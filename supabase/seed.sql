@@ -156,3 +156,10 @@ from r, (values
   ('phone',     '+919800000019'),
   ('instagram', 'banned02')
 ) as b(kind, value);
+
+---------------------------------------------------------------------------
+-- Local Vault secrets so queued emails reach the local send-email function
+-- (which delivers to Mailpit). Hosted values are set once by hand.
+---------------------------------------------------------------------------
+select vault.create_secret('http://kong:8000/functions/v1/send-email', 'send_email_url');
+select vault.create_secret('local-email-hook-secret', 'email_hook_secret');

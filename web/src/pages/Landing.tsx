@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import WaitlistForm from '../components/WaitlistForm'
 import { supabase } from '../lib/supabase'
 
@@ -50,7 +51,9 @@ export default function Landing() {
         <div className="mx-auto max-w-3xl">
           <header className="flex items-center justify-between">
             <span className="text-xl font-extrabold tracking-tight">Kollide</span>
-            <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium">Bangalore</span>
+            <Link to="/start" className="rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold hover:bg-white/25">
+              Sign in
+            </Link>
           </header>
 
           <p className="mt-14 text-sm font-semibold uppercase tracking-widest text-marigold-400">

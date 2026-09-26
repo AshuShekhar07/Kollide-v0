@@ -155,11 +155,13 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
+# Local only. Hosted auth URLs (https://kollide-v0.ashushekhar07.workers.dev) are set in the
+# Supabase dashboard. Do not run `supabase config push`: it would overwrite them with these.
 site_url = "http://localhost:5173"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:5173", "http://127.0.0.1:5173"]
+additional_redirect_urls = ["http://localhost:5173/**", "http://127.0.0.1:5173/**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -242,6 +244,17 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Both templates show a 6-digit code (the app uses OTP codes, not links).
+# Hosted: paste supabase/templates/otp.html into Auth → Email Templates for
+# "Confirm signup" and "Magic Link".
+[auth.email.template.confirmation]
+subject = "Your Kollide sign-in code"
+content_path = "./supabase/templates/otp.html"
+
+[auth.email.template.magic_link]
+subject = "Your Kollide sign-in code"
+content_path = "./supabase/templates/otp.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
@@ -319,8 +332,8 @@ max_frequency = "5s"
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
 [auth.external.google]
-enabled = false
-client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+enabled = true
+client_id = "651035248674-rbp2r5n4qbqlso76hpoi8613gs5su977.apps.googleusercontent.com"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = ""
 # Required for local sign in with Google auth.
@@ -389,8 +402,24 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# [edge_runtime.secrets]
-# secret_key = "env(SECRET_VALUE)"
+# Local values only. Hosted: `supabase secrets set ...` (see supabase/functions/README.md).
+[edge_runtime.secrets]
+SITE_URL = "http://localhost:5173"
+ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+EMAIL_HOOK_SECRET = "local-email-hook-secret"
+# Browser-facing API origin, used to rewrite signed URLs (local only).
+PUBLIC_API_URL = "http://127.0.0.1:54321"
+# Local mail goes to Mailpit (http://127.0.0.1:54324).
+SMTP_HOST = "inbucket"
+SMTP_PORT = "1025"
+SMTP_SECURE = "false"
+SMTP_USER = ""
+SMTP_PASS = ""
+SMTP_FROM = "Kollide <no-reply@kollide.local>"
+
+# Called by pg_net with a shared secret header, not a user JWT.
+[functions.send-email]
+verify_jwt = false
 
 [analytics]
 enabled = true
