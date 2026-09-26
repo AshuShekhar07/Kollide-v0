@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useShell } from '../components/AppShell'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard, { useSignedPhotos } from '../components/ProfileCard'
@@ -7,6 +8,7 @@ import { Button, ErrorText, Spinner } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { markNotificationsRead, type IncomingLike, type MatchResult } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
+import { eventDate, spotsLeft, type GroupInvite } from '../lib/groups'
 import { supabase } from '../lib/supabase'
 
 function LikeTile({ like, onOpen }: { like: IncomingLike; onOpen: () => void }) {
@@ -92,24 +94,72 @@ function LikeDetail({
   )
 }
 
+function InviteCard({ invite, onDone }: { invite: GroupInvite; onDone: () => void }) {
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState<'accept' | 'decline' | null>(null)
+  const [error, setError] = useState('')
+  const when = [eventDate(invite.event_date), invite.venue].filter(Boolean).join(' · ')
+
+  async function respond(accept: boolean) {
+    setBusy(accept ? 'accept' : 'decline')
+    setError('')
+    const { error } = await supabase.rpc('respond_invite', { p_group_id: invite.group_id, p_accept: accept })
+    setBusy(null)
+    if (error) return setError(friendlyError(error))
+    if (accept) navigate(`/groups/${invite.group_id}`)
+    else onDone()
+  }
+
+  return (
+    <li className="rounded-2xl border border-brand-100 bg-brand-50 p-4">
+      <p className="text-xs font-semibold uppercase text-brand-700">
+        {invite.admin_name ? `${invite.admin_name} invited you` : "You're invited"}
+      </p>
+      <Link to={`/groups/${invite.group_id}`} className="mt-1 block font-semibold text-neutral-900 underline-offset-2 hover:underline">
+        {invite.title}
+      </Link>
+      {when && <p className="text-sm text-neutral-600">{when}</p>}
+      <p className="text-xs text-neutral-500">
+        {invite.member_count}/{invite.max_members} people · {spotsLeft(invite)}
+      </p>
+      {error && (
+        <div className="mt-2">
+          <ErrorText>{error}</ErrorText>
+        </div>
+      )}
+      <div className="mt-3 flex gap-3">
+        <Button variant="secondary" className="px-4 py-2 text-sm" onClick={() => respond(false)} loading={busy === 'decline'} disabled={!!busy}>
+          Decline
+        </Button>
+        <Button className="flex-1 px-4 py-2 text-sm" onClick={() => respond(true)} loading={busy === 'accept'} disabled={!!busy}>
+          Join group
+        </Button>
+      </div>
+    </li>
+  )
+}
+
 export default function Likes() {
   const { profile } = useAuth()
   const { refreshBadges } = useShell()
   const verified = profile?.verification_status === 'approved'
   const [likes, setLikes] = useState<IncomingLike[] | null>(null)
+  const [invites, setInvites] = useState<GroupInvite[]>([])
   const [error, setError] = useState('')
   const [open, setOpen] = useState<IncomingLike | null>(null)
   const [matchName, setMatchName] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase.rpc('get_incoming_likes')
-    if (error) return setError(friendlyError(error))
-    setLikes(data)
+    const [likes, invites] = await Promise.all([supabase.rpc('get_incoming_likes'), supabase.rpc('get_group_invites')])
+    if (likes.error || invites.error) return setError(friendlyError(likes.error ?? invites.error))
+    setLikes(likes.data)
+    setInvites(invites.data)
   }, [])
 
   useEffect(() => {
     load()
     markNotificationsRead('like_received')
+    markNotificationsRead('group_invite')
   }, [load])
 
   function onDone(matched: boolean) {
@@ -129,7 +179,25 @@ export default function Likes() {
         <ErrorText>{error}</ErrorText>
       </div>
       {!likes && !error && <Spinner />}
-      {likes?.length === 0 && (
+      {invites.length > 0 && (
+        <>
+          <h2 className="mt-2 text-sm font-semibold text-neutral-800">Group invites</h2>
+          <ul className="mt-2 space-y-3">
+            {invites.map((inv) => (
+              <InviteCard
+                key={inv.group_id}
+                invite={inv}
+                onDone={() => {
+                  setInvites((l) => l.filter((x) => x.group_id !== inv.group_id))
+                  refreshBadges()
+                }}
+              />
+            ))}
+          </ul>
+          {likes && likes.length > 0 && <h2 className="mt-5 text-sm font-semibold text-neutral-800">People</h2>}
+        </>
+      )}
+      {likes?.length === 0 && invites.length === 0 && (
         <div className="mt-12 text-center text-neutral-500">
           <p className="font-semibold text-neutral-700">No likes yet</p>
           <p className="mt-1 text-sm">

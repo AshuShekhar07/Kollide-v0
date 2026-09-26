@@ -14,6 +14,8 @@ export type Conversation = {
   message_count: number
   is_frozen: boolean
   members: ChatMember[]
+  // Group chats only. `names` covers everyone who has been in the chat.
+  group: { id: string; title: string; is_admin: boolean; names: Record<string, string> } | null
 }
 
 // Exact copy required wherever encryption comes up (PLAN.md §2.3).

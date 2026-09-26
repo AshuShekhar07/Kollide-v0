@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } f
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useShell } from '../components/AppShell'
+import DiscoverTabs from '../components/DiscoverTabs'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard from '../components/ProfileCard'
 import { Button, ErrorText, Spinner } from '../components/ui'
@@ -203,6 +204,7 @@ export default function Discover() {
 
   return (
     <>
+      <DiscoverTabs />
       {!verified && (
         <div className="mb-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
           <span className="font-semibold">Pending verification.</span> Your likes will be delivered once you're

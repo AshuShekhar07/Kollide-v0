@@ -8,7 +8,7 @@ import { Button, ErrorText, inputClass } from './ui'
 type Reason = Database['public']['Enums']['report_reason']
 type Target = { userId: string; name: string }
 
-function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+export function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-6"
@@ -174,11 +174,13 @@ export function BlockDialog({
   onClose,
   onBlocked,
   onReportInstead,
+  inGroup = false,
 }: {
   target: Target
   onClose: () => void
   onBlocked: () => void
   onReportInstead: () => void
+  inGroup?: boolean
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -196,7 +198,9 @@ export function BlockDialog({
     <Sheet label={`Block ${target.name}`} onClose={onClose}>
       <h2 className="text-lg font-bold text-neutral-900">Block {target.name}?</h2>
       <p className="mt-2 text-sm text-neutral-600">
-        You won't see each other anywhere on Kollide, and this chat will close. They won't be told.
+        {inGroup
+          ? "You won't see each other in Discover or Likes, and their messages in this group are hidden from you. They won't be told."
+          : "You won't see each other anywhere on Kollide, and this chat will close. They won't be told."}
       </p>
       <p className="mt-2 text-sm text-neutral-600">
         If they made you feel unsafe,{' '}

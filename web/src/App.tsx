@@ -6,6 +6,10 @@ import AdminVerification from './pages/admin/AdminVerification'
 import AuthCallback from './pages/AuthCallback'
 import Chat from './pages/Chat'
 import Discover from './pages/Discover'
+import GroupDetail from './pages/groups/GroupDetail'
+import Groups from './pages/groups/Groups'
+import ManageGroup from './pages/groups/ManageGroup'
+import NewGroup from './pages/groups/NewGroup'
 import Landing from './pages/Landing'
 import Likes from './pages/Likes'
 import { Privacy, Terms } from './pages/Legal'
@@ -30,6 +34,10 @@ export default function App() {
         <Route element={<RequireOnboarded />}>
           <Route element={<AppShell />}>
             <Route path="/discover" element={<Discover />} />
+            <Route path="/groups" element={<Groups />} />
+            <Route path="/groups/new" element={<NewGroup />} />
+            <Route path="/groups/:id" element={<GroupDetail />} />
+            <Route path="/groups/:id/manage" element={<ManageGroup />} />
             <Route path="/likes" element={<Likes />} />
             <Route path="/matches" element={<Matches />} />
             <Route path="/profile" element={<Profile />} />

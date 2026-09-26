@@ -50,6 +50,8 @@ export default function Chat() {
   const [dialog, setDialog] = useState<'report' | 'block' | 'socials' | null>(null)
 
   const listRef = useRef<HTMLDivElement>(null)
+  // Latest header, for the Realtime handlers.
+  const convRef = useRef<Conversation | null>(null)
   // How to fix up the scroll position after the next render of `messages`.
   const scrollMode = useRef<{ kind: 'bottom' } | { kind: 'keep'; fromBottom: number } | null>({ kind: 'bottom' })
 
@@ -95,6 +97,9 @@ export default function Chat() {
           if (nearBottom || m.sender_id === uid) scrollMode.current = { kind: 'bottom' }
           setMessages((cur) => merge(cur, [m]))
           if (m.sender_id !== uid) markRead()
+          // Someone new in the group (e.g. rejoined); fetch their name.
+          const names = convRef.current?.group?.names
+          if (names && m.sender_id && !names[m.sender_id]) loadConversation()
         },
       )
       .on(
@@ -103,8 +108,10 @@ export default function Chat() {
         (payload) => {
           const next = payload.new as Pick<Conversation, 'message_count' | 'message_cap' | 'is_frozen'>
           setConv((cur) => cur && { ...cur, message_count: next.message_count, message_cap: next.message_cap, is_frozen: next.is_frozen })
-          // A block or ban also hides the other member; refetch the header.
-          if (next.is_frozen) loadConversation()
+          // A block or ban hides the other member, and a bigger cap means
+          // someone joined the group; refetch the header for either.
+          const cur = convRef.current
+          if (next.is_frozen || (cur && next.message_cap !== cur.message_cap)) loadConversation()
         },
       )
       .subscribe()
@@ -112,6 +119,10 @@ export default function Chat() {
       supabase.removeChannel(channel)
     }
   }, [id, uid, markRead, loadConversation])
+
+  useEffect(() => {
+    convRef.current = conv
+  }, [conv])
 
   useLayoutEffect(() => {
     const el = listRef.current
@@ -179,11 +190,13 @@ export default function Chat() {
   }
   if (!conv) return <Spinner />
 
-  const other = conv.members[0] ?? null
+  const group = conv.kind === 'group' ? conv.group : null
+  const other = group ? null : (conv.members[0] ?? null)
   const remaining = Math.max(conv.message_cap - conv.message_count, 0)
   const used = conv.message_count / conv.message_cap
   const atCap = remaining === 0
-  const closed = conv.is_frozen || (conv.kind === 'direct' && !other)
+  const closed = conv.is_frozen || (!group && !other)
+  // Report and block for group members live on the group page.
   const target = other && { userId: other.user_id, name: other.first_name }
 
   return (
@@ -192,7 +205,22 @@ export default function Chat() {
         <Link to="/matches" className="px-1 text-xl text-brand-700" aria-label="Back to matches">
           ←
         </Link>
-        {other ? (
+        {group ? (
+          <Link to={`/groups/${group.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700">
+              {group.title.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-semibold text-neutral-900">{group.title}</span>
+              <span className="block truncate text-xs text-neutral-500">
+                {conv.members.length === 0
+                  ? 'Just you so far'
+                  : `You, ${conv.members.map((m) => m.first_name).join(', ')}`}
+              </span>
+            </span>
+            <span className="shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-brand-700">Info</span>
+          </Link>
+        ) : other ? (
           <>
             <Avatar path={other.photo_path} />
             <div className="min-w-0 flex-1">
@@ -262,14 +290,20 @@ export default function Chat() {
         )}
         {messages.length === 0 && !closed && (
           <p className="mt-10 text-center text-sm text-neutral-500">
-            Say hi{other ? ` to ${other.first_name}` : ''}! Plan where you'll meet for Garba.
+            Say hi{group ? ' to the group' : other ? ` to ${other.first_name}` : ''}! Plan where you'll meet for Garba.
           </p>
         )}
         <ul className="space-y-1.5">
-          {messages.map((m) => {
+          {messages.map((m, i) => {
             const mine = m.sender_id === uid
+            const showName = group && !mine && messages[i - 1]?.sender_id !== m.sender_id
             return (
-              <li key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+              <li key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+                {showName && (
+                  <span className="mb-0.5 ml-2 mt-1 text-xs font-semibold text-neutral-500">
+                    {(m.sender_id && group.names[m.sender_id]) || 'Former member'}
+                  </span>
+                )}
                 <div
                   className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
                     mine ? 'rounded-br-md bg-brand-600 text-white' : 'rounded-bl-md bg-neutral-100 text-neutral-900'
@@ -289,13 +323,26 @@ export default function Chat() {
       <div className="border-t border-neutral-200 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
         {closed ? (
           <p className="rounded-2xl bg-neutral-100 px-4 py-3 text-center text-sm text-neutral-600">
-            This chat is closed.
+            {group ? 'This group has closed.' : 'This chat is closed.'}
           </p>
         ) : atCap ? (
-          <div className="rounded-2xl border border-marigold-500/40 bg-marigold-500/10 p-4">
+          <div className="max-h-[50dvh] overflow-y-auto rounded-2xl border border-marigold-500/40 bg-marigold-500/10 p-4">
             <p className="font-bold text-neutral-900">You've used all {conv.message_cap} messages</p>
-            <p className="mt-1 text-sm text-neutral-600">Continue on socials with {other?.first_name}.</p>
-            <div className="mt-3">{other && <SocialLinks userId={other.user_id} />}</div>
+            <p className="mt-1 text-sm text-neutral-600">
+              Continue on socials with {group ? 'the group' : other?.first_name}.
+            </p>
+            {group ? (
+              <div className="mt-3 space-y-3">
+                {conv.members.map((m) => (
+                  <div key={m.user_id}>
+                    <p className="mb-1 text-sm font-semibold text-neutral-800">{m.first_name}</p>
+                    <SocialLinks userId={m.user_id} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-3">{other && <SocialLinks userId={other.user_id} />}</div>
+            )}
           </div>
         ) : (
           <>

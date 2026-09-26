@@ -525,8 +525,14 @@ isOneToOne: false
 "block_user":
 { Args: { "p_target_id": string }; Returns: undefined
                            },
+"cancel_join_request":
+{ Args: { "p_group_id": string }; Returns: undefined
+                           },
 "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"create_group":
+{ Args: { "p_activity_id": string,"p_description": string,"p_event_date": string,"p_max_members": number,"p_title": string,"p_venue": string }; Returns: Json
                            },
 "get_contact":
 { Args: { "p_user_id": string }; Returns: Json
@@ -536,6 +542,24 @@ isOneToOne: false
                            },
 "get_feed":
 { Args: { "p_activity_id": string,"p_limit"?: number }; Returns: Json
+                           },
+"get_group":
+{ Args: { "p_group_id": string }; Returns: Json
+                           },
+"get_group_interested":
+{ Args: { "p_group_id": string }; Returns: {
+              "age": number,"bio": string,"first_name": string,"photo_paths": (string)[],"public_code": string,"seeking": Database["public"]['Enums']["seeking"],"since": string,"status": Database["public"]['Enums']["group_member_status"],"user_id": string
+            }[]
+                           },
+"get_group_invites":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "admin_name": string,"description": string,"event_date": string,"group_id": string,"invited_at": string,"max_members": number,"member_count": number,"title": string,"venue": string
+            }[]
+                           },
+"get_groups":
+{ Args: { "p_activity_id": string }; Returns: {
+              "admin_name": string,"created_at": string,"description": string,"event_date": string,"id": string,"max_members": number,"member_count": number,"my_status": Database["public"]['Enums']["group_member_status"],"status": Database["public"]['Enums']["group_status"],"title": string,"venue": string
+            }[]
                            },
 "get_incoming_likes":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -552,8 +576,19 @@ isOneToOne: false
               "body": string,"created_at": string,"id": string,"sender_id": string
             }[]
                            },
+"get_my_groups":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "conversation_id": string,"event_date": string,"group_id": string,"is_new": boolean,"last_message_at": string,"max_members": number,"member_count": number,"pending_requests": number,"role": Database["public"]['Enums']["group_role"],"title": string,"unread": boolean
+            }[]
+                           },
+"invite_to_group":
+{ Args: { "p_group_id": string,"p_user_id": string }; Returns: undefined
+                           },
 "join_waitlist":
 { Args: { "p_email": string }; Returns: undefined
+                           },
+"leave_group":
+{ Args: { "p_group_id": string }; Returns: undefined
                            },
 "like_profile":
 { Args: { "p_activity_id": string,"p_target_id": string }; Returns: Json
@@ -564,11 +599,23 @@ isOneToOne: false
 "pass_profile":
 { Args: { "p_activity_id": string,"p_target_id": string }; Returns: undefined
                            },
+"remove_member":
+{ Args: { "p_group_id": string,"p_user_id": string }; Returns: undefined
+                           },
 "reorder_photos":
 { Args: { "p_ids": (string)[] }; Returns: undefined
                            },
 "report_user":
 { Args: { "p_consent": boolean,"p_conversation_id": string,"p_details": string,"p_reason": Database["public"]['Enums']["report_reason"],"p_reported_id": string }; Returns: string
+                           },
+"request_join":
+{ Args: { "p_group_id": string }; Returns: Database["public"]['Enums']["group_member_status"]
+                           },
+"respond_invite":
+{ Args: { "p_accept": boolean,"p_group_id": string }; Returns: undefined
+                           },
+"respond_join_request":
+{ Args: { "p_approve": boolean,"p_group_id": string,"p_user_id": string }; Returns: undefined
                            },
 "respond_to_like":
 { Args: { "p_accept": boolean,"p_swipe_id": string }; Returns: Json

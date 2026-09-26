@@ -10,7 +10,8 @@ export function useShell() {
 }
 
 const TABS = [
-  { to: '/discover', label: 'Discover', badge: null },
+  // Groups is part of Discover (People / Groups switch).
+  { to: '/discover', label: 'Discover', badge: null, also: '/groups' },
   { to: '/likes', label: 'Likes', badge: 'likes' },
   { to: '/matches', label: 'Matches', badge: 'matches' },
   { to: '/profile', label: 'Profile', badge: null },
@@ -24,10 +25,17 @@ export default function AppShell() {
   const uid = profile?.id
 
   const refreshBadges = useCallback(async () => {
-    const [likes, matches] = await Promise.all([supabase.rpc('get_incoming_likes'), supabase.rpc('get_matches')])
+    const [likes, invites, matches, groups] = await Promise.all([
+      supabase.rpc('get_incoming_likes'),
+      supabase.rpc('get_group_invites'),
+      supabase.rpc('get_matches'),
+      supabase.rpc('get_my_groups'),
+    ])
     setBadges({
-      likes: likes.data?.length ?? 0,
-      matches: matches.data?.filter((m) => m.is_new || m.unread).length ?? 0,
+      likes: (likes.data?.length ?? 0) + (invites.data?.length ?? 0),
+      matches:
+        (matches.data?.filter((m) => m.is_new || m.unread).length ?? 0) +
+        (groups.data?.filter((g) => g.is_new || g.unread || g.pending_requests > 0).length ?? 0),
     })
   }, [])
 
@@ -75,7 +83,9 @@ export default function AppShell() {
                 <NavLink
                   to={tab.to}
                   className={({ isActive }) =>
-                    `flex justify-center py-3 text-sm font-semibold ${isActive ? 'text-brand-700' : 'text-neutral-500'}`
+                    `flex justify-center py-3 text-sm font-semibold ${
+                      isActive || ('also' in tab && location.pathname.startsWith(tab.also)) ? 'text-brand-700' : 'text-neutral-500'
+                    }`
                   }
                 >
                   <span className="relative">
