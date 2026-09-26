@@ -19,6 +19,7 @@ function GoogleIcon() {
 export default function Login() {
   const { loading, session, profile } = useAuth()
   const [email, setEmail] = useState('')
+  // Code length is a Supabase Auth setting (6 locally; hosted may use up to 10).
   const [code, setCode] = useState('')
   const [stage, setStage] = useState<'email' | 'code'>('email')
   const [busy, setBusy] = useState<'google' | 'email' | 'code' | null>(null)
@@ -99,20 +100,20 @@ export default function Login() {
           </form>
         ) : (
           <form onSubmit={verifyCode} className="space-y-3">
-            <Field label={`Enter the 6-digit code sent to ${email}`}>
+            <Field label={`Enter the code sent to ${email}`}>
               <input
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                maxLength={6}
+                pattern="[0-9]{6,10}"
+                maxLength={10}
                 required
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="123456"
-                className={`${inputClass} text-center font-mono text-2xl tracking-[0.5em]`}
+                placeholder="Code"
+                className={`${inputClass} text-center font-mono text-2xl tracking-[0.3em]`}
               />
             </Field>
-            <Button type="submit" className="w-full" loading={busy === 'code'} disabled={code.length !== 6}>
+            <Button type="submit" className="w-full" loading={busy === 'code'} disabled={code.length < 6}>
               Verify and continue
             </Button>
             <button
