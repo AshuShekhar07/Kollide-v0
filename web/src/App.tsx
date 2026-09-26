@@ -1,8 +1,10 @@
 import { Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell'
 import { RequireAdmin, RequireAuth, RequireOnboarded, StartRedirect } from './components/guards'
+import AdminReports from './pages/admin/AdminReports'
 import AdminVerification from './pages/admin/AdminVerification'
 import AuthCallback from './pages/AuthCallback'
+import Chat from './pages/Chat'
 import Discover from './pages/Discover'
 import Landing from './pages/Landing'
 import Likes from './pages/Likes'
@@ -32,9 +34,11 @@ export default function App() {
             <Route path="/matches" element={<Matches />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
+          <Route path="/chat/:id" element={<Chat />} />
         </Route>
         <Route element={<RequireAdmin />}>
           <Route path="/admin" element={<AdminVerification />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
         </Route>
       </Route>
 

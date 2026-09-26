@@ -392,13 +392,13 @@ isOneToOne: false
                   ]
                 },"reports": {
                   Row: {
-                    "chat_share_consent": boolean,"conversation_id": string | null,"created_at": string,"details": string | null,"id": string,"reason": Database["public"]['Enums']["report_reason"],"reported_id": string,"reporter_id": string,"resolution": Database["public"]['Enums']["report_resolution"] | null,"resolved_at": string | null,"resolved_by": string | null,"snapshot": Json | null,"status": Database["public"]['Enums']["report_status"]
+                    "chat_share_consent": boolean,"conversation_id": string | null,"created_at": string,"details": string | null,"id": string,"reason": Database["public"]['Enums']["report_reason"],"reported_id": string,"reported_identifiers": NonNullable<Json>,"reporter_id": string,"resolution": Database["public"]['Enums']["report_resolution"] | null,"resolved_at": string | null,"resolved_by": string | null,"snapshot": Json | null,"status": Database["public"]['Enums']["report_status"]
                   }
                   Insert: {
-                    "chat_share_consent": boolean,"conversation_id"?: string | null,"created_at"?: string,"details"?: string | null,"id"?: string,"reason": Database["public"]['Enums']["report_reason"],"reported_id": string,"reporter_id": string,"resolution"?: Database["public"]['Enums']["report_resolution"] | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"snapshot"?: Json | null,"status"?: Database["public"]['Enums']["report_status"]
+                    "chat_share_consent": boolean,"conversation_id"?: string | null,"created_at"?: string,"details"?: string | null,"id"?: string,"reason": Database["public"]['Enums']["report_reason"],"reported_id": string,"reported_identifiers"?: NonNullable<Json>,"reporter_id": string,"resolution"?: Database["public"]['Enums']["report_resolution"] | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"snapshot"?: Json | null,"status"?: Database["public"]['Enums']["report_status"]
                   }
                   Update: {
-                    "chat_share_consent"?: boolean,"conversation_id"?: string | null,"created_at"?: string,"details"?: string | null,"id"?: string,"reason"?: Database["public"]['Enums']["report_reason"],"reported_id"?: string,"reporter_id"?: string,"resolution"?: Database["public"]['Enums']["report_resolution"] | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"snapshot"?: Json | null,"status"?: Database["public"]['Enums']["report_status"]
+                    "chat_share_consent"?: boolean,"conversation_id"?: string | null,"created_at"?: string,"details"?: string | null,"id"?: string,"reason"?: Database["public"]['Enums']["report_reason"],"reported_id"?: string,"reported_identifiers"?: NonNullable<Json>,"reporter_id"?: string,"resolution"?: Database["public"]['Enums']["report_resolution"] | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"snapshot"?: Json | null,"status"?: Database["public"]['Enums']["report_status"]
                   }
                   Relationships: [
                     {
@@ -503,7 +503,18 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_review_verification":
+            "admin_get_report":
+{ Args: { "p_report_id": string }; Returns: Json
+                           },
+"admin_reports_queue":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "created_at": string,"message_count": number,"reason": Database["public"]['Enums']["report_reason"],"report_id": string,"reported_banned": boolean,"reported_code": string,"reported_id": string,"reported_name": string,"reporter_code": string,"reporter_name": string,"reports_against": number,"status": Database["public"]['Enums']["report_status"]
+            }[]
+                           },
+"admin_resolve_report":
+{ Args: { "p_report_id": string,"p_resolution": Database["public"]['Enums']["report_resolution"] }; Returns: undefined
+                           },
+"admin_review_verification":
 { Args: { "p_approve": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined
                            },
 "admin_verification_queue":
@@ -511,11 +522,17 @@ isOneToOne: false
               "age": number,"first_name": string,"gender": Database["public"]['Enums']["gender"],"is_resubmission": boolean,"photo_paths": (string)[],"public_code": string,"submitted_at": string,"user_id": string,"video_id": string
             }[]
                            },
+"block_user":
+{ Args: { "p_target_id": string }; Returns: undefined
+                           },
 "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "get_contact":
 { Args: { "p_user_id": string }; Returns: Json
+                           },
+"get_conversation":
+{ Args: { "p_conversation_id": string }; Returns: Json
                            },
 "get_feed":
 { Args: { "p_activity_id": string,"p_limit"?: number }; Returns: Json
@@ -530,17 +547,28 @@ isOneToOne: false
               "activity_id": string,"age": number,"conversation_id": string,"first_name": string,"is_new": boolean,"last_message_at": string,"match_id": string,"matched_at": string,"photo_path": string,"public_code": string,"unread": boolean,"user_id": string
             }[]
                            },
+"get_messages":
+{ Args: { "p_before"?: string,"p_conversation_id": string,"p_limit"?: number }; Returns: {
+              "body": string,"created_at": string,"id": string,"sender_id": string
+            }[]
+                           },
 "join_waitlist":
 { Args: { "p_email": string }; Returns: undefined
                            },
 "like_profile":
 { Args: { "p_activity_id": string,"p_target_id": string }; Returns: Json
                            },
+"mark_conversation_read":
+{ Args: { "p_conversation_id": string }; Returns: undefined
+                           },
 "pass_profile":
 { Args: { "p_activity_id": string,"p_target_id": string }; Returns: undefined
                            },
 "reorder_photos":
 { Args: { "p_ids": (string)[] }; Returns: undefined
+                           },
+"report_user":
+{ Args: { "p_consent": boolean,"p_conversation_id": string,"p_details": string,"p_reason": Database["public"]['Enums']["report_reason"],"p_reported_id": string }; Returns: string
                            },
 "respond_to_like":
 { Args: { "p_accept": boolean,"p_swipe_id": string }; Returns: Json
@@ -550,6 +578,9 @@ isOneToOne: false
                            },
 "save_contact":
 { Args: { "p_phone": string,"p_socials": Json }; Returns: undefined
+                           },
+"send_message":
+{ Args: { "p_body": string,"p_conversation_id": string }; Returns: Json
                            },
 "submit_verification":
 { Args: { "p_storage_path": string }; Returns: undefined

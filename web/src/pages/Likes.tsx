@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useShell } from '../components/AppShell'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard, { useSignedPhotos } from '../components/ProfileCard'
+import { ReportDialog } from '../components/SafetyDialogs'
 import { Button, ErrorText, Spinner } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { markNotificationsRead, type IncomingLike, type MatchResult } from '../lib/discovery'
@@ -32,6 +33,7 @@ function LikeDetail({
   const [photo, setPhoto] = useState(0)
   const [busy, setBusy] = useState<'accept' | 'decline' | null>(null)
   const [error, setError] = useState('')
+  const [reporting, setReporting] = useState(false)
 
   async function respond(accept: boolean) {
     setBusy(accept ? 'accept' : 'decline')
@@ -70,7 +72,22 @@ function LikeDetail({
         <p className="mt-3 text-center text-xs text-neutral-500">
           Declining is private. {like.first_name} won't be told.
         </p>
+        <button
+          type="button"
+          onClick={() => setReporting(true)}
+          className="mx-auto mt-6 block text-sm font-medium text-red-700 underline"
+        >
+          Report {like.first_name}
+        </button>
       </div>
+      {reporting && (
+        <ReportDialog
+          target={{ userId: like.user_id, name: like.first_name }}
+          conversationId={null}
+          onClose={() => setReporting(false)}
+          onReported={() => onDone(false)}
+        />
+      )}
     </div>
   )
 }

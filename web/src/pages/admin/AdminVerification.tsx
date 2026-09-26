@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import AdminNav from '../../components/AdminNav'
 import { Button, ErrorText, Spinner, inputClass } from '../../components/ui'
 import type { Database } from '../../lib/database.types'
 import { friendlyError, functionError } from '../../lib/errors'
@@ -155,6 +156,7 @@ export default function AdminVerification() {
           <span className="text-lg font-extrabold tracking-tight text-brand-700">Kollide admin</span>
           <h1 className="text-2xl font-bold text-neutral-900">Verification queue</h1>
         </div>
+        <AdminNav />
         {queue && (
           <div className="flex items-center gap-3 text-sm">
             <span className="rounded-full bg-neutral-100 px-3 py-1 font-semibold">{queue.length} waiting</span>

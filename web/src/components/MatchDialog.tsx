@@ -10,7 +10,7 @@ export default function MatchDialog({ name, onClose }: { name: string; onClose: 
         <h2 id="match-title" className="mt-2 text-3xl font-extrabold text-brand-700">
           It's a match!
         </h2>
-        <p className="mt-2 text-neutral-600">You and {name} liked each other. Their socials are now on your Matches tab.</p>
+        <p className="mt-2 text-neutral-600">You and {name} liked each other. Say hi from your Matches tab.</p>
         <div className="mt-6 flex flex-col gap-2">
           <Button onClick={() => navigate('/matches')}>See matches</Button>
           <Button variant="ghost" onClick={onClose}>

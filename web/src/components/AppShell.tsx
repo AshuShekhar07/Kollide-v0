@@ -24,22 +24,19 @@ export default function AppShell() {
   const uid = profile?.id
 
   const refreshBadges = useCallback(async () => {
-    const [likes, matches] = await Promise.all([
-      supabase.rpc('get_incoming_likes'),
-      supabase
-        .from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('type', 'match')
-        .is('read_at', null),
-    ])
-    setBadges({ likes: likes.data?.length ?? 0, matches: matches.count ?? 0 })
+    const [likes, matches] = await Promise.all([supabase.rpc('get_incoming_likes'), supabase.rpc('get_matches')])
+    setBadges({
+      likes: likes.data?.length ?? 0,
+      matches: matches.data?.filter((m) => m.is_new || m.unread).length ?? 0,
+    })
   }, [])
 
   useEffect(() => {
     refreshBadges()
   }, [refreshBadges, location.pathname])
 
-  // New likes and matches arrive as notification rows (RLS limits these to our own).
+  // New likes and matches arrive as notification rows, new chat messages as
+  // message rows (RLS limits both to our own).
   useEffect(() => {
     if (!uid) return
     const channel = supabase
@@ -49,6 +46,7 @@ export default function AppShell() {
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
         () => refreshBadges(),
       )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => refreshBadges())
       .subscribe()
     return () => {
       supabase.removeChannel(channel)
