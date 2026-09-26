@@ -514,11 +514,36 @@ isOneToOne: false
 "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"get_contact":
+{ Args: { "p_user_id": string }; Returns: Json
+                           },
+"get_feed":
+{ Args: { "p_activity_id": string,"p_limit"?: number }; Returns: Json
+                           },
+"get_incoming_likes":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "activity_id": string,"age": number,"bio": string,"first_name": string,"gender": Database["public"]['Enums']["gender"],"liked_at": string,"photo_paths": (string)[],"public_code": string,"swipe_id": string,"user_id": string
+            }[]
+                           },
+"get_matches":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "activity_id": string,"age": number,"conversation_id": string,"first_name": string,"is_new": boolean,"last_message_at": string,"match_id": string,"matched_at": string,"photo_path": string,"public_code": string,"unread": boolean,"user_id": string
+            }[]
+                           },
 "join_waitlist":
 { Args: { "p_email": string }; Returns: undefined
                            },
+"like_profile":
+{ Args: { "p_activity_id": string,"p_target_id": string }; Returns: Json
+                           },
+"pass_profile":
+{ Args: { "p_activity_id": string,"p_target_id": string }; Returns: undefined
+                           },
 "reorder_photos":
 { Args: { "p_ids": (string)[] }; Returns: undefined
+                           },
+"respond_to_like":
+{ Args: { "p_accept": boolean,"p_swipe_id": string }; Returns: Json
                            },
 "save_basics":
 { Args: { "p_consent": boolean,"p_dob": string,"p_first_name": string,"p_gender": Database["public"]['Enums']["gender"],"p_gender_preference": (Database["public"]['Enums']["gender"])[],"p_seeking": Database["public"]['Enums']["seeking"] }; Returns: undefined
@@ -528,10 +553,13 @@ isOneToOne: false
                            },
 "submit_verification":
 { Args: { "p_storage_path": string }; Returns: undefined
+                           },
+"update_preferences":
+{ Args: { "p_gender_preference": (Database["public"]['Enums']["gender"])[],"p_seeking": Database["public"]['Enums']["seeking"] }; Returns: undefined
                            }
           }
           Enums: {
-            "activity_status": "live"|"coming_soon","ban_kind": "email"|"phone"|"instagram"|"snapchat"|"whatsapp"|"telegram","conversation_kind": "direct"|"group","email_status": "pending"|"sent"|"failed","gender": "man"|"woman"|"non_binary","group_member_status": "requested"|"invited"|"approved"|"rejected"|"left"|"removed","group_role": "admin"|"member","group_status": "open"|"full"|"closed","report_reason": "harassment"|"fake_profile"|"inappropriate"|"safety_threat"|"spam"|"other","report_resolution": "no_action"|"warning"|"ban","report_status": "open"|"reviewing"|"resolved","seeking": "partner"|"friend","swipe_action": "like"|"pass","swipe_status": "held"|"pending"|"accepted"|"rejected"|"discarded","verification_status": "unsubmitted"|"pending"|"approved"|"rejected","video_status": "pending"|"approved"|"rejected"
+            "activity_status": "live"|"coming_soon","ban_kind": "email"|"phone"|"instagram"|"snapchat"|"whatsapp"|"telegram","conversation_kind": "direct"|"group","email_status": "pending"|"sent"|"failed","gender": "man"|"woman"|"non_binary","group_member_status": "requested"|"invited"|"approved"|"rejected"|"left"|"removed","group_role": "admin"|"member","group_status": "open"|"full"|"closed","report_reason": "harassment"|"fake_profile"|"inappropriate"|"safety_threat"|"spam"|"other","report_resolution": "no_action"|"warning"|"ban","report_status": "open"|"reviewing"|"resolved","seeking": "group"|"friend","swipe_action": "like"|"pass","swipe_status": "held"|"pending"|"accepted"|"rejected"|"discarded","verification_status": "unsubmitted"|"pending"|"approved"|"rejected","video_status": "pending"|"approved"|"rejected"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -647,7 +675,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "activity_status": ["live", "coming_soon"],"ban_kind": ["email", "phone", "instagram", "snapchat", "whatsapp", "telegram"],"conversation_kind": ["direct", "group"],"email_status": ["pending", "sent", "failed"],"gender": ["man", "woman", "non_binary"],"group_member_status": ["requested", "invited", "approved", "rejected", "left", "removed"],"group_role": ["admin", "member"],"group_status": ["open", "full", "closed"],"report_reason": ["harassment", "fake_profile", "inappropriate", "safety_threat", "spam", "other"],"report_resolution": ["no_action", "warning", "ban"],"report_status": ["open", "reviewing", "resolved"],"seeking": ["partner", "friend"],"swipe_action": ["like", "pass"],"swipe_status": ["held", "pending", "accepted", "rejected", "discarded"],"verification_status": ["unsubmitted", "pending", "approved", "rejected"],"video_status": ["pending", "approved", "rejected"]
+            "activity_status": ["live", "coming_soon"],"ban_kind": ["email", "phone", "instagram", "snapchat", "whatsapp", "telegram"],"conversation_kind": ["direct", "group"],"email_status": ["pending", "sent", "failed"],"gender": ["man", "woman", "non_binary"],"group_member_status": ["requested", "invited", "approved", "rejected", "left", "removed"],"group_role": ["admin", "member"],"group_status": ["open", "full", "closed"],"report_reason": ["harassment", "fake_profile", "inappropriate", "safety_threat", "spam", "other"],"report_resolution": ["no_action", "warning", "ban"],"report_status": ["open", "reviewing", "resolved"],"seeking": ["group", "friend"],"swipe_action": ["like", "pass"],"swipe_status": ["held", "pending", "accepted", "rejected", "discarded"],"verification_status": ["unsubmitted", "pending", "approved", "rejected"],"video_status": ["pending", "approved", "rejected"]
           }
         }
 } as const

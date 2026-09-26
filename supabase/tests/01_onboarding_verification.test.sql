@@ -112,7 +112,7 @@ select is((select template from public.email_outbox where user_id = 'a0000000-00
 create function pg_temp.fill_profile(uid uuid, phone text, socials jsonb) returns void language plpgsql as $$
 begin
   perform pg_temp.login_as(uid);
-  perform public.save_basics('Test', '1999-05-05', 'man', 'partner', '{woman}', true);
+  perform public.save_basics('Test', '1999-05-05', 'man', 'group', '{woman}', true);
   perform public.save_contact(phone, socials);
   insert into public.photos (user_id, storage_path, position) values
     (uid, uid || '/p0.jpg', 0), (uid, uid || '/p1.jpg', 1);

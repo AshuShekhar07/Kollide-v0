@@ -70,7 +70,7 @@ export default function Login() {
         Kollide
       </Link>
       <h1 className="mt-6 text-2xl font-bold text-neutral-900">Sign in or create an account</h1>
-      <p className="mt-1 text-neutral-600">Find your Garba partner or group.</p>
+      <p className="mt-1 text-neutral-600">Find your Garba friends or group.</p>
 
       <div className="mt-8 space-y-4">
         <Button variant="secondary" className="w-full" onClick={signInWithGoogle} loading={busy === 'google'}>

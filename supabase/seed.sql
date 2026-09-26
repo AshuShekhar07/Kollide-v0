@@ -9,6 +9,8 @@
 --   fresh01@kollide.test          just signed up, nothing filled in
 --   novideo01@kollide.test        onboarded, never submitted a video
 --
+-- A few likes are seeded too (see "Likes" below).
+--
 -- IDs are fixed (00000000-0000-0000-0000-0000000000NN) so tests can refer to them.
 -- Photo rows point at storage paths that have no file behind them.
 
@@ -22,26 +24,26 @@ declare
   -- n, email, first_name, gender, prefs, seeking, state
   users constant jsonb := '[
     [1,  "admin",      "Ananya",  "woman",      ["man","woman"],  "friend",  "approved"],
-    [2,  "approved01", "Rohan",   "man",        ["woman"],        "partner", "approved"],
-    [3,  "approved02", "Priya",   "woman",      ["man"],          "partner", "approved"],
-    [4,  "approved03", "Arjun",   "man",        ["woman"],        "partner", "approved"],
-    [5,  "approved04", "Meera",   "woman",      ["man"],          "partner", "approved"],
-    [6,  "approved05", "Kabir",   "man",        ["man"],          "partner", "approved"],
-    [7,  "approved06", "Vikram",  "man",        ["man"],          "partner", "approved"],
+    [2,  "approved01", "Rohan",   "man",        ["woman"],        "group",   "approved"],
+    [3,  "approved02", "Priya",   "woman",      ["man"],          "group",   "approved"],
+    [4,  "approved03", "Arjun",   "man",        ["woman"],        "group",   "approved"],
+    [5,  "approved04", "Meera",   "woman",      ["man"],          "group",   "approved"],
+    [6,  "approved05", "Kabir",   "man",        ["man"],          "group",   "approved"],
+    [7,  "approved06", "Vikram",  "man",        ["man"],          "group",   "approved"],
     [8,  "approved07", "Sneha",   "woman",      ["woman","man"],  "friend",  "approved"],
     [9,  "approved08", "Isha",    "woman",      ["woman"],        "friend",  "approved"],
     [10, "approved09", "Aditya",  "man",        ["man","woman"],  "friend",  "approved"],
     [11, "approved10", "Sam",     "non_binary", ["man","woman","non_binary"], "friend", "approved"],
-    [12, "approved11", "Diya",    "woman",      ["man"],          "partner", "approved"],
-    [13, "pending01",  "Karan",   "man",        ["woman"],        "partner", "pending"],
-    [14, "pending02",  "Riya",    "woman",      ["man"],          "partner", "pending"],
+    [12, "approved11", "Diya",    "woman",      ["man"],          "group",   "approved"],
+    [13, "pending01",  "Karan",   "man",        ["woman"],        "group",   "pending"],
+    [14, "pending02",  "Riya",    "woman",      ["man"],          "group",   "pending"],
     [15, "pending03",  "Neha",    "woman",      ["woman","man"],  "friend",  "pending"],
-    [16, "rejected01", "Rahul",   "man",        ["woman"],        "partner", "rejected"],
-    [17, "rejected02", "Tanya",   "woman",      ["man"],          "partner", "rejected"],
-    [18, "banned01",   "Varun",   "man",        ["woman"],        "partner", "banned"],
+    [16, "rejected01", "Rahul",   "man",        ["woman"],        "group",   "rejected"],
+    [17, "rejected02", "Tanya",   "woman",      ["man"],          "group",   "rejected"],
+    [18, "banned01",   "Varun",   "man",        ["woman"],        "group",   "banned"],
     [19, "banned02",   "Nikhil",  "man",        ["woman"],        "friend",  "banned"],
     [20, "fresh01",    null,      null,         null,             null,      "fresh"],
-    [21, "novideo01",  "Pooja",   "woman",      ["man"],          "partner", "unsubmitted"]
+    [21, "novideo01",  "Pooja",   "woman",      ["man"],          "group",   "unsubmitted"]
   ]';
   u jsonb;
   uid uuid;
@@ -156,6 +158,24 @@ from r, (values
   ('phone',     '+919800000019'),
   ('instagram', 'banned02')
 ) as b(kind, value);
+
+---------------------------------------------------------------------------
+-- Likes, so the Likes screen has something to show locally:
+--   Rohan (approved01) has two incoming likes, from Priya and Meera.
+--   Ananya (admin) has one, from Aditya.
+--   Karan (pending01) liked Priya, but it's held until he's verified.
+---------------------------------------------------------------------------
+with l as (
+  insert into public.swipes (from_user, to_user, activity_id, action, status, created_at)
+  select ('00000000-0000-0000-0000-' || lpad(f::text, 12, '0'))::uuid,
+         ('00000000-0000-0000-0000-' || lpad(t::text, 12, '0'))::uuid,
+         (select id from public.activities where slug = 'garba'),
+         'like', st::public.swipe_status, now() - (f || ' hours')::interval
+  from (values (3, 2, 'pending'), (5, 2, 'pending'), (10, 1, 'pending'), (13, 3, 'held')) as v(f, t, st)
+  returning id, to_user, status
+)
+insert into public.notifications (user_id, type, payload)
+select to_user, 'like_received', jsonb_build_object('swipe_id', id) from l where status = 'pending';
 
 ---------------------------------------------------------------------------
 -- Local Vault secrets so queued emails reach the local send-email function

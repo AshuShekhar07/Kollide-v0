@@ -45,10 +45,12 @@ Deno.serve(async (req) => {
     .createSignedUrl(video.storage_path, SIGNED_URL_TTL_SECONDS)
   if (signError || !signed) return json({ error: 'Could not load video' }, 500, cors)
 
-  // Locally SUPABASE_URL is the internal Docker host; rewrite for the browser.
+  // Locally SUPABASE_URL is the internal Docker host (kong); rewrite for the
+  // browser. Hosted URLs are already public and are never rewritten.
   let url = signed.signedUrl
   const publicApi = Deno.env.get('PUBLIC_API_URL')
-  if (publicApi) url = publicApi + new URL(url).pathname + new URL(url).search
+  const parsed = new URL(url)
+  if (publicApi && parsed.hostname === 'kong') url = publicApi + parsed.pathname + parsed.search
 
   return json({ url, expires_in: SIGNED_URL_TTL_SECONDS }, 200, cors)
 })

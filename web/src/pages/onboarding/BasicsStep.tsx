@@ -2,17 +2,10 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Choice, ErrorText, Field, inputClass } from '../../components/ui'
 import { friendlyError } from '../../lib/errors'
+import { GENDERS, PREFERENCE_LABELS, SEEKING_OPTIONS } from '../../lib/profile-options'
 import { supabase } from '../../lib/supabase'
 import type { Gender, Seeking } from '../../lib/types'
 import type { StepProps } from './Onboarding'
-
-const GENDERS: { value: Gender; label: string }[] = [
-  { value: 'woman', label: 'Woman' },
-  { value: 'man', label: 'Man' },
-  { value: 'non_binary', label: 'Non-binary' },
-]
-
-const PREFERENCE_LABELS: Record<Gender, string> = { woman: 'Women', man: 'Men', non_binary: 'Non-binary people' }
 
 function isoDate(d: Date) {
   return d.toISOString().slice(0, 10)
@@ -95,12 +88,11 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-neutral-800">I'm looking for</legend>
         <div className="grid grid-cols-2 gap-2">
-          <Choice name="seeking" checked={seeking === 'partner'} onChange={() => setSeeking('partner')}>
-            A Garba partner
-          </Choice>
-          <Choice name="seeking" checked={seeking === 'friend'} onChange={() => setSeeking('friend')}>
-            A friend to go with
-          </Choice>
+          {SEEKING_OPTIONS.map((o) => (
+            <Choice key={o.value} name="seeking" checked={seeking === o.value} onChange={() => setSeeking(o.value)}>
+              {o.label}
+            </Choice>
+          ))}
         </div>
       </fieldset>
 

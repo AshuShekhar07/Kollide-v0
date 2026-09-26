@@ -35,6 +35,8 @@ Vault secrets. Emails land in Mailpit at http://127.0.0.1:54324.
 
    Supabase blocks outbound ports 25 and 587 from edge functions, so use 465.
 
+   Don't copy `PUBLIC_API_URL` from `config.toml`: it's local-only (it points at your own machine).
+
 3. **Store the Vault secrets** so the database can call `send-email`. Run this in the
    SQL editor, using the same hook secret:
 

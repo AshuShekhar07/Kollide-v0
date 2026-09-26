@@ -60,11 +60,11 @@ export default function Landing() {
             Where paths collide
           </p>
           <h1 className="mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">
-            Find your Garba partner or group
+            Find your Garba friends or group
           </h1>
           <p className="mt-4 max-w-xl text-lg text-white/85">
             Don't go alone this Navratri. Meet verified people heading to the same Garba nights, as a
-            partner, a friend, or a whole group.
+            friend or a whole group.
           </p>
 
           <div className="mt-8 max-w-lg">
@@ -89,7 +89,7 @@ export default function Landing() {
               </span>
             </div>
             <ul className="mt-4 grid gap-2 text-sm text-neutral-700 sm:grid-cols-2">
-              <li className="rounded-xl bg-brand-50 px-3 py-2">1:1: find a partner or a friend</li>
+              <li className="rounded-xl bg-brand-50 px-3 py-2">1:1: find a friend to go with</li>
               <li className="rounded-xl bg-brand-50 px-3 py-2">Groups: join or start a crew of up to 10</li>
             </ul>
           </div>
