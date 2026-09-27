@@ -19,10 +19,10 @@ const STATUS_TAG: Partial<Record<MemberStatus, { label: string; tone: 'green' | 
 function GroupCard({ group }: { group: GroupListItem }) {
   const status = group.my_status ? STATUS_TAG[group.my_status] : undefined
   return (
-    <li className="animate-rise">
+    <li className="h-full animate-rise">
       <Link
         to={`/groups/${group.id}`}
-        className="block rounded-3xl border border-neutral-200/80 bg-surface p-4 shadow-sm transition hover:border-brand-300 hover:shadow-md active:scale-[0.99]"
+        className="block h-full rounded-[28px] border border-neutral-200 bg-surface p-5 transition duration-300 hover:-translate-y-0.5 hover:border-neutral-900 hover:shadow-[0_12px_30px_-12px_rgba(17,17,17,0.25)] active:scale-[0.99]"
       >
         <span className="flex items-start gap-3">
           <DateChip date={group.event_date} />
@@ -103,9 +103,9 @@ export default function Groups() {
         </EmptyState>
       ) : (
         <>
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-4 flex items-center justify-between gap-3 lg:mb-6 lg:mt-2">
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-neutral-900">Groups</h1>
+              <h1 className="text-2xl font-extrabold text-neutral-900 lg:text-4xl">Groups</h1>
               <p className="mt-0.5 text-xs text-neutral-500">
                 {activity?.name ?? 'Garba'} · everyone in a group is verified.
               </p>
@@ -117,7 +117,7 @@ export default function Groups() {
 
           <ErrorText>{error}</ErrorText>
           {!groups && !error && (
-            <div className="space-y-3" aria-label="Loading">
+            <div className="grid gap-3 lg:grid-cols-2 lg:gap-5" aria-label="Loading">
               {[0, 1].map((i) => (
                 <Skeleton key={i} className="h-36 !rounded-3xl" />
               ))}
@@ -137,7 +137,7 @@ export default function Groups() {
             </EmptyState>
           )}
           {groups && groups.length > 0 && (
-            <ul className="space-y-3">
+            <ul className="grid gap-3 lg:grid-cols-2 lg:gap-5">
               {groups.map((g) => (
                 <GroupCard key={g.id} group={g} />
               ))}

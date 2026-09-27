@@ -11,7 +11,7 @@ const TABS = [
 export default function DiscoverTabs() {
   const { pathname } = useLocation()
   return (
-    <nav className="mb-4 grid grid-cols-2 rounded-full bg-neutral-100 p-1 text-sm font-semibold" aria-label="Discover">
+    <nav className="mb-4 grid grid-cols-2 rounded-full bg-neutral-100 p-1 text-sm font-semibold lg:w-80" aria-label="Discover">
       {TABS.map((t) => {
         const active = t.to === '/discover' ? pathname === '/discover' : pathname.startsWith(t.to)
         const Icon = t.icon
@@ -20,11 +20,11 @@ export default function DiscoverTabs() {
             {active && (
               <motion.span
                 layoutId="discover-pill"
-                className="absolute inset-0 rounded-full bg-raised shadow-sm"
+                className="absolute inset-0 rounded-full bg-ink"
                 transition={{ type: 'spring', stiffness: 500, damping: 38 }}
               />
             )}
-            <span className={`relative inline-flex items-center gap-1.5 ${active ? 'text-brand-700' : 'text-neutral-500'}`}>
+            <span className={`relative inline-flex items-center gap-1.5 ${active ? 'text-on-ink' : 'text-neutral-500'}`}>
               <Icon className="h-4 w-4" strokeWidth={2.2} />
               {t.label}
             </span>

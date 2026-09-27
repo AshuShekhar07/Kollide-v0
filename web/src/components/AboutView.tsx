@@ -22,10 +22,10 @@ export default function AboutView({ userId, bio, compact = false }: { userId: st
       {answers.map((a) => (
         <div
           key={a.prompt_key}
-          className={`relative overflow-hidden rounded-3xl border border-brand-100 bg-brand-50 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3.5'}`}
+          className={`relative overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3.5'}`}
         >
-          <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-marigold-400" aria-hidden />
-          <p className="text-xs font-bold text-brand-700">{a.question}</p>
+          <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-brand-500" aria-hidden />
+          <p className="text-xs font-bold text-brand-600">{a.question}</p>
           <p
             className={`mt-1 whitespace-pre-wrap font-display font-semibold leading-snug text-neutral-900 ${compact ? 'text-[15px]' : 'text-lg'}`}
           >

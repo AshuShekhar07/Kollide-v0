@@ -53,9 +53,9 @@ export default function InviteLinkCard({ groupId, title }: { groupId: string; ti
   }
 
   return (
-    <div className="rounded-3xl border border-brand-200 bg-gradient-to-br from-brand-50 to-marigold-50 p-4">
+    <div className="rounded-3xl border border-brand-200 bg-brand-50 p-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-plum-500 to-plum-700 text-white">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-plum-900 text-white">
           <Link2 className="h-5 w-5" />
         </span>
         <div className="min-w-0">

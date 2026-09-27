@@ -245,14 +245,19 @@ function StorySection({
   eyebrow: string
   heading: string
   body: string
-  base: { src: string; alt: string }
-  reveal: { src: string; alt: string }
+  base: { src: string; alt: string; position?: string }
+  reveal: { src: string; alt: string; position?: string }
   mirrored?: boolean
 }) {
   return (
-    <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 sm:px-6 md:grid-cols-2 md:gap-16 md:py-28">
+    <section
+      className={`mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 sm:px-6 md:gap-14 md:py-28 ${
+        mirrored ? 'md:grid-cols-[1fr_1.4fr]' : 'md:grid-cols-[1.4fr_1fr]'
+      }`}
+    >
+      {/* Tall on phones, landscape on wider screens. */}
       <div className={`mx-auto w-full max-w-md md:max-w-none ${mirrored ? 'md:order-2' : ''}`}>
-        <HoverSwap base={base} reveal={reveal} />
+        <HoverSwap base={base} reveal={reveal} className="md:aspect-[4/3]" />
       </div>
       <div className={mirrored ? 'md:order-1' : ''}>
         <FadeUp>
@@ -367,7 +372,11 @@ export default function Landing() {
             eyebrow="For the nights that matter"
             heading="Find yourself a garba partner."
             body="This Navratri, find someone to share the circle with, and make your night a little more special."
-            base={{ src: '/landing/partner-dupatta.webp', alt: "A boy fixing a girl's skirt on the garba ground" }}
+            base={{
+              src: '/landing/partner-dupatta.webp',
+              alt: "A boy fixing a girl's skirt on the garba ground",
+              position: '50% 65%',
+            }}
             reveal={{ src: '/landing/partner-bangle.webp', alt: "A girl's bangle caught on a boy's kurta" }}
           />
 

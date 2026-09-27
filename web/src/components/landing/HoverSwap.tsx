@@ -2,7 +2,9 @@ import { motion, useAnimate, useReducedMotion, useScroll, useTransform } from 'm
 import { useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent } from 'react'
 import { EASE_OUT } from './motion'
 
-type Photo = { src: string; alt: string }
+// `position` is the CSS object-position, for keeping the subject in frame
+// when the frame is wider than the photo.
+type Photo = { src: string; alt: string; position?: string }
 
 const HOVER_QUERY = '(hover: hover) and (pointer: fine)'
 
@@ -108,6 +110,7 @@ export default function HoverSwap({ base, reveal, className = '' }: { base: Phot
           <img
             data-swap="base"
             src={base.src}
+            style={{ objectPosition: base.position }}
             alt=""
             loading="lazy"
             decoding="async"
@@ -122,7 +125,7 @@ export default function HoverSwap({ base, reveal, className = '' }: { base: Phot
             decoding="async"
             draggable={false}
             className="absolute inset-0 h-full w-full select-none object-cover"
-            style={{ clipPath: 'circle(0% at 50% 50%)' }}
+            style={{ clipPath: 'circle(0% at 50% 50%)', objectPosition: reveal.position }}
           />
         </motion.div>
 

@@ -8,7 +8,7 @@ import DiscoverTabs from '../components/DiscoverTabs'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard from '../components/ProfileCard'
 import { Sheet } from '../components/SafetyDialogs'
-import { Button, EmptyState, ErrorText, Skeleton, Tag } from '../components/ui'
+import { Button, EmptyState, ErrorText, Eyebrow, Skeleton, Tag } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { fetchLiveActivity, type Feed, type FeedProfile, type LiveActivity, type MatchResult } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
@@ -231,7 +231,7 @@ export default function Discover() {
         <>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-bold text-neutral-900">{activity?.name ?? 'Discover'}</h1>
+              <h1 className="truncate text-2xl font-extrabold text-neutral-900 lg:text-4xl">{activity?.name ?? 'Discover'}</h1>
               <Link to="/profile" className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-neutral-500">
                 Looking for {seeking}
                 <span className="font-semibold text-brand-700">· Change</span>
@@ -244,84 +244,117 @@ export default function Discover() {
             )}
           </div>
 
-          {/* Fills the space between the header and the buttons, so they stay above the tab bar. */}
-          <div className="relative mt-3 max-h-[36rem] min-h-80 w-full flex-1">
-            {next && (
-              <ProfileCard
-                key={next.id}
-                profile={next}
-                photoIndex={0}
-                className="absolute inset-0 h-full w-full translate-y-2 scale-[0.94] opacity-70"
-              />
-            )}
-            <AnimatePresence custom={dir}>
-              {top && <SwipeCard key={top.id} profile={top} dir={dir} onDecide={decide} />}
-            </AnimatePresence>
+          {/* Phones: the card fills the space between the header and the buttons, so
+              they stay above the tab bar. Desktop: card on the left, profile on the right. */}
+          <div className="mt-3 flex flex-1 flex-col lg:mt-6 lg:grid lg:flex-none lg:grid-cols-[minmax(0,26rem)_1fr] lg:items-start lg:gap-12">
+            <div className="flex flex-1 flex-col">
+              <div className="relative mt-3 max-h-[36rem] min-h-80 w-full flex-1 lg:mt-0 lg:h-[min(40rem,calc(100dvh-22rem))] lg:min-h-[26rem] lg:max-h-none lg:flex-none">
+                {next && (
+                  <ProfileCard
+                    key={next.id}
+                    profile={next}
+                    photoIndex={0}
+                    className="absolute inset-0 h-full w-full translate-y-2 scale-[0.94] opacity-70"
+                  />
+                )}
+                <AnimatePresence custom={dir}>
+                  {top && <SwipeCard key={top.id} profile={top} dir={dir} onDecide={decide} />}
+                </AnimatePresence>
 
-            {!top &&
-              (loading ? (
-                <div className="absolute inset-0 overflow-hidden rounded-[2rem]" role="status" aria-label="Finding people">
-                  <Skeleton className="h-full w-full !rounded-[2rem]" />
-                  <div className="absolute inset-x-5 bottom-6 space-y-2">
-                    <Skeleton className="h-7 w-40 !bg-neutral-300/60" />
-                    <Skeleton className="h-4 w-56 !bg-neutral-300/60" />
+                {!top &&
+                  (loading ? (
+                    <div className="absolute inset-0 overflow-hidden rounded-[2rem]" role="status" aria-label="Finding people">
+                      <Skeleton className="h-full w-full !rounded-[2rem]" />
+                      <div className="absolute inset-x-5 bottom-6 space-y-2">
+                        <Skeleton className="h-7 w-40 !bg-neutral-300/60" />
+                        <Skeleton className="h-4 w-56 !bg-neutral-300/60" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200 bg-surface">
+                      {outOfViews ? (
+                        <EmptyState icon={Hourglass} title="That's everyone for today">
+                          Unverified accounts see a limited number of new profiles a day. Once you're verified, there's no
+                          limit.
+                        </EmptyState>
+                      ) : (
+                        <EmptyState
+                          icon={Sparkles}
+                          title="You've seen everyone for now"
+                          action={
+                            activity && (
+                              <div className="flex flex-col items-center gap-2">
+                                <Button variant="secondary" onClick={() => loadFeed(activity.id)}>
+                                  <RotateCcw className="h-4 w-4" /> Refresh
+                                </Button>
+                                <Link to="/groups" className="text-sm font-semibold text-brand-700">
+                                  Or browse groups →
+                                </Link>
+                              </div>
+                            )
+                          }
+                        >
+                          New people join every day. Check back soon.
+                        </EmptyState>
+                      )}
+                    </div>
+                  ))}
+              </div>
+              <div className="mt-2">
+                <ErrorText>{error}</ErrorText>
+              </div>
+              <div className="mt-3 flex items-center justify-center gap-5">
+                <ActionButton label="Pass" onClick={() => decide(-1)} disabled={!top} className="h-16 w-16 border border-neutral-200 bg-surface text-red-500">
+                  <X className="h-8 w-8" strokeWidth={2.6} />
+                </ActionButton>
+                <ActionButton
+                  label={top ? `About ${top.first_name}` : 'About'}
+                  onClick={() => setAboutOpen(true)}
+                  disabled={!top}
+                  className="h-12 w-12 border border-neutral-200 bg-surface text-neutral-900 lg:hidden"
+                >
+                  <Info className="h-5 w-5" strokeWidth={2.4} />
+                </ActionButton>
+                <ActionButton
+                  label="Like"
+                  onClick={() => decide(1)}
+                  disabled={!top}
+                  className="h-16 w-16 bg-brand-500 text-white shadow-brand-500/30"
+                >
+                  <Heart className="h-8 w-8 fill-current" />
+                </ActionButton>
+              </div>
+            </div>
+
+            <aside className="hidden lg:block" aria-label={top ? `About ${top.first_name}` : undefined}>
+              {top ? (
+                <div key={top.id} className="animate-rise">
+                  <Eyebrow>Up next</Eyebrow>
+                  <div className="mt-2 flex items-center gap-3">
+                    <h2 className="text-4xl font-extrabold text-neutral-900">
+                      {top.first_name}, {top.age}
+                    </h2>
+                    <Tag tone="green">
+                      <BadgeCheck className="h-3.5 w-3.5" /> Verified
+                    </Tag>
                   </div>
+                  <p className="mt-1 font-mono text-xs text-neutral-500">{top.public_code}</p>
+                  <div className="mt-6 max-w-xl">
+                    <AboutView userId={top.id} bio={top.bio} />
+                  </div>
+                  <p className="mt-8 flex items-center gap-2 text-xs text-neutral-500">
+                    <kbd className="rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">←</kbd> pass
+                    <kbd className="ml-2 rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">→</kbd> like
+                    <span className="ml-2">· click the photo to see more</span>
+                  </p>
                 </div>
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200 bg-surface">
-                  {outOfViews ? (
-                    <EmptyState icon={Hourglass} title="That's everyone for today">
-                      Unverified accounts see a limited number of new profiles a day. Once you're verified, there's no
-                      limit.
-                    </EmptyState>
-                  ) : (
-                    <EmptyState
-                      icon={Sparkles}
-                      title="You've seen everyone for now"
-                      action={
-                        activity && (
-                          <div className="flex flex-col items-center gap-2">
-                            <Button variant="secondary" onClick={() => loadFeed(activity.id)}>
-                              <RotateCcw className="h-4 w-4" /> Refresh
-                            </Button>
-                            <Link to="/groups" className="text-sm font-semibold text-brand-700">
-                              Or browse groups →
-                            </Link>
-                          </div>
-                        )
-                      }
-                    >
-                      New people join every day. Check back soon.
-                    </EmptyState>
-                  )}
+                <div className="rounded-[28px] border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
+                  Profiles show up here with everything they've shared: what they're into, the nights they're going,
+                  and a bit about them.
                 </div>
-              ))}
-          </div>
-
-          <div className="mt-2">
-            <ErrorText>{error}</ErrorText>
-          </div>
-
-          <div className="mt-3 flex items-center justify-center gap-5">
-            <ActionButton label="Pass" onClick={() => decide(-1)} disabled={!top} className="h-16 w-16 border border-neutral-200 bg-surface text-red-500">
-              <X className="h-8 w-8" strokeWidth={2.6} />
-            </ActionButton>
-            <ActionButton
-              label={top ? `About ${top.first_name}` : 'About'}
-              onClick={() => setAboutOpen(true)}
-              disabled={!top}
-              className="h-12 w-12 border border-neutral-200 bg-surface text-brand-700"
-            >
-              <Info className="h-5 w-5" strokeWidth={2.4} />
-            </ActionButton>
-            <ActionButton
-              label="Like"
-              onClick={() => decide(1)}
-              disabled={!top}
-              className="h-16 w-16 bg-gradient-to-br from-plum-500 to-plum-700 text-white shadow-plum-600/40"
-            >
-              <Heart className="h-8 w-8 fill-current" />
-            </ActionButton>
+              )}
+            </aside>
           </div>
         </>
       )}

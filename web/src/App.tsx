@@ -48,8 +48,8 @@ export default function App() {
             <Route path="/matches" element={<Matches />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/chat/:id" element={<Chat />} />
           </Route>
-          <Route path="/chat/:id" element={<Chat />} />
         </Route>
         <Route element={<RequireAdmin />}>
           <Route path="/admin" element={<AdminVerification />} />

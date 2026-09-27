@@ -14,7 +14,7 @@ import { supabase } from '../lib/supabase'
 function NewMatches({ matches }: { matches: MatchItem[] }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-3 text-sm font-bold text-neutral-800">New matches</h2>
+      <h2 className="mb-3 text-lg font-bold text-neutral-900">New matches</h2>
       <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
         {matches.map((m) => (
           <li key={m.match_id} className="animate-rise">
@@ -55,12 +55,12 @@ function Row({
             <span className="truncate font-semibold text-neutral-900">{title}</span>
             {tag}
           </span>
-          <span className={`block truncate text-sm ${highlight ? 'font-semibold text-brand-700' : 'text-neutral-500'}`}>{subtitle}</span>
+          <span className={`block truncate text-sm ${highlight ? 'font-semibold text-neutral-900' : 'text-neutral-500'}`}>{subtitle}</span>
         </span>
         <span className="flex shrink-0 flex-col items-end gap-1.5">
           {time && <span className="text-[11px] text-neutral-400">{time}</span>}
           {highlight ? (
-            <span className="h-2.5 w-2.5 rounded-full bg-brand-600" aria-label="Needs attention" />
+            <span className="h-2.5 w-2.5 rounded-full bg-brand-500" aria-label="Needs attention" />
           ) : (
             <ChevronRight className="h-4 w-4 text-neutral-300" />
           )}
@@ -100,9 +100,9 @@ function GroupRow({ group }: { group: MyGroup }) {
     <Row
       to={review ? `/groups/${group.group_id}/manage` : `/chat/${group.conversation_id}`}
       avatar={
-        <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-plum-500 to-plum-700 font-display text-xl font-bold text-white">
+        <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-plum-900 font-display text-xl font-bold text-white">
           {group.title.slice(0, 1).toUpperCase()}
-          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-canvas bg-marigold-400 text-plum-900">
+          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-canvas bg-brand-500 text-white">
             <UsersRound className="h-3 w-3" strokeWidth={2.6} />
           </span>
         </span>
@@ -142,7 +142,7 @@ export default function Matches() {
 
   return (
     <>
-      <PageHeader title="Chats" subtitle="Your socials are shared only with the people here." />
+      <PageHeader eyebrow="Chats" title="Your people" subtitle="Your socials are shared only with the people here." />
 
       <ErrorText>{error}</ErrorText>
       {(!matches || !groups) && !error && (
@@ -174,8 +174,10 @@ export default function Matches() {
       {fresh.length > 0 && <NewMatches matches={fresh} />}
       {threads.length > 0 && (
         <section>
-          <h2 className="mb-1 text-sm font-bold text-neutral-800">Messages</h2>
-          <ul className="-mx-2">{threads.map((t) => t.el)}</ul>
+          <h2 className="mb-2 text-lg font-bold text-neutral-900">Messages</h2>
+          <ul className="-mx-2 lg:mx-0 lg:divide-y lg:divide-neutral-100 lg:rounded-[28px] lg:border lg:border-neutral-200 lg:p-2">
+            {threads.map((t) => t.el)}
+          </ul>
         </section>
       )}
     </>

@@ -188,7 +188,7 @@ export default function Chat() {
 
   if (loadError && !conv) {
     return (
-      <main className="mx-auto max-w-md px-4 pt-6">
+      <main className="mx-auto max-w-md px-4 pt-6 lg:max-w-4xl lg:pt-10">
         <Link to="/matches" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700">
           <ArrowLeft className="h-4 w-4" /> Chats
         </Link>
@@ -208,11 +208,11 @@ export default function Chat() {
   const closed = conv.is_frozen || (!group && !other)
   // Report and block for group members live on the group page.
   const target = other && { userId: other.user_id, name: other.first_name }
-  const meterTone = used >= 0.95 ? 'bg-red-500' : used >= 0.8 ? 'bg-marigold-500' : 'bg-brand-500'
+  const meterTone = used >= 0.95 ? 'bg-red-500' : used >= 0.8 ? 'bg-marigold-500' : 'bg-neutral-900'
 
   return (
-    <div className="mx-auto flex h-dvh max-w-md flex-col bg-canvas">
-      <header className="z-20 flex items-center gap-2 border-b border-neutral-200/70 bg-surface/90 px-2 pb-2 pt-[max(env(safe-area-inset-top),0.5rem)] backdrop-blur-xl">
+    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-canvas md:max-w-2xl lg:max-w-4xl lg:border-x lg:border-neutral-200">
+      <header className="z-20 flex items-center gap-2 border-b border-neutral-200/70 bg-surface/90 px-2 pb-2 pt-[max(env(safe-area-inset-top),0.5rem)] backdrop-blur-xl lg:px-4 lg:py-3">
         <Link
           to="/matches"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100"
@@ -222,7 +222,7 @@ export default function Chat() {
         </Link>
         {group ? (
           <Link to={`/groups/${group.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-1 pr-2 hover:bg-neutral-100">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-plum-500 to-plum-700 font-display font-bold text-white">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-900 font-display font-bold text-white">
               {group.title.slice(0, 1).toUpperCase()}
             </span>
             <span className="min-w-0 flex-1">
@@ -288,7 +288,7 @@ export default function Chat() {
       </header>
 
       {!closed && (
-        <div className="border-b border-neutral-200/70 bg-surface/60 px-4 py-2">
+        <div className="border-b border-neutral-200/70 bg-surface/60 px-4 py-2 lg:px-8">
           <p className="text-xs text-neutral-600" aria-live="polite">
             <strong className="font-semibold text-neutral-900">{remaining}</strong> of {conv.message_cap} shared messages left,
             then continue on socials.
@@ -302,7 +302,7 @@ export default function Chat() {
         </div>
       )}
 
-      <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3">
+      <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3 lg:px-8 lg:py-6">
         {hasMore && (
           <div className="mb-3 text-center">
             <Button variant="ghost" className="px-3 py-1.5 text-sm" onClick={loadOlder} loading={loadingOlder}>
@@ -315,7 +315,7 @@ export default function Chat() {
             {other ? (
               <Avatar path={other.photo_path} name={other.first_name} className="h-20 w-20 text-2xl" ring />
             ) : (
-              <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-plum-500 to-plum-700 text-white">
+              <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-plum-900 text-white">
                 <UsersRound className="h-9 w-9" />
               </span>
             )}
@@ -323,7 +323,7 @@ export default function Chat() {
               Say hi{group ? ' to the group' : other ? ` to ${other.first_name}` : ''} 👋
             </p>
             <p className="mt-1 text-sm text-neutral-500">Plan where you'll meet for Garba. Tap one to start:</p>
-            <div className="mt-4 flex w-full flex-col gap-2">
+            <div className="mt-4 flex w-full max-w-md flex-col gap-2">
               {ICEBREAKERS.map((t) => (
                 <button
                   key={t}
@@ -332,7 +332,7 @@ export default function Chat() {
                     setDraft(t)
                     inputRef.current?.focus()
                   }}
-                  className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-left text-sm font-medium text-brand-800 transition hover:border-brand-300 active:scale-[0.98]"
+                  className="rounded-2xl border border-neutral-200 bg-surface px-4 py-2.5 text-left text-sm font-medium text-neutral-800 transition hover:border-neutral-900 active:scale-[0.98]"
                 >
                   {t}
                 </button>
@@ -363,14 +363,14 @@ export default function Chat() {
                   </span>
                 )}
                 <div
-                  className={`max-w-[80%] whitespace-pre-wrap break-words rounded-3xl px-4 py-2 text-[15px] leading-snug ${corner} ${
+                  className={`max-w-[80%] lg:max-w-[60%] whitespace-pre-wrap break-words rounded-3xl px-4 py-2 text-[15px] leading-snug ${corner} ${
                     mine
-                      ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-sm shadow-brand-600/20'
+                      ? 'bg-ink text-on-ink'
                       : 'border border-neutral-200/80 bg-surface text-neutral-900 shadow-sm'
                   }`}
                 >
                   {m.body}
-                  <span className={`ml-2 inline-block translate-y-0.5 text-[10px] ${mine ? 'text-white/70' : 'text-neutral-400'}`}>
+                  <span className={`ml-2 inline-block translate-y-0.5 text-[10px] ${mine ? 'text-on-ink/60' : 'text-neutral-400'}`}>
                     {time(m.created_at)}
                   </span>
                 </div>
@@ -380,7 +380,7 @@ export default function Chat() {
         </ul>
       </div>
 
-      <div className="border-t border-neutral-200/70 bg-surface/90 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl">
+      <div className="border-t border-neutral-200/70 bg-surface/90 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:px-8 lg:pb-5 lg:pt-4">
         {closed ? (
           <p className="flex items-center justify-center gap-2 rounded-2xl bg-neutral-100 px-4 py-3 text-center text-sm text-neutral-600">
             <Lock className="h-4 w-4" />
@@ -442,14 +442,14 @@ export default function Chat() {
                 maxLength={MAX_MESSAGE_LENGTH}
                 rows={1}
                 placeholder="Message"
-                className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:border-brand-500 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-100"
+                className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-neutral-200"
               />
               <motion.button
                 type="submit"
                 whileTap={{ scale: 0.85 }}
                 disabled={!draft.trim() || sending}
                 aria-label="Send"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md shadow-brand-600/30 transition disabled:opacity-40"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-on-ink shadow-md shadow-black/10 transition disabled:opacity-40"
               >
                 {sending ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

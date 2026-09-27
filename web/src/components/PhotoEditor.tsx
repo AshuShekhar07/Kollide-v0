@@ -164,7 +164,7 @@ export default function PhotoEditor({
               {busy === 'upload' ? (
                 <span className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md shadow-brand-600/30">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-on-ink shadow-md shadow-black/10">
                   <ImagePlus className="h-5 w-5" />
                 </span>
               )}
