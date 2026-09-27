@@ -5,6 +5,7 @@ import { useShell } from '../../components/AppShell'
 import { Sheet } from '../../components/SafetyDialogs'
 import { BackLink } from '../../components/BackLink'
 import { Capacity } from '../../components/GroupBits'
+import InviteLinkCard from '../../components/InviteLinkCard'
 import { Button, ErrorText, PageHeader, Section, Spinner, Tag } from '../../components/ui'
 import { useAuth } from '../../lib/auth-context'
 import { markNotificationsRead } from '../../lib/discovery'
@@ -21,6 +22,11 @@ function PersonRow({ person, children }: { person: InterestedPerson; children: R
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-neutral-900">
             {person.first_name}, {person.age}
+            {person.via_link && person.status === 'requested' && (
+              <Tag tone="brand" className="ml-2">
+                Via your link
+              </Tag>
+            )}
             {person.seeking === 'group' && (
               <Tag tone="marigold" className="ml-2">
                 Wants a group
@@ -113,6 +119,12 @@ export default function ManageGroup() {
       {error && (
         <div className="mt-3">
           <ErrorText>{error}</ErrorText>
+        </div>
+      )}
+
+      {!full && (
+        <div className="mt-5">
+          <InviteLinkCard groupId={group.id} title={group.title} />
         </div>
       )}
 

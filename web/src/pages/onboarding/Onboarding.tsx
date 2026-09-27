@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import BangaloreCheck from '../../components/BangaloreCheck'
+import PendingInviteBanner from '../../components/PendingInviteBanner'
 import { ErrorText, FullScreenSpinner, Logo } from '../../components/ui'
 import { homePathFor, useAuth } from '../../lib/auth-context'
+import { startPathFor } from '../../lib/invite'
 import { friendlyError } from '../../lib/errors'
 import { supabase } from '../../lib/supabase'
 import type { Activity, Photo, Profile, ProfilePrivate } from '../../lib/types'
@@ -17,7 +19,7 @@ export type VideoSummary = { status: string; reject_reason: string | null; creat
 
 export type OnboardingData = {
   profile: Profile
-  contact: Pick<ProfilePrivate, 'phone' | 'socials'> | null
+  contact: Pick<ProfilePrivate, 'phone' | 'socials' | 'full_name'> | null
   photos: Photo[]
   activities: Activity[]
   selectedActivityIds: string[]
@@ -36,7 +38,7 @@ const VERIFY = STEPS.length - 1
 
 function firstIncompleteStep(d: OnboardingData): number {
   const p = d.profile
-  if (!p.first_name || !p.dob || !p.gender || !p.seeking || !p.gender_preference?.length || !p.consent_at) return 0
+  if (!p.first_name || !d.contact?.full_name || !p.dob || !p.gender || !p.seeking || !p.gender_preference?.length || !p.consent_at) return 0
   if (d.photos.length < 2) return 1
   if ((p.bio ?? '').trim().length < 10) return 2
   if (!d.contact?.phone || !Object.keys((d.contact.socials as object) ?? {}).length) return 3
@@ -56,7 +58,7 @@ export default function Onboarding() {
     if (!uid) return
     const [own, contact, photos, activities, selected, videos] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
-      supabase.from('profile_private').select('phone, socials').eq('user_id', uid).maybeSingle(),
+      supabase.from('profile_private').select('phone, socials, full_name').eq('user_id', uid).maybeSingle(),
       supabase.from('photos').select('*').eq('user_id', uid).order('position'),
       supabase.from('activities').select('*').order('sort_order'),
       supabase.from('user_activities').select('activity_id').eq('user_id', uid),
@@ -95,7 +97,7 @@ export default function Onboarding() {
     await Promise.all([load(), refreshProfile()])
   }, [load, refreshProfile])
 
-  if (profile && homePathFor(profile) === '/discover') return <Navigate to="/discover" replace />
+  if (profile && homePathFor(profile) === '/discover') return <Navigate to={startPathFor(profile)} replace />
   if (error) {
     return (
       <main className="mx-auto max-w-md px-4 py-10">
@@ -145,6 +147,7 @@ export default function Onboarding() {
       </header>
 
       <div className="mt-6">
+        <PendingInviteBanner />
         <BangaloreCheck />
       </div>
       <div key={current} className="mt-2 animate-rise">

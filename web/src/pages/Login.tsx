@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { MailCheck, MapPin } from 'lucide-react'
 import { Button, ErrorText, Field, FullScreenSpinner, inputClass, Logo } from '../components/ui'
-import { homePathFor, useAuth } from '../lib/auth-context'
+import { useAuth } from '../lib/auth-context'
+import { startPathFor } from '../lib/invite'
 import { friendlyError } from '../lib/errors'
 import { supabase } from '../lib/supabase'
 
@@ -33,7 +34,7 @@ export default function Login() {
   const [error, setError] = useState('')
 
   if (loading) return <FullScreenSpinner />
-  if (session && profile) return <Navigate to={homePathFor(profile)} replace />
+  if (session && profile) return <Navigate to={startPathFor(profile)} replace />
 
   async function signInWithGoogle() {
     setError('')

@@ -6,6 +6,7 @@ import Avatar from '../../components/Avatar'
 import { BlockDialog, ReportDialog, Sheet } from '../../components/SafetyDialogs'
 import { BackLink } from '../../components/BackLink'
 import { Capacity, DateChip } from '../../components/GroupBits'
+import InviteLinkCard from '../../components/InviteLinkCard'
 import { Button, LinkButton, ErrorText, Skeleton, Tag } from '../../components/ui'
 import { useAuth } from '../../lib/auth-context'
 import { friendlyError } from '../../lib/errors'
@@ -116,6 +117,11 @@ export default function GroupDetail() {
               <span className="rounded-full bg-marigold-500 px-2 text-xs leading-5 text-white">{group.pending_requests}</span>
             )}
           </LinkButton>
+        )}
+        {isAdmin && group.status === 'open' && (
+          <div className="pt-2">
+            <InviteLinkCard groupId={group.id} title={group.title} />
+          </div>
         )}
       </div>
     )

@@ -2,7 +2,8 @@ import { LogIn } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { LinkButton, EmptyState, FullScreenSpinner } from '../components/ui'
-import { homePathFor, useAuth } from '../lib/auth-context'
+import { useAuth } from '../lib/auth-context'
+import { startPathFor } from '../lib/invite'
 
 // Google redirects here with ?code=…; supabase-js exchanges it automatically
 // (detectSessionInUrl + PKCE), then the auth listener delivers the session.
@@ -17,7 +18,7 @@ export default function AuthCallback() {
     return () => clearTimeout(t)
   }, [])
 
-  if (session && !loading) return <Navigate to={homePathFor(profile)} replace />
+  if (session && !loading) return <Navigate to={startPathFor(profile)} replace />
 
   if (oauthError || timedOut) {
     return (

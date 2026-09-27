@@ -3,11 +3,17 @@ import StepHeader from '../../components/StepHeader'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Choice, ErrorText, Field, inputClass } from '../../components/ui'
+import { useAuth } from '../../lib/auth-context'
 import { friendlyError } from '../../lib/errors'
 import { GENDERS, PREFERENCE_LABELS, SEEKING_OPTIONS } from '../../lib/profile-options'
 import { supabase } from '../../lib/supabase'
 import type { Gender, Seeking } from '../../lib/types'
 import type { StepProps } from './Onboarding'
+
+// Matches save_basics: the first word is the public first name.
+function firstFrom(fullName: string) {
+  return fullName.trim().split(/\s+/)[0] ?? ''
+}
 
 function isoDate(d: Date) {
   return d.toISOString().slice(0, 10)
@@ -15,7 +21,10 @@ function isoDate(d: Date) {
 
 export default function BasicsStep({ data, reload, onNext }: StepProps) {
   const p = data.profile
-  const [firstName, setFirstName] = useState(p.first_name ?? '')
+  const { session } = useAuth()
+  // Google sign-ins come with a name we can suggest.
+  const googleName = session?.user.user_metadata?.full_name as string | undefined
+  const [fullName, setFullName] = useState(data.contact?.full_name ?? googleName ?? p.first_name ?? '')
   const [dob, setDob] = useState(p.dob ?? '')
   const [gender, setGender] = useState<Gender | null>(p.gender)
   const [seeking, setSeeking] = useState<Seeking | null>(p.seeking)
@@ -38,7 +47,7 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
     if (!prefs.length) return setError("Please choose who you'd like to meet")
     setSaving(true)
     const { error } = await supabase.rpc('save_basics', {
-      p_first_name: firstName,
+      p_full_name: fullName,
       p_dob: dob,
       p_gender: gender,
       p_seeking: seeking,
@@ -60,13 +69,21 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
         Only your first name and age are shown on your profile.
       </StepHeader>
 
-      <Field label="First name">
+      <Field
+        label="Full name"
+        hint={
+          firstFrom(fullName)
+            ? `Your profile shows “${firstFrom(fullName)}”. Your full name stays private and helps us verify you.`
+            : 'As on your ID. Only your first name is shown on your profile.'
+        }
+      >
         <input
           required
-          maxLength={50}
-          autoComplete="given-name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
+          maxLength={80}
+          autoComplete="name"
+          placeholder="e.g. Priya Sharma"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
           className={inputClass}
         />
       </Field>

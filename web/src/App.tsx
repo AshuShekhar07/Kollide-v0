@@ -10,6 +10,7 @@ import AuthCallback from './pages/AuthCallback'
 import Chat from './pages/Chat'
 import Discover from './pages/Discover'
 import GroupDetail from './pages/groups/GroupDetail'
+import JoinGroup from './pages/JoinGroup'
 import Groups from './pages/groups/Groups'
 import ManageGroup from './pages/groups/ManageGroup'
 import NewGroup from './pages/groups/NewGroup'
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/start" element={<StartRedirect />} />
+      <Route path="/join/:token" element={<JoinGroup />} />
 
       <Route element={<RequireAuth />}>
         <Route path="/onboarding" element={<Onboarding />} />

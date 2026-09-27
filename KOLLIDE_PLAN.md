@@ -146,7 +146,7 @@ All IDs are `uuid`. All timestamps are `timestamptz` with a default of `now()`. 
 - `onboarding_complete` (bool)
 - `created_at`
 
-**`profile_private`** holds details only the user and admins can read directly. Matched users see socials only through `get_contact()`.
+**`profile_private`** holds details only the user and admins can read directly, including `full_name` (asked at signup; its first word becomes the public `first_name`). Matched users see socials only through `get_contact()`.
 - `user_id` (PK, FK)
 - `email`
 - `phone`
@@ -394,7 +394,13 @@ For unverified callers, the function also enforces the daily view limit using `p
 
 **`remove_member(group_id, user_id)`** — admin only.
 
-**`get_group_interested(group_id)`** — admin only. Lists users with pending requests, plus approved users who marked this activity (so the admin has people to invite).
+**`get_group_interested(group_id)`** — admin only. Lists users with pending requests, plus approved users who marked this activity (so the admin has people to invite). Also returns `via_link`, so requests that came through the invite link are marked.
+
+**Invite links** *(added Sep 27)*. The admin can share a link `/join/<token>`. Tokens live in `group_invite_links`, which has no client access.
+- `get_group_invite_link(group_id)` / `reset_group_invite_link(group_id)`: admin only. Returns the token, creating it on first use; reset replaces it so the old link stops working.
+- `get_group_invite(token)`: open to anyone with the link, including signed-out visitors. Returns a preview (title, activity, date, member count, admin first name) with no venue or description. The group id and the caller's status are returned only to verified users.
+- `request_join_by_link(token)`: the same rules as `request_join`, with the request marked `via_link`. The admin still approves.
+- Signed-out or unverified visitors keep the token on their device through sign-up and verification, and the app brings them back to the link once they can ask to join.
 
 ### 5.4 Chat
 
@@ -507,7 +513,8 @@ For unverified callers, the function also enforces the daily view limit using `p
   - **`/groups`:** browse open groups for the activity.
   - **`/groups/new`:** create a group.
   - **`/groups/:id`:** details, a request-to-join button, and the member list (public codes and first names only until approved).
-  - **`/groups/:id/manage`** (admin): requests, invites, interested users, and member removal.
+  - **`/groups/:id/manage`** (admin): the invite link, requests, invites, interested users, and member removal.
+  - **`/join/:token`** (public): an invite link's group preview and the next step (sign up, finish verification, or ask to join).
 - **`/profile`:** edit profile (built so far: "looking for" and gender preference, via `update_preferences`); view verification status.
 - **`/settings`:** blocked users, notification preferences, delete account, logout.
 - **Report flow (modal):** reason, details, a consent checkbox (required), and helpline info for safety threats.

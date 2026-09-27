@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { homePathFor, useAuth } from '../lib/auth-context'
+import { startPathFor } from '../lib/invite'
 import { FullScreenSpinner } from './ui'
 
 export function RequireAuth() {
@@ -28,5 +29,5 @@ export function RequireAdmin() {
 export function StartRedirect() {
   const { loading, profile, session } = useAuth()
   if (loading) return <FullScreenSpinner />
-  return <Navigate to={session ? homePathFor(profile) : '/login'} replace />
+  return <Navigate to={session ? startPathFor(profile) : '/login'} replace />
 }

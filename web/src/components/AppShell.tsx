@@ -5,7 +5,9 @@ import { Link, NavLink, Outlet, useLocation, useOutletContext } from 'react-rout
 import { useAuth } from '../lib/auth-context'
 import { supabase } from '../lib/supabase'
 import BangaloreCheck from './BangaloreCheck'
+import Avatar from './Avatar'
 import InstallPrompt from './InstallPrompt'
+import PendingInviteBanner from './PendingInviteBanner'
 import { Logo } from './ui'
 
 type ShellContext = { refreshBadges: () => Promise<void> }
@@ -27,7 +29,22 @@ export default function AppShell() {
   const { profile } = useAuth()
   const location = useLocation()
   const [badges, setBadges] = useState({ likes: 0, matches: 0 })
+  const [photo, setPhoto] = useState<string | null>(null)
   const uid = profile?.id
+
+  // The first photo is the profile picture. Re-read on navigation so a
+  // reorder on /profile shows up straight away.
+  useEffect(() => {
+    if (!uid) return
+    supabase
+      .from('photos')
+      .select('storage_path')
+      .eq('user_id', uid)
+      .order('position')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setPhoto(data?.storage_path ?? null))
+  }, [uid, location.pathname])
 
   const refreshBadges = useCallback(async () => {
     const [likes, invites, matches, groups] = await Promise.all([
@@ -80,9 +97,7 @@ export default function AppShell() {
           to="/profile"
           className="flex items-center gap-2 rounded-full border border-neutral-200 bg-surface py-1 pl-1 pr-3 shadow-sm transition active:scale-95"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-marigold-400 to-brand-500 text-xs font-bold text-white">
-            {profile?.first_name?.slice(0, 1)}
-          </span>
+          <Avatar path={photo} name={profile?.first_name ?? ''} className="h-7 w-7 text-xs" />
           <span className="font-mono text-xs font-medium text-neutral-600">{profile?.public_code}</span>
         </Link>
       </header>
@@ -90,6 +105,7 @@ export default function AppShell() {
       <div className="flex flex-1 flex-col px-4 pb-28 pt-2">
         <BangaloreCheck />
         <InstallPrompt />
+        <PendingInviteBanner />
         <Outlet context={{ refreshBadges } satisfies ShellContext} />
       </div>
 

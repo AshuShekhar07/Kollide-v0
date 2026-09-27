@@ -183,15 +183,34 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"group_members": {
+                },"group_invite_links": {
                   Row: {
-                    "approved_at": string | null,"created_at": string,"group_id": string,"role": Database["public"]['Enums']["group_role"],"status": Database["public"]['Enums']["group_member_status"],"user_id": string
+                    "created_at": string,"group_id": string,"token": string
                   }
                   Insert: {
-                    "approved_at"?: string | null,"created_at"?: string,"group_id": string,"role"?: Database["public"]['Enums']["group_role"],"status": Database["public"]['Enums']["group_member_status"],"user_id": string
+                    "created_at"?: string,"group_id": string,"token": string
                   }
                   Update: {
-                    "approved_at"?: string | null,"created_at"?: string,"group_id"?: string,"role"?: Database["public"]['Enums']["group_role"],"status"?: Database["public"]['Enums']["group_member_status"],"user_id"?: string
+                    "created_at"?: string,"group_id"?: string,"token"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "group_invite_links_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: true
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"group_members": {
+                  Row: {
+                    "approved_at": string | null,"created_at": string,"group_id": string,"role": Database["public"]['Enums']["group_role"],"status": Database["public"]['Enums']["group_member_status"],"user_id": string,"via_link": boolean
+                  }
+                  Insert: {
+                    "approved_at"?: string | null,"created_at"?: string,"group_id": string,"role"?: Database["public"]['Enums']["group_role"],"status": Database["public"]['Enums']["group_member_status"],"user_id": string,"via_link"?: boolean
+                  }
+                  Update: {
+                    "approved_at"?: string | null,"created_at"?: string,"group_id"?: string,"role"?: Database["public"]['Enums']["group_role"],"status"?: Database["public"]['Enums']["group_member_status"],"user_id"?: string,"via_link"?: boolean
                   }
                   Relationships: [
                     {
@@ -360,13 +379,13 @@ isOneToOne: false
                   ]
                 },"profile_private": {
                   Row: {
-                    "email": string | null,"phone": string | null,"socials": NonNullable<Json>,"user_id": string
+                    "email": string | null,"full_name": string | null,"phone": string | null,"socials": NonNullable<Json>,"user_id": string
                   }
                   Insert: {
-                    "email"?: string | null,"phone"?: string | null,"socials"?: NonNullable<Json>,"user_id": string
+                    "email"?: string | null,"full_name"?: string | null,"phone"?: string | null,"socials"?: NonNullable<Json>,"user_id": string
                   }
                   Update: {
-                    "email"?: string | null,"phone"?: string | null,"socials"?: NonNullable<Json>,"user_id"?: string
+                    "email"?: string | null,"full_name"?: string | null,"phone"?: string | null,"socials"?: NonNullable<Json>,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -607,8 +626,14 @@ isOneToOne: false
                            },
 "get_group_interested":
 { Args: { "p_group_id": string }; Returns: {
-              "age": number,"bio": string,"first_name": string,"photo_paths": (string)[],"public_code": string,"seeking": Database["public"]['Enums']["seeking"],"since": string,"status": Database["public"]['Enums']["group_member_status"],"user_id": string
+              "age": number,"bio": string,"first_name": string,"photo_paths": (string)[],"public_code": string,"seeking": Database["public"]['Enums']["seeking"],"since": string,"status": Database["public"]['Enums']["group_member_status"],"user_id": string,"via_link": boolean
             }[]
+                           },
+"get_group_invite":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"get_group_invite_link":
+{ Args: { "p_group_id": string }; Returns: string
                            },
 "get_group_invites":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -670,6 +695,12 @@ isOneToOne: false
 "request_join":
 { Args: { "p_group_id": string }; Returns: Database["public"]['Enums']["group_member_status"]
                            },
+"request_join_by_link":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"reset_group_invite_link":
+{ Args: { "p_group_id": string }; Returns: string
+                           },
 "respond_invite":
 { Args: { "p_accept": boolean,"p_group_id": string }; Returns: undefined
                            },
@@ -683,7 +714,7 @@ isOneToOne: false
 { Args: { "p_answers": Json,"p_bio": string }; Returns: undefined
                            },
 "save_basics":
-{ Args: { "p_consent": boolean,"p_dob": string,"p_first_name": string,"p_gender": Database["public"]['Enums']["gender"],"p_gender_preference": (Database["public"]['Enums']["gender"])[],"p_seeking": Database["public"]['Enums']["seeking"] }; Returns: undefined
+{ Args: { "p_consent": boolean,"p_dob": string,"p_full_name": string,"p_gender": Database["public"]['Enums']["gender"],"p_gender_preference": (Database["public"]['Enums']["gender"])[],"p_seeking": Database["public"]['Enums']["seeking"] }; Returns: undefined
                            },
 "save_contact":
 { Args: { "p_phone": string,"p_socials": Json }; Returns: undefined
