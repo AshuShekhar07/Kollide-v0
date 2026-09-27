@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import AboutView from '../../components/AboutView'
 import { useShell } from '../../components/AppShell'
 import { Sheet } from '../../components/SafetyDialogs'
 import { Button, ErrorText, Spinner } from '../../components/ui'
@@ -35,7 +36,9 @@ function PersonRow({ person, children }: { person: InterestedPerson; children: R
             )}
           </p>
           <p className="font-mono text-xs text-neutral-500">{person.public_code}</p>
-          {person.bio && <p className="mt-1 line-clamp-3 text-sm text-neutral-600">{person.bio}</p>}
+          <div className="mt-1">
+            <AboutView userId={person.user_id} bio={person.bio} compact />
+          </div>
         </div>
       </div>
       <div className="mt-2 flex justify-end gap-2">{children}</div>

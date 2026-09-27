@@ -43,7 +43,10 @@ Deno.serve(async (req) => {
   const { data: signed, error: signError } = await db.storage
     .from('verification-videos')
     .createSignedUrl(video.storage_path, SIGNED_URL_TTL_SECONDS)
-  if (signError || !signed) return json({ error: 'Could not load video' }, 500, cors)
+  // The row exists but the file doesn't (e.g. the upload never finished).
+  if (signError || !signed) {
+    return json({ error: 'The video file is missing. Reject with a reason so they can record it again.' }, 404, cors)
+  }
 
   // Locally SUPABASE_URL is the internal Docker host (kong); rewrite for the
   // browser. Hosted URLs are already public and are never rewritten.

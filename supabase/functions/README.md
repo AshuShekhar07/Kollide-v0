@@ -3,7 +3,13 @@
 | Function | Called by | Auth |
 |---|---|---|
 | `admin-video-url` | Admin UI (`supabase.functions.invoke`) | User JWT; caller must be in `admins`. Logs `view_video` before returning a 5-minute signed URL. |
-| `send-email` | `email_outbox` insert trigger via `pg_net` | `x-kollide-secret` header (`verify_jwt = false`) |
+| `send-email` | `email_outbox` insert trigger via `pg_net`; `retry-emails` cron every 15 min | `x-kollide-secret` header (`verify_jwt = false`) |
+| `cleanup-videos` | `cleanup-videos` cron, hourly | `x-kollide-secret` header (`verify_jwt = false`). Deletes video files past `delete_after` through the Storage API. |
+| `delete-account` | Settings → Delete account (`supabase.functions.invoke`) | User JWT. Deletes the caller's photos, any unreviewed video, then the auth user. |
+
+The cron jobs (migration `20261003000001_hardening`) reach functions through the same Vault
+secrets as the email trigger: the functions base URL comes from `send_email_url`, and
+`email_hook_secret` is sent as `x-kollide-secret`. No extra secrets are needed.
 
 ## Local
 
@@ -17,7 +23,9 @@ Vault secrets. Emails land in Mailpit at http://127.0.0.1:54324.
 
    ```bash
    supabase functions deploy admin-video-url
+   supabase functions deploy delete-account
    supabase functions deploy send-email --no-verify-jwt
+   supabase functions deploy cleanup-videos --no-verify-jwt
    ```
 
 2. **Set function secrets.** Generate the hook secret with `openssl rand -hex 32`. For Gmail, use an
@@ -54,4 +62,22 @@ Vault secrets. Emails land in Mailpit at http://127.0.0.1:54324.
 ```sql
 select status, attempts, last_error, created_at from email_outbox order by created_at desc limit 10;
 select status_code, content, error_msg from net._http_response order by created desc limit 10;
+```
+
+## Testing the cleanup job
+
+Locally, after adding a new function, restart the stack (`supabase stop && supabase start`) so the
+edge runtime picks it up. Then upload a file to `verification-videos`, insert a
+`verification_videos` row pointing at it with `delete_after` in the past, and run:
+
+```sql
+select private.call_edge_function('cleanup-videos');
+select status_code, content from net._http_response order by created desc limit 1;  -- {"deleted":1}
+```
+
+The row gets `deleted_at` and the file returns 400/404 from Storage. Hosted, check the job history:
+
+```sql
+select jobname, status, return_message, start_time from cron.job_run_details
+join cron.job using (jobid) order by start_time desc limit 10;
 ```

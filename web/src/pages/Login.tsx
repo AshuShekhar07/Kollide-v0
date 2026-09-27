@@ -26,7 +26,7 @@ export default function Login() {
   const [error, setError] = useState('')
 
   if (loading) return <FullScreenSpinner />
-  if (session) return <Navigate to={homePathFor(profile)} replace />
+  if (session && profile) return <Navigate to={homePathFor(profile)} replace />
 
   async function signInWithGoogle() {
     setError('')
@@ -71,6 +71,9 @@ export default function Login() {
       </Link>
       <h1 className="mt-6 text-2xl font-bold text-neutral-900">Sign in or create an account</h1>
       <p className="mt-1 text-neutral-600">Find your Garba friends or group.</p>
+      <p className="mt-3 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+        📍 Bangalore only, for now
+      </p>
 
       <div className="mt-8 space-y-4">
         <Button variant="secondary" className="w-full" onClick={signInWithGoogle} loading={busy === 'google'}>

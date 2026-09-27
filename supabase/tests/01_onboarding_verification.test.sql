@@ -85,6 +85,7 @@ select throws_ok('select public.complete_onboarding()', '22023', 'Please add at 
 insert into public.photos (user_id, storage_path, position) values
   (auth.uid(), auth.uid() || '/p0.jpg', 0),
   (auth.uid(), auth.uid() || '/p1.jpg', 1);
+select public.save_about('Test user who loves Garba.', '[]');
 
 select throws_ok('select public.complete_onboarding()', '22023', 'Please pick at least one activity',
                  'needs an activity');
@@ -114,6 +115,7 @@ begin
   perform pg_temp.login_as(uid);
   perform public.save_basics('Test', '1999-05-05', 'man', 'group', '{woman}', true);
   perform public.save_contact(phone, socials);
+  perform public.save_about('Test user who loves Garba.', '[]');
   insert into public.photos (user_id, storage_path, position) values
     (uid, uid || '/p0.jpg', 0), (uid, uid || '/p1.jpg', 1);
   insert into public.user_activities (user_id, activity_id)

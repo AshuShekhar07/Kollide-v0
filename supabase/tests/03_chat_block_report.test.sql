@@ -46,7 +46,7 @@ language plpgsql as $$
 begin
   insert into auth.users (id, email, aud, role) values (p_id, p_email, 'authenticated', 'authenticated');
   update public.profiles set first_name = 'New', dob = '2000-01-01', gender = 'woman',
-    gender_preference = '{man}', seeking = 'friend', consent_at = now()
+    gender_preference = '{man}', seeking = 'friend', consent_at = now(), bio = 'New here, loves Garba.'
   where id = p_id;
   update public.profile_private set phone = p_phone, socials = jsonb_build_object('instagram', p_insta)
   where user_id = p_id;

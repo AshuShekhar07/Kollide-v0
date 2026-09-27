@@ -29,10 +29,13 @@ export default function ProfileCard({
   profile,
   photoIndex,
   className = '',
+  hideBio = false,
 }: {
   profile: CardProfile
   photoIndex: number
   className?: string
+  // When the full intro is shown below the card instead.
+  hideBio?: boolean
 }) {
   const urls = useSignedPhotos(profile.photo_paths)
   const count = Math.max(profile.photo_paths.length, 1)
@@ -64,7 +67,7 @@ export default function ProfileCard({
           </span>
           <span className="rounded-full bg-white/20 px-2 py-0.5 font-mono text-xs">{profile.public_code}</span>
         </p>
-        {profile.bio && <p className="mt-1 line-clamp-3 text-sm text-white/90">{profile.bio}</p>}
+        {profile.bio && !hideBio && <p className="mt-1 line-clamp-3 text-sm text-white/90">{profile.bio}</p>}
       </div>
     </div>
   )

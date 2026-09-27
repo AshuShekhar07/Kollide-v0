@@ -1,10 +1,12 @@
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import AboutView from '../components/AboutView'
 import { useShell } from '../components/AppShell'
 import DiscoverTabs from '../components/DiscoverTabs'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard from '../components/ProfileCard'
+import { Sheet } from '../components/SafetyDialogs'
 import { Button, ErrorText, Spinner } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { fetchLiveActivity, type Feed, type FeedProfile, type LiveActivity, type MatchResult } from '../lib/discovery'
@@ -119,6 +121,7 @@ export default function Discover() {
   const [error, setError] = useState('')
   const [dir, setDir] = useState<Dir>(1)
   const [matchName, setMatchName] = useState<string | null>(null)
+  const [aboutOpen, setAboutOpen] = useState(false)
 
   // Swipes are sent in the background; the next feed fetch waits for them so
   // the server never re-serves someone we just swiped.
@@ -190,13 +193,13 @@ export default function Discover() {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (matchName || (e.target as HTMLElement)?.closest('input, textarea')) return
+      if (matchName || aboutOpen || (e.target as HTMLElement)?.closest('input, textarea')) return
       if (e.key === 'ArrowLeft') decide(-1)
       if (e.key === 'ArrowRight') decide(1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [decide, matchName])
+  }, [decide, matchName, aboutOpen])
 
   const top = queue[0]
   const next = queue[1]
@@ -279,6 +282,15 @@ export default function Discover() {
             </button>
             <button
               type="button"
+              onClick={() => setAboutOpen(true)}
+              disabled={!top}
+              aria-label={top ? `About ${top.first_name}` : 'About'}
+              className="flex h-12 w-12 items-center justify-center self-center rounded-full border border-neutral-200 bg-white text-lg font-bold text-brand-700 shadow-md transition hover:scale-105 disabled:opacity-40"
+            >
+              i
+            </button>
+            <button
+              type="button"
               onClick={() => decide(1)}
               disabled={!top}
               aria-label="Like"
@@ -290,6 +302,17 @@ export default function Discover() {
         </>
       )}
 
+      {aboutOpen && top && (
+        <Sheet label={`About ${top.first_name}`} onClose={() => setAboutOpen(false)}>
+          <h2 className="mb-3 text-lg font-bold text-neutral-900">
+            {top.first_name}, {top.age}
+          </h2>
+          <AboutView userId={top.id} bio={top.bio} />
+          <Button variant="secondary" className="mt-4 w-full" onClick={() => setAboutOpen(false)}>
+            Close
+          </Button>
+        </Sheet>
+      )}
       {matchName && <MatchDialog name={matchName} onClose={() => setMatchName(null)} />}
     </>
   )

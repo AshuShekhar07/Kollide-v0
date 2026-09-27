@@ -1,10 +1,13 @@
-import { useState, type FormEvent } from 'react'
-import { Button, Choice, ErrorText } from '../components/ui'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
+import AboutEditor from '../components/AboutEditor'
+import PhotoEditor from '../components/PhotoEditor'
+import { Button, Choice, ErrorText, Spinner } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { friendlyError } from '../lib/errors'
 import { GENDERS, PREFERENCE_LABELS, SEEKING_OPTIONS } from '../lib/profile-options'
 import { supabase } from '../lib/supabase'
-import type { Gender, Seeking } from '../lib/types'
+import type { Gender, Photo, Seeking } from '../lib/types'
 
 const STATUS_COPY: Record<string, { label: string; className: string }> = {
   approved: { label: 'Verified', className: 'bg-green-100 text-green-800' },
@@ -18,6 +21,18 @@ export default function Profile() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [photos, setPhotos] = useState<Photo[] | null>(null)
+  const uid = profile?.id
+
+  const loadPhotos = useCallback(async () => {
+    if (!uid) return
+    const { data } = await supabase.from('photos').select('*').eq('user_id', uid).order('position')
+    setPhotos(data ?? [])
+  }, [uid])
+
+  useEffect(() => {
+    loadPhotos()
+  }, [loadPhotos])
 
   if (!profile) return null
   const status = STATUS_COPY[profile.verification_status]
@@ -52,7 +67,22 @@ export default function Profile() {
         {status && <span className={`rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}>{status.label}</span>}
       </div>
 
-      <form onSubmit={save} className="mt-6 space-y-6">
+      <section className="mt-6">
+        <h2 className="text-sm font-semibold text-neutral-800">Your photos</h2>
+        <p className="mb-3 mt-0.5 text-xs text-neutral-500">
+          2–6 photos of you; the first is your main one.
+          {profile.verification_status === 'approved' && ' New photos are checked by our team against your verification video.'}
+        </p>
+        {photos ? <PhotoEditor uid={profile.id} photos={photos} reload={loadPhotos} /> : <Spinner />}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-semibold text-neutral-800">About you</h2>
+        <AboutEditor uid={profile.id} bio={profile.bio} submitLabel="Save about you" onSaved={refreshProfile} />
+      </section>
+
+      <h2 className="mt-8 text-sm font-semibold text-neutral-800">Preferences</h2>
+      <form onSubmit={save} className="mt-3 space-y-6">
         <fieldset>
           <legend className="mb-1 text-sm font-medium text-neutral-800">I'm looking for</legend>
           <p className="mb-2 text-xs text-neutral-500">You'll see people who picked the same option.</p>
@@ -90,9 +120,14 @@ export default function Profile() {
         </Button>
       </form>
 
-      <Button variant="ghost" className="mx-auto mt-10 flex" onClick={signOut}>
-        Sign out
-      </Button>
+      <div className="mt-10 flex justify-center gap-2">
+        <Link to="/settings" className="rounded-full px-5 py-3 font-semibold text-brand-700 hover:bg-brand-50">
+          Settings
+        </Link>
+        <Button variant="ghost" onClick={signOut}>
+          Sign out
+        </Button>
+      </div>
     </>
   )
 }

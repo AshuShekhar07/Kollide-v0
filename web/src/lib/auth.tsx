@@ -35,10 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoadedFor(null)
       return
     }
-    const [{ data: p }, { data: a }] = await Promise.all([
+    const [{ data: p, error }, { data: a }] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       supabase.from('admins').select('user_id').eq('user_id', userId).maybeSingle(),
     ])
+    // Every account gets a profile at signup, so a session without one belongs
+    // to a deleted account: drop it, or the app would bounce between guards.
+    if (!p && !error) {
+      await supabase.auth.signOut({ scope: 'local' })
+      return
+    }
     setProfile(p)
     setIsAdmin(!!a)
     setLoadedFor(userId)

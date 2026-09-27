@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../lib/auth-context'
 import { supabase } from '../lib/supabase'
+import BangaloreCheck from './BangaloreCheck'
+import InstallPrompt from './InstallPrompt'
 
 type ShellContext = { refreshBadges: () => Promise<void> }
 
@@ -14,7 +16,7 @@ const TABS = [
   { to: '/discover', label: 'Discover', badge: null, also: '/groups' },
   { to: '/likes', label: 'Likes', badge: 'likes' },
   { to: '/matches', label: 'Matches', badge: 'matches' },
-  { to: '/profile', label: 'Profile', badge: null },
+  { to: '/profile', label: 'Profile', badge: null, also: '/settings' },
 ] as const
 
 // Header, bottom tab bar and badge counts for the main app screens.
@@ -71,6 +73,8 @@ export default function AppShell() {
       </header>
 
       <div className="flex flex-1 flex-col px-4 pb-24 pt-4">
+        <BangaloreCheck />
+        <InstallPrompt />
         <Outlet context={{ refreshBadges } satisfies ShellContext} />
       </div>
 

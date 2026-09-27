@@ -2,12 +2,15 @@ import { NavLink } from 'react-router-dom'
 
 const LINKS = [
   { to: '/admin', label: 'Verification' },
+  { to: '/admin/photos', label: 'New photos' },
   { to: '/admin/reports', label: 'Reports' },
+  { to: '/admin/bans', label: 'Bans' },
+  { to: '/admin/metrics', label: 'Metrics' },
 ]
 
 export default function AdminNav() {
   return (
-    <nav className="flex gap-1 text-sm">
+    <nav className="flex flex-wrap gap-1 text-sm">
       {LINKS.map((l) => (
         <NavLink
           key={l.to}

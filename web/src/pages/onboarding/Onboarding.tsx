@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import BangaloreCheck from '../../components/BangaloreCheck'
 import { ErrorText, FullScreenSpinner } from '../../components/ui'
 import { homePathFor, useAuth } from '../../lib/auth-context'
 import { friendlyError } from '../../lib/errors'
 import { supabase } from '../../lib/supabase'
 import type { Activity, Photo, Profile, ProfilePrivate } from '../../lib/types'
+import AboutStep from './AboutStep'
 import ActivitiesStep from './ActivitiesStep'
 import BasicsStep from './BasicsStep'
 import ContactStep from './ContactStep'
@@ -29,15 +31,17 @@ export type StepProps = {
   onBack?: () => void
 }
 
-const STEPS = ['Basics', 'Photos', 'Contact', 'Activities', 'Verify'] as const
+const STEPS = ['Basics', 'Photos', 'About', 'Contact', 'Activities', 'Verify'] as const
+const VERIFY = STEPS.length - 1
 
 function firstIncompleteStep(d: OnboardingData): number {
   const p = d.profile
   if (!p.first_name || !p.dob || !p.gender || !p.seeking || !p.gender_preference?.length || !p.consent_at) return 0
   if (d.photos.length < 2) return 1
-  if (!d.contact?.phone || !Object.keys((d.contact.socials as object) ?? {}).length) return 2
-  if (!p.onboarding_complete) return 3
-  return 4
+  if ((p.bio ?? '').trim().length < 10) return 2
+  if (!d.contact?.phone || !Object.keys((d.contact.socials as object) ?? {}).length) return 3
+  if (!p.onboarding_complete) return 4
+  return VERIFY
 }
 
 export default function Onboarding() {
@@ -103,11 +107,11 @@ export default function Onboarding() {
 
   // Steps before "Verify" are locked once onboarding is complete.
   const locked = data.profile.onboarding_complete
-  const current = locked ? 4 : step
+  const current = locked ? VERIFY : step
   const props: StepProps = {
     data,
     reload,
-    onNext: () => setStep((s) => Math.min((s ?? 0) + 1, 4)),
+    onNext: () => setStep((s) => Math.min((s ?? 0) + 1, VERIFY)),
     onBack: current > 0 && !locked ? () => setStep((s) => Math.max((s ?? 0) - 1, 0)) : undefined,
   }
 
@@ -127,12 +131,16 @@ export default function Onboarding() {
         </ol>
       </header>
 
-      <div className="mt-8">
+      <div className="mt-6">
+        <BangaloreCheck />
+      </div>
+      <div className="mt-2">
         {current === 0 && <BasicsStep {...props} />}
         {current === 1 && <PhotosStep {...props} />}
-        {current === 2 && <ContactStep {...props} />}
-        {current === 3 && <ActivitiesStep {...props} />}
-        {current === 4 && <VideoStep {...props} />}
+        {current === 2 && <AboutStep {...props} />}
+        {current === 3 && <ContactStep {...props} />}
+        {current === 4 && <ActivitiesStep {...props} />}
+        {current === VERIFY && <VideoStep {...props} />}
       </div>
     </main>
   )

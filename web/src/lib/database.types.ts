@@ -316,17 +316,42 @@ isOneToOne: false
                   ]
                 },"photos": {
                   Row: {
-                    "created_at": string,"id": string,"position": number,"storage_path": string,"user_id": string
+                    "checked_at": string | null,"created_at": string,"id": string,"position": number,"storage_path": string,"user_id": string
                   }
                   Insert: {
-                    "created_at"?: string,"id"?: string,"position": number,"storage_path": string,"user_id": string
+                    "checked_at"?: string | null,"created_at"?: string,"id"?: string,"position": number,"storage_path": string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"position"?: number,"storage_path"?: string,"user_id"?: string
+                    "checked_at"?: string | null,"created_at"?: string,"id"?: string,"position"?: number,"storage_path"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
       foreignKeyName: "photos_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profile_answers": {
+                  Row: {
+                    "answer": string,"created_at": string,"position": number,"prompt_key": string,"user_id": string
+                  }
+                  Insert: {
+                    "answer": string,"created_at"?: string,"position": number,"prompt_key": string,"user_id": string
+                  }
+                  Update: {
+                    "answer"?: string,"created_at"?: string,"position"?: number,"prompt_key"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profile_answers_prompt_key_fkey"
+      columns: ["prompt_key"]
+isOneToOne: false
+      referencedRelation: "prompts"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "profile_answers_user_id_fkey"
       columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
@@ -386,6 +411,19 @@ isOneToOne: false
                   }
                   Update: {
                     "bio"?: string | null,"consent_at"?: string | null,"created_at"?: string,"dob"?: string | null,"first_name"?: string | null,"gender"?: Database["public"]['Enums']["gender"] | null,"gender_preference"?: (Database["public"]['Enums']["gender"])[] | null,"id"?: string,"is_banned"?: boolean,"onboarding_complete"?: boolean,"plan"?: string | null,"public_code"?: string,"seeking"?: Database["public"]['Enums']["seeking"] | null,"verification_status"?: Database["public"]['Enums']["verification_status"],"verified_at"?: string | null,"verified_by"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"prompts": {
+                  Row: {
+                    "active": boolean,"key": string,"question": string,"sort_order": number
+                  }
+                  Insert: {
+                    "active"?: boolean,"key": string,"question": string,"sort_order": number
+                  }
+                  Update: {
+                    "active"?: boolean,"key"?: string,"question"?: string,"sort_order"?: number
                   }
                   Relationships: [
                     
@@ -503,8 +541,21 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_get_report":
+            "admin_bans":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "banned_code": string,"banned_name": string,"created_at": string,"id": string,"kind": Database["public"]['Enums']["ban_kind"],"report_id": string,"report_reason": Database["public"]['Enums']["report_reason"],"value": string
+            }[]
+                           },
+"admin_get_report":
 { Args: { "p_report_id": string }; Returns: Json
+                           },
+"admin_metrics":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"admin_new_photos":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "added_at": string,"first_name": string,"photo_id": string,"public_code": string,"storage_path": string,"user_id": string,"verified_at": string,"verified_paths": (string)[]
+            }[]
                            },
 "admin_reports_queue":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -513,6 +564,9 @@ isOneToOne: false
                            },
 "admin_resolve_report":
 { Args: { "p_report_id": string,"p_resolution": Database["public"]['Enums']["report_resolution"] }; Returns: undefined
+                           },
+"admin_review_photo":
+{ Args: { "p_keep": boolean,"p_photo_id": string }; Returns: string
                            },
 "admin_review_verification":
 { Args: { "p_approve": boolean,"p_reason"?: string,"p_user_id": string }; Returns: undefined
@@ -533,6 +587,11 @@ isOneToOne: false
                            },
 "create_group":
 { Args: { "p_activity_id": string,"p_description": string,"p_event_date": string,"p_max_members": number,"p_title": string,"p_venue": string }; Returns: Json
+                           },
+"get_blocked_users":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "blocked_at": string,"first_name": string,"public_code": string,"user_id": string
+            }[]
                            },
 "get_contact":
 { Args: { "p_user_id": string }; Returns: Json
@@ -620,6 +679,9 @@ isOneToOne: false
 "respond_to_like":
 { Args: { "p_accept": boolean,"p_swipe_id": string }; Returns: Json
                            },
+"save_about":
+{ Args: { "p_answers": Json,"p_bio": string }; Returns: undefined
+                           },
 "save_basics":
 { Args: { "p_consent": boolean,"p_dob": string,"p_first_name": string,"p_gender": Database["public"]['Enums']["gender"],"p_gender_preference": (Database["public"]['Enums']["gender"])[],"p_seeking": Database["public"]['Enums']["seeking"] }; Returns: undefined
                            },
@@ -632,8 +694,14 @@ isOneToOne: false
 "submit_verification":
 { Args: { "p_storage_path": string }; Returns: undefined
                            },
+"unblock_user":
+{ Args: { "p_target_id": string }; Returns: undefined
+                           },
 "update_preferences":
 { Args: { "p_gender_preference": (Database["public"]['Enums']["gender"])[],"p_seeking": Database["public"]['Enums']["seeking"] }; Returns: undefined
+                           },
+"vote_coming_soon":
+{ Args: { "p_slug": string }; Returns: undefined
                            }
           }
           Enums: {

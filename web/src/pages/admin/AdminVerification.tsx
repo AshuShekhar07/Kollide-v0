@@ -30,6 +30,7 @@ function ageBadge(hours: number) {
 
 function Review({ item, onDone }: { item: QueueItem; onDone: () => void }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [videoFailed, setVideoFailed] = useState(false)
   const [photoUrls, setPhotoUrls] = useState<(string | null)[]>([])
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState<'approve' | 'reject' | null>(null)
@@ -38,12 +39,15 @@ function Review({ item, onDone }: { item: QueueItem; onDone: () => void }) {
   useEffect(() => {
     let cancelled = false
     setVideoUrl(null)
+    setVideoFailed(false)
     setError('')
     // Each call is logged server-side as a `view_video` access.
     supabase.functions.invoke('admin-video-url', { body: { video_id: item.video_id } }).then(async ({ data, error }) => {
       if (cancelled) return
-      if (error) setError(await functionError(error))
-      else setVideoUrl(data.url)
+      if (error) {
+        setVideoFailed(true)
+        setError(await functionError(error))
+      } else setVideoUrl(data.url)
     })
     signedPhotoUrls(item.photo_paths).then((urls) => !cancelled && setPhotoUrls(urls))
     return () => {
@@ -83,7 +87,9 @@ function Review({ item, onDone }: { item: QueueItem; onDone: () => void }) {
           {videoUrl ? (
             <video key={videoUrl} src={videoUrl} controls autoPlay muted playsInline className="aspect-[3/4] w-full object-contain" />
           ) : (
-            <div className="flex aspect-[3/4] items-center justify-center text-sm text-neutral-400">Loading video…</div>
+            <div className="flex aspect-[3/4] items-center justify-center text-sm text-neutral-400">
+              {videoFailed ? 'Video unavailable' : 'Loading video…'}
+            </div>
           )}
         </div>
         <ul className="grid grid-cols-3 content-start gap-2">

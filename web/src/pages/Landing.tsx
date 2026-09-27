@@ -31,8 +31,52 @@ const TRUST_POINTS = [
   },
 ]
 
+const VOTES_KEY = 'kollide:votes'
+
+function readVotes(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(VOTES_KEY) ?? '[]')
+  } catch {
+    return []
+  }
+}
+
+// "I'd want this" (§6.1): logged as a coming_soon_vote event. The browser
+// remembers its own votes so the button stays ticked.
+function VoteButton({ slug }: { slug: string }) {
+  const [voted, setVoted] = useState(() => readVotes().includes(slug))
+  const [busy, setBusy] = useState(false)
+
+  async function vote() {
+    setBusy(true)
+    const { error } = await supabase.rpc('vote_coming_soon', { p_slug: slug })
+    setBusy(false)
+    if (error) return
+    setVoted(true)
+    try {
+      localStorage.setItem(VOTES_KEY, JSON.stringify([...new Set([...readVotes(), slug])]))
+    } catch {
+      /* storage unavailable; the vote still counted */
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={vote}
+      disabled={voted || busy}
+      className={`mt-3 w-full rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+        voted ? 'bg-green-100 text-green-800' : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+      }`}
+    >
+      {voted ? '✓ Noted, thanks!' : busy ? 'Saving…' : "I'd want this"}
+    </button>
+  )
+}
+
 export default function Landing() {
   const [comingSoon, setComingSoon] = useState<Activity[]>(FALLBACK_COMING_SOON)
+  const [fromDb, setFromDb] = useState(false)
 
   useEffect(() => {
     supabase
@@ -41,7 +85,10 @@ export default function Landing() {
       .eq('status', 'coming_soon')
       .order('sort_order')
       .then(({ data }) => {
-        if (data?.length) setComingSoon(data as Activity[])
+        if (data?.length) {
+          setComingSoon(data as Activity[])
+          setFromDb(true)
+        }
       })
   }, [])
 
@@ -59,12 +106,15 @@ export default function Landing() {
           <p className="mt-14 text-sm font-semibold uppercase tracking-widest text-marigold-400">
             Where paths collide
           </p>
+          <p className="mt-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+            📍 Bangalore only, for now
+          </p>
           <h1 className="mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">
             Find your Garba friends or group
           </h1>
           <p className="mt-4 max-w-xl text-lg text-white/85">
-            Don't go alone this Navratri. Meet verified people heading to the same Garba nights, as a
-            friend or a whole group.
+            Don't go alone this Navratri. Meet verified people in Bangalore heading to the same Garba
+            nights, as a friend or a whole group.
           </p>
 
           <div className="mt-8 max-w-lg">
@@ -97,7 +147,7 @@ export default function Landing() {
 
         <section className="mt-12">
           <h2 className="text-lg font-bold text-brand-900">Coming soon</h2>
-          <p className="mt-1 text-sm text-neutral-600">Garba is just the start.</p>
+          <p className="mt-1 text-sm text-neutral-600">Garba is just the start. Tell us what you'd use next.</p>
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {comingSoon.map((a) => (
               <li
@@ -106,6 +156,7 @@ export default function Landing() {
               >
                 {a.name}
                 <span className="mt-1 block text-xs font-normal text-neutral-400">Coming soon</span>
+                {fromDb && <VoteButton slug={a.slug} />}
               </li>
             ))}
           </ul>
@@ -125,7 +176,15 @@ export default function Landing() {
       </main>
 
       <footer className="mx-auto mt-16 max-w-3xl px-4 pb-10 text-sm text-neutral-500">
-        © 2026 Kollide · Bangalore
+        <p>© 2026 Kollide · Bangalore</p>
+        <p className="mt-2 flex gap-4">
+          <Link to="/privacy" className="underline">
+            Privacy Policy
+          </Link>
+          <Link to="/terms" className="underline">
+            Terms of Service
+          </Link>
+        </p>
       </footer>
     </div>
   )

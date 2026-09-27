@@ -405,7 +405,7 @@ deno_version = 2
 # Local values only. Hosted: `supabase secrets set ...` (see supabase/functions/README.md).
 [edge_runtime.secrets]
 SITE_URL = "http://localhost:5173"
-ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5180"
 EMAIL_HOOK_SECRET = "local-email-hook-secret"
 # Browser-facing API origin, used to rewrite signed URLs (local only).
 PUBLIC_API_URL = "http://127.0.0.1:54321"
@@ -419,6 +419,9 @@ SMTP_FROM = "Kollide <no-reply@kollide.local>"
 
 # Called by pg_net with a shared secret header, not a user JWT.
 [functions.send-email]
+verify_jwt = false
+
+[functions.cleanup-videos]
 verify_jwt = false
 
 [analytics]

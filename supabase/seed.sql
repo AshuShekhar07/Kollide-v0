@@ -108,9 +108,10 @@ begin
 
     insert into public.user_activities (user_id, activity_id) values (uid, garba);
 
-    insert into public.photos (user_id, storage_path, position) values
-      (uid, uid || '/seed-0.jpg', 0),
-      (uid, uid || '/seed-1.jpg', 1);
+    -- Uploaded before verification, so they aren't "new photos" for admins.
+    insert into public.photos (user_id, storage_path, position, created_at) values
+      (uid, uid || '/seed-0.jpg', 0, now() - interval '3 days'),
+      (uid, uid || '/seed-1.jpg', 1, now() - interval '3 days');
 
     if state = 'pending' then
       insert into public.verification_videos (user_id, storage_path, status, created_at)

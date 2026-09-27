@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import AboutView from '../components/AboutView'
 import { useShell } from '../components/AppShell'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard, { useSignedPhotos } from '../components/ProfileCard'
@@ -58,8 +59,11 @@ function LikeDetail({
           aria-label="Next photo"
           onClick={() => setPhoto((p) => p + 1)}
         >
-          <ProfileCard profile={like} photoIndex={photo} className="aspect-[3/4] w-full" />
+          <ProfileCard profile={like} photoIndex={photo} className="aspect-[3/4] w-full" hideBio />
         </button>
+        <div className="mt-4">
+          <AboutView userId={like.user_id} bio={like.bio} />
+        </div>
         <div className="mt-3">
           <ErrorText>{error}</ErrorText>
         </div>
