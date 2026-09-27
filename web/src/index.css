@@ -58,6 +58,7 @@
   --animate-rise: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-float: float 6s ease-in-out infinite;
   --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-marquee: marquee 38s linear infinite;
 
   @keyframes pop {
     0% { transform: scale(0.6); opacity: 0; }
@@ -74,6 +75,11 @@
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
+  }
+  /* Scrolls a strip whose content is repeated twice, so -50% loops seamlessly. */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
   }
 }
 
@@ -171,6 +177,12 @@ h3,
   animation: var(--animate-shimmer);
 }
 
+/* Outlined display text (landing page marquee). */
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px #111;
+}
+
 @utility pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
 }
@@ -182,5 +194,12 @@ h3,
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* The marquee stays still rather than jumping to its end frame. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
   }
 }

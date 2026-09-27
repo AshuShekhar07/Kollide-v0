@@ -1,28 +1,30 @@
+import Lenis from 'lenis'
+import 'lenis/dist/lenis.css'
 import {
-  BadgeCheck,
+  ArrowDown,
+  ArrowUpRight,
   Check,
   Coffee,
-  Compass,
   Dices,
   Feather,
   Footprints,
-  Lock,
-  MapPin,
-  MessageCircle,
   Mountain,
   Music,
-  ShieldCheck,
   Sparkles,
-  UserRound,
-  UsersRound,
-  Video,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { motion, MotionConfig, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Card, Logo, Tag } from '../components/ui'
+import HoverSwap from '../components/landing/HoverSwap'
+import LogoIntro from '../components/landing/LogoIntro'
+import { FadeUp, RevealText } from '../components/landing/Reveal'
+import Wordmark from '../components/landing/Wordmark'
 import WaitlistForm from '../components/WaitlistForm'
 import { supabase } from '../lib/supabase'
+
+// The landing page uses fixed hex colours (not the theme's neutral-* tokens)
+// so it stays white and near-black when the phone is in dark mode.
 
 type Activity = { slug: string; name: string; status: 'live' | 'coming_soon' }
 
@@ -47,10 +49,22 @@ const ACTIVITY_ICONS: Record<string, LucideIcon> = {
 }
 
 const STEPS = [
-  { icon: Video, title: 'Get verified', body: 'Record a 10-second face video. Our team checks every profile by hand.' },
-  { icon: Compass, title: 'Find your people', body: 'Swipe for a friend to go with, or join a group heading out.' },
-  { icon: MessageCircle, title: 'Chat and go', body: 'Plan your night, swap socials, and dance till late.' },
+  {
+    title: 'Get verified',
+    body: 'Record a 10-second face video. Our team checks every profile by hand, so everyone you meet is real.',
+  },
+  {
+    title: 'Find your people',
+    body: 'Match with someone to go with, or join a group heading to the same garba night.',
+  },
+  {
+    title: 'Chat and show up',
+    body: 'Plan the night in chat, swap socials when you match, and dance till late.',
+  },
 ]
+
+// The intro plays once per page load, not on every in-app visit to `/`.
+let introPlayed = false
 
 // Navratri 2026 opens the night of Oct 11 (IST).
 const NAVRATRI = new Date('2026-10-11T18:00:00+05:30')
@@ -60,28 +74,10 @@ function Countdown() {
   if (days <= 0) return <span>Navratri is here · Oct 11–19</span>
   return (
     <span>
-      <strong className="font-bold text-white">{days}</strong> day{days === 1 ? '' : 's'} to Navratri · Oct 11–19
+      <strong className="font-bold text-[#fff]">{days}</strong> day{days === 1 ? '' : 's'} to Navratri · Oct 11–19
     </span>
   )
 }
-
-const TRUST_POINTS = [
-  {
-    icon: BadgeCheck,
-    title: 'Every profile is verified',
-    body: 'Members record a short face video that our team reviews before they can be seen or matched.',
-  },
-  {
-    icon: Lock,
-    title: 'Private chat',
-    body: 'Your messages are private. If a conversation is reported, our safety team reviews it to investigate.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Block and report, instantly',
-    body: 'Block anyone in one tap. Reports go straight to our safety team, and bans stick.',
-  },
-]
 
 const VOTES_KEY = 'kollide:votes'
 
@@ -117,8 +113,10 @@ function VoteButton({ slug }: { slug: string }) {
       type="button"
       onClick={vote}
       disabled={voted || busy}
-      className={`mt-3 inline-flex w-full items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition active:scale-95 ${
-        voted ? 'bg-green-100 text-green-800' : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+      className={`mt-4 inline-flex w-full items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${
+        voted
+          ? 'bg-[#e8f5ec] text-[#1d6b3a]'
+          : 'border border-[#111]/15 text-[#111] hover:border-[#111] hover:bg-[#111] hover:text-[#fff]'
       }`}
     >
       {voted ? (
@@ -134,9 +132,167 @@ function VoteButton({ slug }: { slug: string }) {
   )
 }
 
+function Eyebrow({ children, className = 'text-[#E0661A]' }: { children: string; className?: string }) {
+  return <p className={`text-xs font-bold uppercase tracking-[0.22em] ${className}`}>{children}</p>
+}
+
+const HEADING = 'font-extrabold leading-[1.05] tracking-[-0.025em]'
+
+function Hero({ ready, onJoin }: { ready: boolean; onJoin: () => void }) {
+  const ref = useRef<HTMLElement>(null)
+  const reduced = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
+  const videoScale = useTransform(scrollYProgress, [0, 1], reduced ? [1, 1] : [1, 1.15])
+  const textY = useTransform(scrollYProgress, [0, 1], reduced ? ['0%', '0%'] : ['0%', '-35%'])
+  const textOpacity = useTransform(scrollYProgress, [0, 0.7], reduced ? [1, 1] : [1, 0])
+
+  return (
+    <section ref={ref} className="relative flex h-[100svh] min-h-[560px] flex-col overflow-hidden">
+      <motion.div className="absolute inset-0" style={{ scale: videoScale }} aria-hidden>
+        <video
+          className="h-full w-full object-cover opacity-50"
+          src="/landing/garba-hero.mp4"
+          poster="/landing/garba-hero-poster.jpg"
+          autoPlay={!reduced}
+          muted
+          loop
+          playsInline
+          preload={reduced ? 'none' : 'auto'}
+        />
+      </motion.div>
+      {/* A soft white wash behind the text, and a fade into the page below. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 62% 48% at 50% 50%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0) 100%)',
+        }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-[#fff]/0 to-[#fff]"
+        aria-hidden
+      />
+
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1.25rem)] sm:px-6">
+        <Link to="/" aria-label="Kollide home">
+          <Wordmark className="h-7 w-auto sm:h-8" />
+        </Link>
+        <Link
+          to="/start"
+          className="rounded-full bg-[#111] px-5 py-2.5 text-sm font-semibold text-[#fff] transition hover:bg-[#333] active:scale-95"
+        >
+          Sign in
+        </Link>
+      </header>
+
+      <motion.div
+        className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 text-center"
+        style={{ y: textY, opacity: textOpacity }}
+      >
+        <FadeUp play={ready}>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#111]/70 sm:text-xs sm:tracking-[0.22em]">
+            Garba nights · Bangalore · Oct 11–19
+          </p>
+        </FadeUp>
+        <RevealText
+          as="h1"
+          play={ready}
+          delay={0.1}
+          text="Find people to show up with, not just swipe past."
+          className="mt-5 text-[2.6rem] font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl"
+        />
+        <FadeUp play={ready} delay={0.55}>
+          <button
+            type="button"
+            onClick={onJoin}
+            className="group mt-9 inline-flex items-center gap-2 rounded-full bg-[#111] py-3.5 pl-6 pr-5 font-semibold text-[#fff] shadow-lg shadow-black/15 transition hover:bg-[#333] active:scale-[0.97]"
+          >
+            Join the waitlist
+            <ArrowUpRight className="h-5 w-5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </button>
+        </FadeUp>
+      </motion.div>
+
+      <motion.div className="relative z-10" style={{ opacity: textOpacity }} aria-hidden>
+        <motion.div
+          className="flex flex-col items-center gap-1 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-xs font-semibold uppercase tracking-[0.2em] text-[#111]/60"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: ready ? 1 : 0 }}
+          transition={{ duration: 0.6, delay: ready ? 1 : 0 }}
+        >
+          Scroll
+          <motion.span
+            animate={reduced ? undefined : { y: [0, 6, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <ArrowDown className="h-4 w-4" />
+          </motion.span>
+        </motion.div>
+      </motion.div>
+    </section>
+  )
+}
+
+function StorySection({
+  eyebrow,
+  heading,
+  body,
+  base,
+  reveal,
+  mirrored = false,
+}: {
+  eyebrow: string
+  heading: string
+  body: string
+  base: { src: string; alt: string }
+  reveal: { src: string; alt: string }
+  mirrored?: boolean
+}) {
+  return (
+    <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 sm:px-6 md:grid-cols-2 md:gap-16 md:py-28">
+      <div className={`mx-auto w-full max-w-md md:max-w-none ${mirrored ? 'md:order-2' : ''}`}>
+        <HoverSwap base={base} reveal={reveal} />
+      </div>
+      <div className={mirrored ? 'md:order-1' : ''}>
+        <FadeUp>
+          <Eyebrow>{eyebrow}</Eyebrow>
+        </FadeUp>
+        <RevealText text={heading} className={`mt-4 text-4xl sm:text-5xl lg:text-6xl ${HEADING}`} />
+        <FadeUp delay={0.15}>
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-[#111]/70">{body}</p>
+        </FadeUp>
+      </div>
+    </section>
+  )
+}
+
+function Marquee({ names }: { names: string[] }) {
+  const items = [...names, ...names]
+  return (
+    <div className="relative mt-12 overflow-hidden border-y border-[#111]/10 py-6" aria-hidden>
+      <div className="flex w-max animate-marquee items-center">
+        {items.map((name, i) => (
+          <span key={i} className="flex items-center">
+            <span className="text-outline whitespace-nowrap px-6 font-display text-6xl font-extrabold tracking-[-0.02em] sm:text-8xl">
+              {name}
+            </span>
+            <span className="h-3 w-3 shrink-0 rounded-full bg-[#E0661A]" />
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
   const [comingSoon, setComingSoon] = useState<Activity[]>(FALLBACK_COMING_SOON)
   const [fromDb, setFromDb] = useState(false)
+  // Read once on mount: the intro only shows on the first visit to `/`.
+  const [ready, setReady] = useState(introPlayed)
+  const [introDone, setIntroDone] = useState(introPlayed)
+  const lenisRef = useRef<Lenis | null>(null)
+  const reduced = useReducedMotion()
 
   useEffect(() => {
     supabase
@@ -152,183 +308,180 @@ export default function Landing() {
       })
   }, [])
 
+  // Keep the page white around the edges (overscroll) even in dark mode.
+  useEffect(() => {
+    const root = document.documentElement
+    const prev = { bg: root.style.backgroundColor, scheme: root.style.colorScheme }
+    root.style.backgroundColor = '#fff'
+    root.style.colorScheme = 'light'
+    return () => {
+      root.style.backgroundColor = prev.bg
+      root.style.colorScheme = prev.scheme
+    }
+  }, [])
+
+  // Smooth scrolling for this page only, once the intro has let go of it.
+  useEffect(() => {
+    if (!introDone || reduced) return
+    const lenis = new Lenis({ autoRaf: true })
+    lenisRef.current = lenis
+    return () => {
+      lenis.destroy()
+      lenisRef.current = null
+    }
+  }, [introDone, reduced])
+
+  function scrollToWaitlist() {
+    const target = document.getElementById('waitlist')
+    if (!target) return
+    if (lenisRef.current) lenisRef.current.scrollTo(target, { offset: -24, duration: 1.6 })
+    else target.scrollIntoView({ block: 'start' })
+  }
+
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      <section className="relative overflow-hidden bg-gradient-to-br from-plum-700 via-plum-600 to-plum-500 px-4 pb-20 pt-[max(env(safe-area-inset-top),1.5rem)] text-white">
-        <div className="bandhani pointer-events-none absolute inset-0 text-white/[0.08]" aria-hidden />
-        <div
-          className="pointer-events-none absolute -right-16 top-24 h-56 w-56 animate-float rounded-full bg-marigold-400/30 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 animate-float rounded-full bg-brand-300/30 blur-3xl [animation-delay:-3s]"
-          aria-hidden
-        />
-        <div className="relative mx-auto max-w-3xl">
-          <header className="flex items-center justify-between">
-            <Logo tone="white" className="text-2xl" />
-            <Link
-              to="/start"
-              className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold ring-1 ring-white/25 backdrop-blur-sm transition hover:bg-white/25 active:scale-95"
-            >
-              Sign in
-            </Link>
-          </header>
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen overflow-x-clip bg-[#fff] text-[#111] [color-scheme:light]">
+        {!introDone && (
+          <LogoIntro
+            onReveal={() => setReady(true)}
+            onDone={() => {
+              introPlayed = true
+              setIntroDone(true)
+            }}
+          />
+        )}
 
-          <div className="mt-14 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/20 backdrop-blur-sm">
-              <MapPin className="h-3.5 w-3.5" /> Bangalore only, for now
-            </span>
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-marigold-300">Where paths collide</span>
-          </div>
-          <h1 className="mt-4 text-[2.6rem] font-extrabold leading-[1.05] sm:text-6xl">
-            Find your{' '}
-            <span className="relative inline-block text-marigold-300">
-              Garba
-              <svg
-                className="absolute -bottom-1 left-0 w-full text-marigold-400"
-                viewBox="0 0 100 8"
-                preserveAspectRatio="none"
-                aria-hidden
-              >
-                <path
-                  d="M1 6 Q 25 1 50 5 T 99 3"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
+        <Hero ready={ready} onJoin={scrollToWaitlist} />
+
+        <main>
+          <StorySection
+            eyebrow="Navratri 2026"
+            heading="It's that time of the year."
+            body="Nine nights of garba are almost here. Celebrate them together: make new friends, find your crowd, and assemble a group to dance with."
+            base={{ src: '/landing/together-fistbump.webp', alt: 'Friends bumping fists in a circle at a garba night' }}
+            reveal={{ src: '/landing/together-dandiya.webp', alt: 'Friends crossing dandiya sticks into a star' }}
+          />
+
+          <StorySection
+            mirrored
+            eyebrow="For the nights that matter"
+            heading="Find yourself a garba partner."
+            body="This Navratri, find someone to share the circle with, and make your night a little more special."
+            base={{ src: '/landing/partner-dupatta.webp', alt: "A boy fixing a girl's skirt on the garba ground" }}
+            reveal={{ src: '/landing/partner-bangle.webp', alt: "A girl's bangle caught on a boy's kurta" }}
+          />
+
+          <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
+            <FadeUp>
+              <Eyebrow>How it works</Eyebrow>
+            </FadeUp>
+            <RevealText
+              text="Three steps to your first night out."
+              className={`mt-4 max-w-2xl text-4xl sm:text-5xl ${HEADING}`}
+            />
+            <ol className="mt-12 grid gap-4 md:grid-cols-3">
+              {STEPS.map((step, i) => (
+                <li key={step.title}>
+                  <FadeUp delay={i * 0.1} className="h-full">
+                    <div className="h-full rounded-[28px] border border-[#111]/10 bg-[#fff] p-7">
+                      <span className="font-display text-6xl font-extrabold leading-none tracking-[-0.03em] text-[#E0661A]">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <h3 className="mt-8 text-2xl font-bold">{step.title}</h3>
+                      <p className="mt-2 leading-relaxed text-[#111]/65">{step.body}</p>
+                    </div>
+                  </FadeUp>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="py-20 md:py-28">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <FadeUp>
+                <Eyebrow>Coming soon</Eyebrow>
+              </FadeUp>
+              <RevealText text="Garba is just the start." className={`mt-4 text-4xl sm:text-5xl ${HEADING}`} />
+              <FadeUp delay={0.1}>
+                <p className="mt-5 max-w-lg text-lg leading-relaxed text-[#111]/70">
+                  After Navratri, Kollide opens up to more ways to meet people. Tell us what you'd use next.
+                </p>
+              </FadeUp>
+            </div>
+
+            <Marquee names={comingSoon.map((a) => a.name)} />
+
+            <ul className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
+              {comingSoon.map((a, i) => {
+                const Icon = ACTIVITY_ICONS[a.slug] ?? Sparkles
+                return (
+                  <li key={a.slug}>
+                    <FadeUp delay={(i % 3) * 0.08} className="h-full">
+                      <div className="flex h-full flex-col rounded-3xl border border-[#111]/10 bg-[#fff] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#111] hover:shadow-[0_12px_30px_-12px_rgba(17,17,17,0.25)]">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#E0661A]">
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <span className="rounded-full bg-[#111]/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#111]/55">
+                            Soon
+                          </span>
+                        </div>
+                        <p className="mt-5 flex-1 font-display text-lg font-bold leading-tight">{a.name}</p>
+                        {fromDb && <VoteButton slug={a.slug} />}
+                      </div>
+                    </FadeUp>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+
+          <section id="waitlist" className="scroll-mt-6 px-4 pb-16 sm:px-6">
+            <FadeUp className="mx-auto max-w-6xl">
+              <div className="relative overflow-hidden rounded-[2rem] bg-[#0d0f22] px-6 py-14 text-center text-[#fff] sm:px-12 sm:py-20">
+                <div
+                  className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#F4C51C]/10 blur-3xl"
+                  aria-hidden
                 />
-              </svg>
-            </span>{' '}
-            friends or group
-          </h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/85">
-            Don't go alone this Navratri. Meet verified people in Bangalore heading to the same Garba nights, as a
-            friend or a whole group.
-          </p>
-
-          <div className="mt-8 max-w-lg">
-            <WaitlistForm />
-            <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/75">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-marigold-400" /> Opening Sunday, Oct 4
-              </span>
-              <Countdown />
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <main className="mx-auto max-w-3xl px-4">
-        <section className="relative -mt-10">
-          <Card className="p-5 shadow-xl shadow-plum-900/10">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-marigold-300 to-marigold-500 text-2xl">
-                  💃
-                </span>
-                <div>
-                  <h2 className="text-xl font-bold text-neutral-900">Garba &amp; Dandiya</h2>
-                  <p className="text-sm text-neutral-500">Sharad Navratri 2026 · Oct 11–19</p>
+                <div className="relative mx-auto max-w-xl">
+                  <Wordmark tone="dark" className="mx-auto h-12 w-auto sm:h-14" />
+                  <RevealText
+                    text="Don't go alone this Navratri."
+                    className={`mt-8 text-4xl sm:text-5xl ${HEADING}`}
+                  />
+                  <p className="mt-4 text-[#fff]/70">
+                    Join the waitlist and we'll email you the moment Kollide opens in Bangalore.
+                  </p>
+                  <div className="mx-auto mt-8 max-w-md text-left">
+                    <WaitlistForm />
+                  </div>
+                  <p className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-[#fff]/70">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-[#F4C51C]" /> Opening Sunday, Oct 4
+                    </span>
+                    <Countdown />
+                  </p>
                 </div>
               </div>
-              <Tag tone="green" className="shrink-0">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" /> Live soon
-              </Tag>
-            </div>
-            <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-              <li className="flex items-center gap-3 rounded-2xl bg-brand-50 px-3 py-2.5 font-medium text-neutral-800">
-                <UserRound className="h-5 w-5 shrink-0 text-brand-600" /> 1:1: find a friend to go with
-              </li>
-              <li className="flex items-center gap-3 rounded-2xl bg-brand-50 px-3 py-2.5 font-medium text-neutral-800">
-                <UsersRound className="h-5 w-5 shrink-0 text-brand-600" /> Groups: join or start a crew of up to 10
-              </li>
-            </ul>
-          </Card>
-        </section>
+            </FadeUp>
+          </section>
+        </main>
 
-        <section className="mt-14">
-          <h2 className="text-2xl font-bold text-neutral-900">How it works</h2>
-          <ol className="mt-5 grid gap-3 sm:grid-cols-3">
-            {STEPS.map((step, i) => (
-              <li
-                key={step.title}
-                className="relative rounded-3xl border border-neutral-200/80 bg-surface p-5 shadow-sm"
-              >
-                <span className="absolute right-4 top-3 font-display text-4xl font-extrabold text-neutral-100">
-                  {i + 1}
-                </span>
-                <span className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-plum-500 to-plum-700 text-white shadow-md shadow-plum-600/25">
-                  <step.icon className="h-5 w-5" />
-                </span>
-                <h3 className="relative mt-3 text-lg font-bold text-neutral-900">{step.title}</h3>
-                <p className="relative mt-1 text-sm leading-relaxed text-neutral-600">{step.body}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="mt-14">
-          <h2 className="text-2xl font-bold text-neutral-900">Coming soon</h2>
-          <p className="mt-1 text-sm text-neutral-500">Garba is just the start. Tell us what you'd use next.</p>
-          <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {comingSoon.map((a) => {
-              const Icon = ACTIVITY_ICONS[a.slug] ?? Sparkles
-              return (
-                <li key={a.slug} className="rounded-3xl border border-neutral-200/80 bg-surface p-4 shadow-sm">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-marigold-100 text-marigold-800">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <p className="mt-3 font-semibold text-neutral-900">{a.name}</p>
-                  <p className="text-xs text-neutral-400">Coming soon</p>
-                  {fromDb && <VoteButton slug={a.slug} />}
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-
-        <section className="mt-14">
-          <h2 className="text-2xl font-bold text-neutral-900">Built for trust</h2>
-          <ul className="mt-5 grid gap-3 sm:grid-cols-3">
-            {TRUST_POINTS.map((p) => (
-              <li key={p.title} className="flex gap-4 rounded-3xl bg-neutral-100/70 p-5 sm:flex-col sm:gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface text-brand-600 shadow-sm">
-                  <p.icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="font-bold text-neutral-900">{p.title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-neutral-600">{p.body}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="relative mt-14 overflow-hidden rounded-[2rem] bg-gradient-to-br from-plum-600 to-plum-800 p-6 text-center text-white">
-          <div className="bandhani pointer-events-none absolute inset-0 text-white/[0.07]" aria-hidden />
-          <div className="relative">
-            <p className="font-display text-2xl font-bold">Don't go alone this Navratri</p>
-            <p className="mt-1 text-sm text-white/75">Join the waitlist and we'll tell you the moment we open.</p>
-            <div className="mx-auto mt-5 max-w-md text-left">
-              <WaitlistForm id="waitlist-email-bottom" />
-            </div>
+        <footer className="mx-auto flex max-w-6xl flex-col gap-4 px-4 pb-10 pt-4 text-sm text-[#111]/60 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex items-center gap-3">
+            <Wordmark className="h-6 w-auto" />
+            <span>© 2026 · Made in Bangalore</span>
           </div>
-        </section>
-      </main>
-
-      <footer className="mx-auto mt-14 max-w-3xl px-4 pb-10 text-sm text-neutral-500">
-        <Logo className="text-lg" />
-        <p className="mt-2">© 2026 Kollide · Made in Bangalore</p>
-        <p className="mt-2 flex gap-4">
-          <Link to="/privacy" className="underline underline-offset-2 hover:text-neutral-800">
-            Privacy Policy
-          </Link>
-          <Link to="/terms" className="underline underline-offset-2 hover:text-neutral-800">
-            Terms of Service
-          </Link>
-        </p>
-      </footer>
-    </div>
+          <p className="flex gap-5">
+            <Link to="/privacy" className="underline-offset-4 hover:text-[#111] hover:underline">
+              Privacy Policy
+            </Link>
+            <Link to="/terms" className="underline-offset-4 hover:text-[#111] hover:underline">
+              Terms
+            </Link>
+          </p>
+        </footer>
+      </div>
+    </MotionConfig>
   )
 }
