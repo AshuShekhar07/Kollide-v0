@@ -1,7 +1,7 @@
 // Cloudflare Workers static-assets deploy for the Vite SPA.
 // Unknown paths serve index.html so React Router can handle them.
 {
-  "name": "kollide-v0",
+  "name": "kollide",
   "compatibility_date": "2026-09-26",
   "assets": {
     "directory": "./dist",
