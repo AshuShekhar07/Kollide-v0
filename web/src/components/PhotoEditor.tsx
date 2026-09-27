@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight, ImagePlus, Star, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { friendlyError } from '../lib/errors'
 import { compressImage } from '../lib/image'
@@ -105,44 +106,49 @@ export default function PhotoEditor({
     <div className="space-y-3">
       <ul className="grid grid-cols-3 gap-2">
         {photos.map((p, i) => (
-          <li key={p.id} className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-100">
+          <li
+            key={p.id}
+            className={`relative aspect-[3/4] animate-rise overflow-hidden rounded-2xl bg-neutral-100 shadow-sm ${
+              i === 0 ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-canvas' : ''
+            }`}
+          >
             {urls[p.storage_path] ? (
               <img src={urls[p.storage_path]!} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
             ) : (
-              <span className="flex h-full items-center justify-center text-xs text-neutral-400">Loading…</span>
+              <span className="skeleton block h-full w-full" />
             )}
             {i === 0 && (
-              <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                Main
+              <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-plum-600 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                <Star className="h-2.5 w-2.5 fill-current" /> Main
               </span>
             )}
-            <div className="absolute inset-x-1 bottom-1 flex justify-between">
+            <div className="absolute inset-x-0 bottom-0 flex justify-between bg-gradient-to-t from-black/50 to-transparent p-1.5 pt-6">
               <button
                 type="button"
                 aria-label="Move earlier"
                 disabled={!!busy || i === 0}
                 onClick={() => move(i, -1)}
-                className="h-7 w-7 rounded-full bg-white/90 text-sm shadow disabled:opacity-0"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-plum-950 shadow transition active:scale-90 disabled:opacity-0"
               >
-                ←
+                <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 aria-label="Remove photo"
                 disabled={!!busy}
                 onClick={() => remove(p.id, p.storage_path)}
-                className="h-7 w-7 rounded-full bg-white/90 text-sm shadow"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-red-600 shadow transition active:scale-90"
               >
-                ✕
+                <X className="h-4 w-4" strokeWidth={2.6} />
               </button>
               <button
                 type="button"
                 aria-label="Move later"
                 disabled={!!busy || i === photos.length - 1}
                 onClick={() => move(i, 1)}
-                className="h-7 w-7 rounded-full bg-white/90 text-sm shadow disabled:opacity-0"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-plum-950 shadow transition active:scale-90 disabled:opacity-0"
               >
-                →
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </li>
@@ -153,10 +159,16 @@ export default function PhotoEditor({
               type="button"
               onClick={() => fileInput.current?.click()}
               disabled={!!busy}
-              className="flex aspect-[3/4] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 text-neutral-500 hover:border-brand-500 hover:text-brand-600 disabled:opacity-50"
+              className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-brand-300 bg-brand-50/60 text-brand-700 transition hover:border-brand-500 active:scale-[0.97] disabled:opacity-50"
             >
-              <span className="text-3xl leading-none">+</span>
-              <span className="mt-1 text-xs">{busy === 'upload' ? 'Uploading…' : 'Add photo'}</span>
+              {busy === 'upload' ? (
+                <span className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              ) : (
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md shadow-brand-600/30">
+                  <ImagePlus className="h-5 w-5" />
+                </span>
+              )}
+              <span className="text-xs font-semibold">{busy === 'upload' ? 'Uploading…' : 'Add photo'}</span>
             </button>
           </li>
         )}

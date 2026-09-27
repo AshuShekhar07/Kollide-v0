@@ -1,3 +1,5 @@
+import { ArrowRight, UserRound } from 'lucide-react'
+import StepHeader from '../../components/StepHeader'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Choice, ErrorText, Field, inputClass } from '../../components/ui'
@@ -54,10 +56,9 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Let's start with the basics</h1>
-        <p className="mt-1 text-neutral-600">Only your first name and age are shown on your profile.</p>
-      </div>
+      <StepHeader icon={UserRound} title="Let's start with the basics">
+        Only your first name and age are shown on your profile.
+      </StepHeader>
 
       <Field label="First name">
         <input
@@ -75,7 +76,7 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
       </Field>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-neutral-800">I am a</legend>
+        <legend className="mb-2 text-sm font-semibold text-neutral-800">I am a</legend>
         <div className="grid grid-cols-3 gap-2">
           {GENDERS.map((g) => (
             <Choice key={g.value} name="gender" checked={gender === g.value} onChange={() => setGender(g.value)}>
@@ -86,7 +87,7 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-neutral-800">I'm looking for</legend>
+        <legend className="mb-2 text-sm font-semibold text-neutral-800">I'm looking for</legend>
         <div className="grid grid-cols-2 gap-2">
           {SEEKING_OPTIONS.map((o) => (
             <Choice key={o.value} name="seeking" checked={seeking === o.value} onChange={() => setSeeking(o.value)}>
@@ -97,7 +98,7 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-neutral-800">I'd like to meet</legend>
+        <legend className="mb-2 text-sm font-semibold text-neutral-800">I'd like to meet</legend>
         <div className="grid grid-cols-3 gap-2">
           {GENDERS.map((g) => (
             <Choice key={g.value} type="checkbox" checked={prefs.includes(g.value)} onChange={() => togglePref(g.value)}>
@@ -108,7 +109,7 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
       </fieldset>
 
       {!p.consent_at && (
-        <label className="flex items-start gap-3 rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-700">
+        <label className="flex items-start gap-3 rounded-3xl border border-neutral-200 bg-surface p-4 text-sm text-neutral-700 shadow-sm">
           <input
             type="checkbox"
             required
@@ -132,7 +133,7 @@ export default function BasicsStep({ data, reload, onNext }: StepProps) {
 
       <ErrorText>{error}</ErrorText>
       <Button type="submit" className="w-full" loading={saving}>
-        Continue
+        Continue <ArrowRight className="h-4 w-4" />
       </Button>
     </form>
   )

@@ -1,15 +1,130 @@
 @import 'tailwindcss';
 
+/*
+ * Colours are CSS variables so the whole app follows the phone's dark mode
+ * without `dark:` variants: the neutral, brand and status scales below are
+ * swapped for dark values in the media query at the end. `white`/`black`
+ * never change (text on photos and brand buttons); `surface` (cards, sheets)
+ * and `canvas` (page background) do.
+ */
 @theme {
-  --color-brand-50: #fdf2f8;
-  --color-brand-100: #fbe4f1;
+  --color-canvas: #fff8f1;
+  --color-surface: #ffffff;
+  /* Selected pills and chips sitting on a neutral-100 track. */
+  --color-raised: #ffffff;
+
+  /* Warm neutrals, so cream pages don't look grey. */
+  --color-neutral-50: #faf5ef;
+  --color-neutral-100: #f3ebe2;
+  --color-neutral-200: #e8ddd1;
+  --color-neutral-300: #d6c8b9;
+  --color-neutral-400: #a8998b;
+  --color-neutral-500: #7d6f63;
+  --color-neutral-600: #62564c;
+  --color-neutral-700: #4a4039;
+  --color-neutral-800: #332b26;
+  --color-neutral-900: #211b17;
+
+  --color-brand-50: #fdf1f7;
+  --color-brand-100: #fae1ee;
+  --color-brand-200: #f4c0dc;
+  --color-brand-300: #e893c1;
   --color-brand-500: #c2327f;
   --color-brand-600: #a3246a;
   --color-brand-700: #7a1f5c;
+  --color-brand-800: #5c1745;
   --color-brand-900: #3d0f2e;
+
+  /* Deep magentas that stay deep in dark mode: backgrounds under white text. */
+  --color-plum-500: #c2327f;
+  --color-plum-600: #a3246a;
+  --color-plum-700: #7a1f5c;
+  --color-plum-800: #5c1745;
+  --color-plum-900: #3d0f2e;
+  --color-plum-950: #24081b;
+
+  --color-marigold-50: #fff7e6;
+  --color-marigold-100: #ffeac2;
+  --color-marigold-300: #fcc868;
   --color-marigold-400: #fbb13c;
   --color-marigold-500: #f59e0b;
-  --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --color-marigold-600: #d97706;
+  --color-marigold-800: #8a4b06;
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  --animate-pop: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-rise: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes rise {
+    0% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(4deg); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-canvas: #140d11;
+    --color-surface: #1f161b;
+    --color-raised: #45363e;
+
+    --color-neutral-50: #251b20;
+    --color-neutral-100: #2d2228;
+    --color-neutral-200: #3b2e35;
+    --color-neutral-300: #4f4148;
+    --color-neutral-400: #7c6d74;
+    --color-neutral-500: #a1939a;
+    --color-neutral-600: #bdb0b6;
+    --color-neutral-700: #d4c9ce;
+    --color-neutral-800: #e8dfe3;
+    --color-neutral-900: #f8f2f4;
+
+    --color-brand-50: #34172a;
+    --color-brand-100: #451d36;
+    --color-brand-200: #5e2749;
+    --color-brand-300: #8a3a6a;
+    --color-brand-500: #e0559f;
+    --color-brand-600: #c93a86;
+    --color-brand-700: #f28cc0;
+    --color-brand-800: #f7b3d6;
+    --color-brand-900: #fbd8ea;
+
+    --color-marigold-50: #2e2210;
+    --color-marigold-100: #3d2c10;
+    --color-marigold-800: #fcc868;
+
+    --color-red-50: #3a1519;
+    --color-red-100: #4a1a1f;
+    --color-red-200: #6b2229;
+    --color-red-700: #fca5a5;
+    --color-red-800: #fecaca;
+    --color-green-50: #11281a;
+    --color-green-100: #14331f;
+    --color-green-700: #86efac;
+    --color-green-800: #a7f3c0;
+    --color-amber-50: #33240b;
+    --color-amber-100: #402d0d;
+    --color-amber-200: #5c4212;
+    --color-amber-800: #fcd34d;
+    --color-amber-900: #fde68a;
+    --color-amber-950: #fef3c7;
+  }
 }
 
 html,
@@ -19,5 +134,53 @@ body,
 }
 
 body {
-  @apply bg-white text-neutral-800 antialiased;
+  @apply bg-canvas text-neutral-800 antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Bandhani: rows of tie-dye dots, for festive surfaces. Colour comes from
+   `color`, so `text-*` utilities tint it. */
+@utility bandhani {
+  background-image: radial-gradient(circle at center, currentColor 1.4px, transparent 1.8px),
+    radial-gradient(circle at center, currentColor 1.4px, transparent 1.8px);
+  background-size: 18px 18px;
+  background-position: 0 0, 9px 9px;
+}
+
+/* A hanging toran of marigold-and-magenta triangles, for the top edge of
+   hero sections. */
+@utility toran {
+  background-image: linear-gradient(135deg, var(--color-marigold-400) 25%, transparent 25%),
+    linear-gradient(225deg, var(--color-marigold-400) 25%, transparent 25%);
+  background-size: 20px 20px;
+  background-repeat: repeat-x;
+}
+
+/* Loading placeholder shimmer. */
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-200) 50%, var(--color-neutral-100) 75%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

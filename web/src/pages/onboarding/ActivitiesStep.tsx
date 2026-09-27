@@ -1,8 +1,20 @@
+import { Check, ChevronLeft, PartyPopper } from 'lucide-react'
+import StepHeader from '../../components/StepHeader'
 import { useState } from 'react'
-import { Button, ErrorText } from '../../components/ui'
+import { Button, ErrorText, Tag } from '../../components/ui'
 import { friendlyError } from '../../lib/errors'
 import { supabase } from '../../lib/supabase'
 import type { StepProps } from './Onboarding'
+
+const ACTIVITY_EMOJI: Record<string, string> = {
+  garba: '💃',
+  trekking: '🥾',
+  badminton: '🏸',
+  concerts: '🎸',
+  running: '🏃',
+  board_games: '🎲',
+  cafe_hopping: '☕',
+}
 
 export default function ActivitiesStep({ data, reload, onNext, onBack }: StepProps) {
   const garba = data.activities.find((a) => a.slug === 'garba')
@@ -59,12 +71,9 @@ export default function ActivitiesStep({ data, reload, onNext, onBack }: StepPro
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">What are you up for?</h1>
-        <p className="mt-1 text-neutral-600">
-          Garba is live for Navratri. Tap the others to hear when they launch.
-        </p>
-      </div>
+      <StepHeader icon={PartyPopper} title="What are you up for?">
+        Garba is live for Navratri. Tap the others to hear when they launch.
+      </StepHeader>
 
       <ul className="space-y-2">
         {data.activities.map((a) => {
@@ -75,19 +84,24 @@ export default function ActivitiesStep({ data, reload, onNext, onBack }: StepPro
                 type="button"
                 onClick={() => toggle(a.id)}
                 aria-pressed={on}
-                className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
-                  on ? 'border-brand-600 bg-brand-50' : 'border-neutral-200 bg-white hover:border-brand-300'
+                className={`flex w-full items-center justify-between gap-3 rounded-3xl border px-4 py-3 text-left transition active:scale-[0.99] ${
+                  on ? 'border-brand-500 bg-brand-50 shadow-sm' : 'border-neutral-200 bg-surface hover:border-brand-300'
                 }`}
               >
-                <span className="font-medium text-neutral-900">{a.name}</span>
+                <span className="flex items-center gap-3">
+                  <span className="text-2xl" aria-hidden>
+                    {ACTIVITY_EMOJI[a.slug] ?? '✨'}
+                  </span>
+                  <span className="font-semibold text-neutral-900">{a.name}</span>
+                </span>
                 <span className="flex items-center gap-2">
-                  {a.status === 'coming_soon' && <span className="text-xs text-neutral-500">Coming soon</span>}
+                  {a.status === 'coming_soon' ? <Tag>Coming soon</Tag> : <Tag tone="green">Live</Tag>}
                   <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-full border text-sm ${
+                    className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
                       on ? 'border-brand-600 bg-brand-600 text-white' : 'border-neutral-300'
                     }`}
                   >
-                    {on ? '✓' : ''}
+                    {on && <Check className="h-3.5 w-3.5 animate-pop" strokeWidth={3.5} />}
                   </span>
                 </span>
               </button>
@@ -100,7 +114,7 @@ export default function ActivitiesStep({ data, reload, onNext, onBack }: StepPro
       <div className="flex gap-3">
         {onBack && (
           <Button variant="secondary" onClick={onBack} disabled={saving}>
-            Back
+            <ChevronLeft className="h-4 w-4" /> Back
           </Button>
         )}
         <Button className="flex-1" onClick={finish} loading={saving}>

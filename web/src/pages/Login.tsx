@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { Button, ErrorText, Field, FullScreenSpinner, inputClass } from '../components/ui'
+import { MailCheck, MapPin } from 'lucide-react'
+import { Button, ErrorText, Field, FullScreenSpinner, inputClass, Logo } from '../components/ui'
 import { homePathFor, useAuth } from '../lib/auth-context'
 import { friendlyError } from '../lib/errors'
 import { supabase } from '../lib/supabase'
@@ -8,8 +9,14 @@ import { supabase } from '../lib/supabase'
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.7z" />
-      <path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9h-4v3.1A12 12 0 0 0 12 24z" />
+      <path
+        fill="#4285F4"
+        d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.7z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9h-4v3.1A12 12 0 0 0 12 24z"
+      />
       <path fill="#FBBC05" d="M5.4 14.4a7.2 7.2 0 0 1 0-4.7V6.6h-4a12 12 0 0 0 0 10.8l4-3z" />
       <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z" />
     </svg>
@@ -65,87 +72,104 @@ export default function Login() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 py-10">
-      <Link to="/" className="text-2xl font-extrabold tracking-tight text-brand-700">
-        Kollide
-      </Link>
-      <h1 className="mt-6 text-2xl font-bold text-neutral-900">Sign in or create an account</h1>
-      <p className="mt-1 text-neutral-600">Find your Garba friends or group.</p>
-      <p className="mt-3 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
-        📍 Bangalore only, for now
-      </p>
-
-      <div className="mt-8 space-y-4">
-        <Button variant="secondary" className="w-full" onClick={signInWithGoogle} loading={busy === 'google'}>
-          <GoogleIcon /> Continue with Google
-        </Button>
-
-        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-neutral-400">
-          <span className="h-px flex-1 bg-neutral-200" /> or <span className="h-px flex-1 bg-neutral-200" />
+    <main className="flex min-h-dvh flex-col">
+      <div className="relative overflow-hidden bg-gradient-to-br from-plum-700 via-plum-600 to-plum-500 px-4 pb-16 pt-[max(env(safe-area-inset-top),1.5rem)] text-white">
+        <div className="bandhani pointer-events-none absolute inset-0 text-white/[0.08]" aria-hidden />
+        <div
+          className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 animate-float rounded-full bg-marigold-400/30 blur-3xl"
+          aria-hidden
+        />
+        <div className="relative mx-auto max-w-sm">
+          <Link to="/" aria-label="Kollide home">
+            <Logo tone="white" className="text-3xl" />
+          </Link>
+          <h1 className="mt-8 text-3xl font-extrabold leading-tight">Sign in or create an account</h1>
+          <p className="mt-2 text-white/80">Find your Garba friends or group.</p>
+          <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/20">
+            <MapPin className="h-3.5 w-3.5" /> Bangalore only, for now
+          </p>
         </div>
-
-        {stage === 'email' ? (
-          <form onSubmit={sendCode} className="space-y-3">
-            <Field label="Email">
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                className={inputClass}
-              />
-            </Field>
-            <Button type="submit" className="w-full" loading={busy === 'email'}>
-              Email me a code
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={verifyCode} className="space-y-3">
-            <Field label={`Enter the code sent to ${email}`}>
-              <input
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{6,10}"
-                maxLength={10}
-                required
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="Code"
-                className={`${inputClass} text-center font-mono text-2xl tracking-[0.3em]`}
-              />
-            </Field>
-            <Button type="submit" className="w-full" loading={busy === 'code'} disabled={code.length < 6}>
-              Verify and continue
-            </Button>
-            <button
-              type="button"
-              className="w-full text-sm text-neutral-500 underline underline-offset-4"
-              onClick={() => {
-                setStage('email')
-                setCode('')
-              }}
-            >
-              Use a different email
-            </button>
-          </form>
-        )}
-
-        <ErrorText>{error}</ErrorText>
       </div>
 
-      <p className="mt-8 text-xs text-neutral-500">
-        By continuing you agree to our{' '}
-        <Link to="/terms" className="underline">
-          Terms
-        </Link>{' '}
-        and{' '}
-        <Link to="/privacy" className="underline">
-          Privacy Policy
-        </Link>
-        . You must be 18 or older.
-      </p>
+      <div className="relative mx-auto -mt-8 w-full max-w-sm flex-1 px-4 pb-10">
+        <div className="animate-rise space-y-4 rounded-[2rem] border border-neutral-200/80 bg-surface p-5 shadow-xl shadow-plum-900/10">
+          <Button variant="secondary" className="w-full" onClick={signInWithGoogle} loading={busy === 'google'}>
+            <GoogleIcon /> Continue with Google
+          </Button>
+
+          <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-neutral-400">
+            <span className="h-px flex-1 bg-neutral-200" /> or <span className="h-px flex-1 bg-neutral-200" />
+          </div>
+
+          {stage === 'email' ? (
+            <form onSubmit={sendCode} className="space-y-3">
+              <Field label="Email">
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@email.com"
+                  className={inputClass}
+                />
+              </Field>
+              <Button type="submit" className="w-full" loading={busy === 'email'}>
+                Email me a code
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={verifyCode} className="space-y-3">
+              <div className="flex items-start gap-3 rounded-2xl bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
+                <MailCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  Check your inbox. We sent a code to <strong className="break-all">{email}</strong>
+                </span>
+              </div>
+              <Field label="Enter the code">
+                <input
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6,10}"
+                  maxLength={10}
+                  required
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Code"
+                  className={`${inputClass} text-center font-mono text-2xl tracking-[0.3em]`}
+                />
+              </Field>
+              <Button type="submit" className="w-full" loading={busy === 'code'} disabled={code.length < 6}>
+                Verify and continue
+              </Button>
+              <button
+                type="button"
+                className="w-full py-1 text-sm font-medium text-neutral-500 underline underline-offset-4 hover:text-neutral-800"
+                onClick={() => {
+                  setStage('email')
+                  setCode('')
+                }}
+              >
+                Use a different email
+              </button>
+            </form>
+          )}
+
+          <ErrorText>{error}</ErrorText>
+        </div>
+
+        <p className="mt-6 px-2 text-center text-xs leading-relaxed text-neutral-500">
+          By continuing you agree to our{' '}
+          <Link to="/terms" className="underline">
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link to="/privacy" className="underline">
+            Privacy Policy
+          </Link>
+          . You must be 18 or older.
+        </p>
+      </div>
     </main>
   )
 }

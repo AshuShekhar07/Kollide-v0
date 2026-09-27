@@ -1,38 +1,58 @@
+import { MapPin, Plus, ShieldCheck, Sparkles, UsersRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DiscoverTabs from '../../components/DiscoverTabs'
-import { ErrorText, Spinner } from '../../components/ui'
+import { Capacity, DateChip } from '../../components/GroupBits'
+import { LinkButton, EmptyState, ErrorText, Skeleton, Tag } from '../../components/ui'
 import { useAuth } from '../../lib/auth-context'
 import { fetchLiveActivity, type LiveActivity } from '../../lib/discovery'
 import { friendlyError } from '../../lib/errors'
-import { eventDate, spotsLeft, type GroupListItem, type MemberStatus } from '../../lib/groups'
+import { spotsLeft, type GroupListItem, type MemberStatus } from '../../lib/groups'
 import { supabase } from '../../lib/supabase'
 
-const STATUS_CHIP: Partial<Record<MemberStatus, { label: string; className: string }>> = {
-  approved: { label: "You're in", className: 'bg-green-100 text-green-800' },
-  requested: { label: 'Requested', className: 'bg-amber-100 text-amber-800' },
-  invited: { label: 'Invited', className: 'bg-brand-100 text-brand-700' },
+const STATUS_TAG: Partial<Record<MemberStatus, { label: string; tone: 'green' | 'amber' | 'brand' }>> = {
+  approved: { label: "You're in", tone: 'green' },
+  requested: { label: 'Requested', tone: 'amber' },
+  invited: { label: 'Invited', tone: 'brand' },
 }
 
 function GroupCard({ group }: { group: GroupListItem }) {
-  const chip = group.my_status ? STATUS_CHIP[group.my_status] : undefined
-  const when = [eventDate(group.event_date), group.venue].filter(Boolean).join(' · ')
+  const status = group.my_status ? STATUS_TAG[group.my_status] : undefined
   return (
-    <li>
-      <Link to={`/groups/${group.id}`} className="block rounded-2xl border border-neutral-200 bg-white p-4 hover:border-brand-500">
-        <span className="flex items-start justify-between gap-3">
-          <span className="font-semibold text-neutral-900">{group.title}</span>
-          {chip && (
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${chip.className}`}>{chip.label}</span>
-          )}
-        </span>
-        {when && <span className="mt-0.5 block text-sm text-neutral-600">{when}</span>}
-        {group.description && <span className="mt-1 line-clamp-2 block text-sm text-neutral-500">{group.description}</span>}
-        <span className="mt-2 flex items-center justify-between text-xs text-neutral-500">
-          <span>
-            {group.member_count}/{group.max_members} people · {spotsLeft(group)}
+    <li className="animate-rise">
+      <Link
+        to={`/groups/${group.id}`}
+        className="block rounded-3xl border border-neutral-200/80 bg-surface p-4 shadow-sm transition hover:border-brand-300 hover:shadow-md active:scale-[0.99]"
+      >
+        <span className="flex items-start gap-3">
+          <DateChip date={group.event_date} />
+          <span className="min-w-0 flex-1">
+            <span className="flex items-start justify-between gap-2">
+              <span className="font-display text-[17px] font-bold leading-tight text-neutral-900">{group.title}</span>
+              {status && (
+                <Tag tone={status.tone} className="shrink-0">
+                  {status.label}
+                </Tag>
+              )}
+            </span>
+            {group.venue && (
+              <span className="mt-1 flex items-center gap-1 text-sm text-neutral-600">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{group.venue}</span>
+              </span>
+            )}
           </span>
-          {group.admin_name && <span>by {group.admin_name}</span>}
+        </span>
+        {group.description && <span className="mt-3 line-clamp-2 block text-sm text-neutral-500">{group.description}</span>}
+        <span className="mt-3 block">
+          <Capacity count={group.member_count} max={group.max_members} />
+          <span className="mt-1.5 flex items-center justify-between text-xs text-neutral-500">
+            <span className="flex items-center gap-1 font-medium">
+              <UsersRound className="h-3.5 w-3.5" />
+              {group.member_count}/{group.max_members} · {spotsLeft(group)}
+            </span>
+            {group.admin_name && <span>by {group.admin_name}</span>}
+          </span>
         </span>
       </Link>
     </li>
@@ -65,45 +85,59 @@ export default function Groups() {
       <DiscoverTabs />
 
       {!verified ? (
-        <div className="mt-12 text-center">
-          <p className="font-semibold text-neutral-900">Groups open once you're verified</p>
-          <p className="mt-1 text-sm text-neutral-600">
-            Everyone in a group is verified, so you'll be able to join and start groups as soon as your video is
-            approved, usually within 24 hours.
-          </p>
-        </div>
+        <EmptyState icon={ShieldCheck} title="Groups open once you're verified">
+          Everyone in a group is verified, so you can join and start groups as soon as your video is approved, usually
+          within 24 hours.
+        </EmptyState>
       ) : activity === null ? (
-        <div className="mt-12 text-center">
-          <p className="font-semibold text-neutral-900">Add Garba &amp; Dandiya first</p>
-          <p className="mt-1 text-sm text-neutral-600">Groups are for live activities. Add Garba on the People tab.</p>
-        </div>
+        <EmptyState
+          icon={Sparkles}
+          title="Add Garba & Dandiya first"
+          action={
+            <LinkButton to="/discover">
+              Go to People
+            </LinkButton>
+          }
+        >
+          Groups are for live activities. Add Garba on the People tab.
+        </EmptyState>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h1 className="text-lg font-bold text-neutral-900">{activity?.name ?? 'Groups'} groups</h1>
-              <p className="text-xs text-neutral-500">Go with a group. Everyone in it is verified.</p>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-neutral-900">Groups</h1>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                {activity?.name ?? 'Garba'} · everyone in a group is verified.
+              </p>
             </div>
-            <Link
-              to="/groups/new"
-              className="shrink-0 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-            >
-              Start a group
-            </Link>
+            <LinkButton to="/groups/new" className="shrink-0 px-4 py-2.5 text-sm">
+              <Plus className="h-4 w-4" strokeWidth={2.6} /> Start a group
+            </LinkButton>
           </div>
 
-          <div className="mt-4">
-            <ErrorText>{error}</ErrorText>
-          </div>
-          {!groups && !error && <Spinner />}
-          {groups?.length === 0 && (
-            <div className="mt-12 text-center">
-              <p className="font-semibold text-neutral-700">No open groups yet</p>
-              <p className="mt-1 text-sm text-neutral-500">Start one and invite people who are going.</p>
+          <ErrorText>{error}</ErrorText>
+          {!groups && !error && (
+            <div className="space-y-3" aria-label="Loading">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-36 !rounded-3xl" />
+              ))}
             </div>
           )}
+          {groups?.length === 0 && (
+            <EmptyState
+              icon={UsersRound}
+              title="No open groups yet"
+              action={
+                <LinkButton to="/groups/new">
+                  <Plus className="h-4 w-4" strokeWidth={2.6} /> Start a group
+                </LinkButton>
+              }
+            >
+              Be the first. Start a group for your Garba night and invite people who are going.
+            </EmptyState>
+          )}
           {groups && groups.length > 0 && (
-            <ul className="mt-4 space-y-3">
+            <ul className="space-y-3">
               {groups.map((g) => (
                 <GroupCard key={g.id} group={g} />
               ))}

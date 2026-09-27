@@ -38,7 +38,7 @@ function Row({ item, onDone }: { item: NewPhoto; onDone: () => void }) {
   }
 
   return (
-    <li className="rounded-2xl border border-neutral-200 bg-white p-4">
+    <li className="rounded-2xl border border-neutral-200 bg-surface p-4">
       <p className="font-semibold text-neutral-900">
         {item.first_name} <span className="font-mono text-xs font-normal text-neutral-500">{item.public_code}</span>
       </p>

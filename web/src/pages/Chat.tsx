@@ -1,9 +1,11 @@
+import { ArrowLeft, AtSign, Ban, Flag, Info, Lock, MoreVertical, PartyPopper, SendHorizontal, UsersRound } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useSignedPhotos } from '../components/ProfileCard'
-import { BlockDialog, ReportDialog } from '../components/SafetyDialogs'
+import Avatar from '../components/Avatar'
+import { BlockDialog, ReportDialog, Sheet } from '../components/SafetyDialogs'
 import SocialLinks from '../components/SocialLinks'
-import { Button, ErrorText, Spinner } from '../components/ui'
+import { Button, ErrorText, FullScreenSpinner } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { MAX_MESSAGE_LENGTH, PRIVACY_COPY, type ChatMessage, type Conversation } from '../lib/chat'
 import { friendlyError } from '../lib/errors'
@@ -23,14 +25,21 @@ function time(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 }
 
-function Avatar({ path }: { path: string | null }) {
-  const [url] = useSignedPhotos(path ? [path] : [])
-  return (
-    <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-200">
-      {url && <img src={url} alt="" className="h-full w-full object-cover" />}
-    </span>
-  )
+function dayLabel(iso: string) {
+  const d = new Date(iso)
+  const today = new Date()
+  const yesterday = new Date()
+  yesterday.setDate(today.getDate() - 1)
+  if (d.toDateString() === today.toDateString()) return 'Today'
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
+  return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
 }
+
+const ICEBREAKERS = [
+  'Which Garba night are you going to? 💃',
+  'Where do you usually go for Garba in Bangalore?',
+  'Honest question: how good are your Garba steps? 😄',
+]
 
 export default function Chat() {
   const { id = '' } = useParams()
@@ -50,6 +59,7 @@ export default function Chat() {
   const [dialog, setDialog] = useState<'report' | 'block' | 'socials' | null>(null)
 
   const listRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   // Latest header, for the Realtime handlers.
   const convRef = useRef<Conversation | null>(null)
   // How to fix up the scroll position after the next render of `messages`.
@@ -179,8 +189,8 @@ export default function Chat() {
   if (loadError && !conv) {
     return (
       <main className="mx-auto max-w-md px-4 pt-6">
-        <Link to="/matches" className="text-sm font-semibold text-brand-700">
-          ← Matches
+        <Link to="/matches" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700">
+          <ArrowLeft className="h-4 w-4" /> Chats
         </Link>
         <div className="mt-6">
           <ErrorText>{loadError}</ErrorText>
@@ -188,7 +198,7 @@ export default function Chat() {
       </main>
     )
   }
-  if (!conv) return <Spinner />
+  if (!conv) return <FullScreenSpinner />
 
   const group = conv.kind === 'group' ? conv.group : null
   const other = group ? null : (conv.members[0] ?? null)
@@ -198,16 +208,21 @@ export default function Chat() {
   const closed = conv.is_frozen || (!group && !other)
   // Report and block for group members live on the group page.
   const target = other && { userId: other.user_id, name: other.first_name }
+  const meterTone = used >= 0.95 ? 'bg-red-500' : used >= 0.8 ? 'bg-marigold-500' : 'bg-brand-500'
 
   return (
-    <div className="mx-auto flex h-dvh max-w-md flex-col bg-white">
-      <header className="flex items-center gap-3 border-b border-neutral-200 px-3 py-2">
-        <Link to="/matches" className="px-1 text-xl text-brand-700" aria-label="Back to matches">
-          ←
+    <div className="mx-auto flex h-dvh max-w-md flex-col bg-canvas">
+      <header className="z-20 flex items-center gap-2 border-b border-neutral-200/70 bg-surface/90 px-2 pb-2 pt-[max(env(safe-area-inset-top),0.5rem)] backdrop-blur-xl">
+        <Link
+          to="/matches"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100"
+          aria-label="Back to chats"
+        >
+          <ArrowLeft className="h-5 w-5" />
         </Link>
         {group ? (
-          <Link to={`/groups/${group.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700">
+          <Link to={`/groups/${group.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-1 pr-2 hover:bg-neutral-100">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-plum-500 to-plum-700 font-display font-bold text-white">
               {group.title.slice(0, 1).toUpperCase()}
             </span>
             <span className="min-w-0 flex-1">
@@ -218,16 +233,16 @@ export default function Chat() {
                   : `You, ${conv.members.map((m) => m.first_name).join(', ')}`}
               </span>
             </span>
-            <span className="shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-brand-700">Info</span>
+            <Info className="h-5 w-5 shrink-0 text-neutral-400" aria-label="Group info" />
           </Link>
         ) : other ? (
-          <>
-            <Avatar path={other.photo_path} />
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Avatar path={other.photo_path} name={other.first_name} className="h-10 w-10" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-neutral-900">{other.first_name}</p>
-              <p className="font-mono text-xs text-neutral-500">{other.public_code}</p>
+              <p className="font-mono text-[11px] text-neutral-500">{other.public_code}</p>
             </div>
-          </>
+          </div>
         ) : (
           <p className="flex-1 font-semibold text-neutral-500">Chat closed</p>
         )}
@@ -236,49 +251,56 @@ export default function Chat() {
             <button
               type="button"
               onClick={() => setMenuOpen((o) => !o)}
-              className="rounded-full px-3 py-1 text-xl leading-none text-neutral-600 hover:bg-neutral-100"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
               aria-label="Chat options"
               aria-expanded={menuOpen}
             >
-              ⋯
+              <MoreVertical className="h-5 w-5" />
             </button>
             {menuOpen && (
-              <ul className="absolute right-0 top-10 z-30 w-44 overflow-hidden rounded-2xl border border-neutral-200 bg-white py-1 text-sm shadow-lg">
-                {[
-                  { key: 'socials', label: `${other.first_name}'s socials`, className: 'text-neutral-800' },
-                  { key: 'report', label: 'Report', className: 'text-red-700' },
-                  { key: 'block', label: 'Block', className: 'text-red-700' },
-                ].map((item) => (
-                  <li key={item.key}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false)
-                        setDialog(item.key as 'socials' | 'report' | 'block')
-                      }}
-                      className={`w-full px-4 py-2.5 text-left font-medium hover:bg-neutral-50 ${item.className}`}
-                    >
-                      {item.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <button type="button" className="fixed inset-0 z-20 cursor-default" aria-label="Close menu" onClick={() => setMenuOpen(false)} />
+                <ul className="absolute right-0 top-11 z-30 w-52 origin-top-right animate-pop overflow-hidden rounded-2xl border border-neutral-200 bg-surface py-1.5 text-sm shadow-xl">
+                  {[
+                    { key: 'socials', label: `${other.first_name}'s socials`, icon: AtSign, className: 'text-neutral-800' },
+                    { key: 'report', label: 'Report', icon: Flag, className: 'text-red-700' },
+                    { key: 'block', label: 'Block', icon: Ban, className: 'text-red-700' },
+                  ].map((item) => (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false)
+                          setDialog(item.key as 'socials' | 'report' | 'block')
+                        }}
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left font-medium hover:bg-neutral-50 ${item.className}`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </div>
         )}
       </header>
 
-      <div className="border-b border-brand-100 bg-brand-50 px-4 py-2 text-xs text-brand-900">
-        <div className="flex items-start justify-between gap-3">
-          <p>
-            You share <strong>{conv.message_cap} messages</strong> in this chat, then continue on socials.
+      {!closed && (
+        <div className="border-b border-neutral-200/70 bg-surface/60 px-4 py-2">
+          <p className="text-xs text-neutral-600" aria-live="polite">
+            <strong className="font-semibold text-neutral-900">{remaining}</strong> of {conv.message_cap} shared messages left,
+            then continue on socials.
           </p>
-          <span className="shrink-0 rounded-full bg-white px-2 py-0.5 font-semibold text-brand-700" aria-live="polite">
-            {remaining} left
-          </span>
+          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-neutral-200" aria-hidden>
+            <div className={`h-full rounded-full transition-all duration-500 ${meterTone}`} style={{ width: `${Math.min(used, 1) * 100}%` }} />
+          </div>
+          <p className="mt-1.5 flex gap-1.5 text-[11px] leading-snug text-neutral-500">
+            <Lock className="mt-px h-3 w-3 shrink-0" /> {PRIVACY_COPY}
+          </p>
         </div>
-        <p className="mt-1 text-brand-700">{PRIVACY_COPY}</p>
-      </div>
+      )}
 
       <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3">
         {hasMore && (
@@ -289,28 +311,66 @@ export default function Chat() {
           </div>
         )}
         {messages.length === 0 && !closed && (
-          <p className="mt-10 text-center text-sm text-neutral-500">
-            Say hi{group ? ' to the group' : other ? ` to ${other.first_name}` : ''}! Plan where you'll meet for Garba.
-          </p>
+          <div className="flex animate-rise flex-col items-center px-4 pt-8 text-center">
+            {other ? (
+              <Avatar path={other.photo_path} name={other.first_name} className="h-20 w-20 text-2xl" ring />
+            ) : (
+              <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-plum-500 to-plum-700 text-white">
+                <UsersRound className="h-9 w-9" />
+              </span>
+            )}
+            <p className="mt-4 font-display text-lg font-bold text-neutral-900">
+              Say hi{group ? ' to the group' : other ? ` to ${other.first_name}` : ''} 👋
+            </p>
+            <p className="mt-1 text-sm text-neutral-500">Plan where you'll meet for Garba. Tap one to start:</p>
+            <div className="mt-4 flex w-full flex-col gap-2">
+              {ICEBREAKERS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => {
+                    setDraft(t)
+                    inputRef.current?.focus()
+                  }}
+                  className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-left text-sm font-medium text-brand-800 transition hover:border-brand-300 active:scale-[0.98]"
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
-        <ul className="space-y-1.5">
+        <ul aria-label="Conversation">
           {messages.map((m, i) => {
             const mine = m.sender_id === uid
-            const showName = group && !mine && messages[i - 1]?.sender_id !== m.sender_id
+            const prev = messages[i - 1]
+            const nextMsg = messages[i + 1]
+            const newDay = !prev || dayLabel(prev.created_at) !== dayLabel(m.created_at)
+            const firstOfRun = newDay || prev?.sender_id !== m.sender_id
+            const lastOfRun = !nextMsg || nextMsg.sender_id !== m.sender_id || dayLabel(nextMsg.created_at) !== dayLabel(m.created_at)
+            const showName = group && !mine && firstOfRun
+            const corner = mine ? (lastOfRun ? 'rounded-br-md' : '') : lastOfRun ? 'rounded-bl-md' : ''
             return (
-              <li key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+              <li key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'} ${firstOfRun ? 'mt-3' : 'mt-0.5'}`}>
+                {newDay && (
+                  <span className="mx-auto mb-3 rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-500">
+                    {dayLabel(m.created_at)}
+                  </span>
+                )}
                 {showName && (
-                  <span className="mb-0.5 ml-2 mt-1 text-xs font-semibold text-neutral-500">
+                  <span className="mb-1 ml-3 text-xs font-semibold text-brand-700">
                     {(m.sender_id && group.names[m.sender_id]) || 'Former member'}
                   </span>
                 )}
                 <div
-                  className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${
-                    mine ? 'rounded-br-md bg-brand-600 text-white' : 'rounded-bl-md bg-neutral-100 text-neutral-900'
+                  className={`max-w-[80%] whitespace-pre-wrap break-words rounded-3xl px-4 py-2 text-[15px] leading-snug ${corner} ${
+                    mine
+                      ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-sm shadow-brand-600/20'
+                      : 'border border-neutral-200/80 bg-surface text-neutral-900 shadow-sm'
                   }`}
                 >
                   {m.body}
-                  <span className={`ml-2 inline-block text-[10px] ${mine ? 'text-white/70' : 'text-neutral-400'}`}>
+                  <span className={`ml-2 inline-block translate-y-0.5 text-[10px] ${mine ? 'text-white/70' : 'text-neutral-400'}`}>
                     {time(m.created_at)}
                   </span>
                 </div>
@@ -320,14 +380,17 @@ export default function Chat() {
         </ul>
       </div>
 
-      <div className="border-t border-neutral-200 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
+      <div className="border-t border-neutral-200/70 bg-surface/90 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl">
         {closed ? (
-          <p className="rounded-2xl bg-neutral-100 px-4 py-3 text-center text-sm text-neutral-600">
+          <p className="flex items-center justify-center gap-2 rounded-2xl bg-neutral-100 px-4 py-3 text-center text-sm text-neutral-600">
+            <Lock className="h-4 w-4" />
             {group ? 'This group has closed.' : 'This chat is closed.'}
           </p>
         ) : atCap ? (
-          <div className="max-h-[50dvh] overflow-y-auto rounded-2xl border border-marigold-500/40 bg-marigold-500/10 p-4">
-            <p className="font-bold text-neutral-900">You've used all {conv.message_cap} messages</p>
+          <div className="max-h-[50dvh] overflow-y-auto rounded-3xl border border-marigold-300 bg-marigold-50 p-4">
+            <p className="flex items-center gap-2 font-display font-bold text-neutral-900">
+              <PartyPopper className="h-5 w-5 text-marigold-600" /> You've used all {conv.message_cap} messages
+            </p>
             <p className="mt-1 text-sm text-neutral-600">
               Continue on socials with {group ? 'the group' : other?.first_name}.
             </p>
@@ -348,7 +411,7 @@ export default function Chat() {
           <>
             {used >= 0.8 && (
               <p
-                className={`mb-2 rounded-xl px-3 py-2 text-xs font-medium ${
+                className={`mb-2 rounded-2xl px-3 py-2 text-xs font-medium ${
                   used >= 0.95 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'
                 }`}
                 role="status"
@@ -369,6 +432,7 @@ export default function Chat() {
               </label>
               <textarea
                 id="chat-input"
+                ref={inputRef}
                 value={draft}
                 onChange={(e) => {
                   setDraft(e.target.value)
@@ -378,11 +442,21 @@ export default function Chat() {
                 maxLength={MAX_MESSAGE_LENGTH}
                 rows={1}
                 placeholder="Message"
-                className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-neutral-300 px-4 py-2.5 text-[15px] focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-100"
+                className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:border-brand-500 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-100"
               />
-              <Button type="submit" className="h-11 px-4" loading={sending} disabled={!draft.trim()}>
-                Send
-              </Button>
+              <motion.button
+                type="submit"
+                whileTap={{ scale: 0.85 }}
+                disabled={!draft.trim() || sending}
+                aria-label="Send"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md shadow-brand-600/30 transition disabled:opacity-40"
+              >
+                {sending ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <SendHorizontal className="h-5 w-5" />
+                )}
+              </motion.button>
             </form>
             {draft.length > MAX_MESSAGE_LENGTH - 100 && (
               <p className="mt-1 text-right text-xs text-neutral-500">
@@ -394,21 +468,13 @@ export default function Chat() {
       </div>
 
       {dialog === 'socials' && other && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${other.first_name}'s socials`}
-          onClick={(e) => e.target === e.currentTarget && setDialog(null)}
-        >
-          <div className="w-full max-w-md rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl">
-            <h2 className="mb-3 text-lg font-bold text-neutral-900">{other.first_name}'s socials</h2>
-            <SocialLinks userId={other.user_id} />
-            <Button variant="secondary" className="mt-4 w-full" onClick={() => setDialog(null)}>
-              Close
-            </Button>
-          </div>
-        </div>
+        <Sheet label={`${other.first_name}'s socials`} onClose={() => setDialog(null)}>
+          <h2 className="mb-3 text-xl font-bold text-neutral-900">{other.first_name}'s socials</h2>
+          <SocialLinks userId={other.user_id} />
+          <Button variant="secondary" className="mt-4 w-full" onClick={() => setDialog(null)}>
+            Close
+          </Button>
+        </Sheet>
       )}
       {dialog === 'report' && target && (
         <ReportDialog

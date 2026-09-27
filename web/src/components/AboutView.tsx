@@ -18,11 +18,19 @@ export default function AboutView({ userId, bio, compact = false }: { userId: st
   if (!bio && !answers.length) return null
   return (
     <div className={compact ? 'space-y-2' : 'space-y-3'}>
-      {bio && <p className={`whitespace-pre-wrap text-neutral-800 ${compact ? 'text-sm' : 'text-[15px]'}`}>{bio}</p>}
+      {bio && <p className={`whitespace-pre-wrap leading-relaxed text-neutral-700 ${compact ? 'text-sm' : 'text-[15px]'}`}>{bio}</p>}
       {answers.map((a) => (
-        <div key={a.prompt_key} className={`rounded-2xl bg-brand-50 ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}>
-          <p className="text-xs font-semibold text-brand-700">{a.question}</p>
-          <p className={`mt-0.5 whitespace-pre-wrap text-neutral-900 ${compact ? 'text-sm' : 'text-[15px]'}`}>{a.answer}</p>
+        <div
+          key={a.prompt_key}
+          className={`relative overflow-hidden rounded-3xl border border-brand-100 bg-brand-50 ${compact ? 'px-3.5 py-2.5' : 'px-4 py-3.5'}`}
+        >
+          <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-marigold-400" aria-hidden />
+          <p className="text-xs font-bold text-brand-700">{a.question}</p>
+          <p
+            className={`mt-1 whitespace-pre-wrap font-display font-semibold leading-snug text-neutral-900 ${compact ? 'text-[15px]' : 'text-lg'}`}
+          >
+            {a.answer}
+          </p>
         </div>
       ))}
     </div>

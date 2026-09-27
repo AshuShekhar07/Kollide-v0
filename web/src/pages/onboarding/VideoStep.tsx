@@ -1,3 +1,5 @@
+import { Circle, RefreshCw, RotateCcw, ScanFace, ShieldAlert, Smartphone, Sun, Video } from 'lucide-react'
+import StepHeader from '../../components/StepHeader'
 import { useEffect, useRef, useState } from 'react'
 import { Button, ErrorText } from '../../components/ui'
 import { friendlyError } from '../../lib/errors'
@@ -159,11 +161,10 @@ export default function VideoStep({ data, reload }: StepProps) {
   if (rejected && outOfAttempts) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-neutral-900">We couldn't verify your profile</h1>
-        {latest?.reject_reason && <p className="text-neutral-700">Reason: {latest.reject_reason}</p>}
-        <p className="text-neutral-600">
+        <StepHeader icon={ShieldAlert} title="We couldn't verify your profile">
+          {latest?.reject_reason && <p className="mb-2 font-medium text-neutral-800">Reason: {latest.reject_reason}</p>}
           You've used your one resubmission. If you think this is a mistake, reply to the email we sent you.
-        </p>
+        </StepHeader>
       </div>
     )
   }
@@ -173,30 +174,34 @@ export default function VideoStep({ data, reload }: StepProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">
-          {rejected ? 'Record a new verification video' : 'Verify it’s really you'}
-        </h1>
+      <StepHeader icon={ScanFace} title={rejected ? 'Record a new verification video' : 'Verify it’s really you'}>
         {rejected && latest?.reject_reason && (
-          <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p className="mb-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             Your last video wasn't approved: {latest.reject_reason}. You can try once more.
           </p>
         )}
-        <p className="mt-1 text-neutral-600">
-          Record a 10-second selfie video. Our team checks it against your photos, usually within 24 hours. It's
-          deleted 48 hours after approval and never shown on your profile.
-        </p>
-      </div>
+        Record a 10-second selfie video. Our team checks it against your photos, usually within 24 hours. It's deleted
+        48 hours after approval and never shown on your profile.
+      </StepHeader>
 
       {phase === 'intro' && (
         <>
-          <ol className="space-y-2 rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-700">
-            <li>1. Find good light and remove sunglasses or masks.</li>
-            <li>2. Hold your phone at face height.</li>
-            <li>3. Follow the prompts: look straight, turn left, turn right.</li>
+          <ol className="divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-200/80 bg-surface text-sm text-neutral-700 shadow-sm">
+            {[
+              { icon: Sun, text: 'Find good light and remove sunglasses or masks.' },
+              { icon: Smartphone, text: 'Hold your phone at face height.' },
+              { icon: RefreshCw, text: 'Follow the prompts: look straight, turn left, turn right.' },
+            ].map((tip) => (
+              <li key={tip.text} className="flex items-center gap-3 px-4 py-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-marigold-100 text-marigold-800">
+                  <tip.icon className="h-[18px] w-[18px]" />
+                </span>
+                {tip.text}
+              </li>
+            ))}
           </ol>
           <Button className="w-full" onClick={openCamera}>
-            Open camera
+            <Video className="h-5 w-5" /> Open camera
           </Button>
         </>
       )}
@@ -205,6 +210,13 @@ export default function VideoStep({ data, reload }: StepProps) {
         <div className="space-y-4">
           <div className="relative overflow-hidden rounded-3xl bg-black">
             <video ref={liveVideo} muted playsInline className="aspect-[3/4] w-full -scale-x-100 object-cover" />
+            {/* Where to put your face. */}
+            <div
+              className={`pointer-events-none absolute left-1/2 top-[42%] h-[58%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-[3px] border-dashed ${
+                phase === 'recording' ? 'border-marigold-400' : 'border-white/70'
+              }`}
+              aria-hidden
+            />
             {phase === 'recording' && (
               <>
                 <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 text-white">
@@ -221,7 +233,7 @@ export default function VideoStep({ data, reload }: StepProps) {
           </div>
           {phase === 'camera' ? (
             <Button className="w-full" onClick={startRecording}>
-              Start recording
+              <Circle className="h-4 w-4 fill-current" /> Start recording
             </Button>
           ) : (
             <Button className="w-full" variant="secondary" onClick={stopRecording} disabled={elapsed < MIN_MS}>
@@ -237,7 +249,7 @@ export default function VideoStep({ data, reload }: StepProps) {
           <p className="text-sm text-neutral-600">Check that your face is clearly visible throughout.</p>
           <div className="flex gap-3">
             <Button variant="secondary" onClick={retake} disabled={phase === 'uploading'}>
-              Retake
+              <RotateCcw className="h-4 w-4" /> Retake
             </Button>
             <Button className="flex-1" onClick={submit} loading={phase === 'uploading'}>
               Submit for review

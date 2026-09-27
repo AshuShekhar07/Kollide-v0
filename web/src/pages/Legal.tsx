@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { Logo } from '../components/ui'
 import { PRIVACY_COPY } from '../lib/chat'
 
 // Operator details still to be filled in before launch (PLAN.md §8). They
@@ -16,10 +17,10 @@ function Blank({ children }: { children: string }) {
 function LegalPage({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="mx-auto max-w-2xl px-4 pb-16 pt-8">
-      <Link to="/" className="text-lg font-extrabold tracking-tight text-brand-700">
-        Kollide
+      <Link to="/" aria-label="Kollide home">
+        <Logo className="text-2xl" />
       </Link>
-      <h1 className="mt-6 text-2xl font-bold text-neutral-900">{title}</h1>
+      <h1 className="mt-6 text-3xl font-bold text-neutral-900">{title}</h1>
       <p className="mt-1 text-sm text-neutral-500">Effective {EFFECTIVE}</p>
       <div className="mt-6 space-y-6 text-[15px] leading-relaxed text-neutral-700 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-neutral-900 [&_li]:mt-1 [&_ul]:list-disc [&_ul]:pl-5">
         {children}

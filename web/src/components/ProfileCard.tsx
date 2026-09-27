@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { BadgeCheck } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { signedPhotoUrls } from '../lib/photos'
 
 export type CardProfile = {
@@ -30,44 +31,62 @@ export default function ProfileCard({
   photoIndex,
   className = '',
   hideBio = false,
+  footer,
 }: {
   profile: CardProfile
   photoIndex: number
   className?: string
   // When the full intro is shown below the card instead.
   hideBio?: boolean
+  // Extra content under the name, e.g. a "More about" button.
+  footer?: ReactNode
 }) {
   const urls = useSignedPhotos(profile.photo_paths)
   const count = Math.max(profile.photo_paths.length, 1)
   const index = ((photoIndex % count) + count) % count
   const url = urls[index]
+  const [loaded, setLoaded] = useState<string | null>(null)
 
   return (
-    <div className={`relative select-none overflow-hidden rounded-3xl bg-neutral-200 shadow-xl shadow-black/10 ${className}`}>
+    <div className={`relative select-none overflow-hidden rounded-[2rem] bg-neutral-200 shadow-xl shadow-plum-900/20 ${className}`}>
       {url ? (
-        <img src={url} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-5xl font-bold text-neutral-400">
-          {profile.first_name.slice(0, 1)}
+        <img
+          key={url}
+          src={url}
+          alt=""
+          draggable={false}
+          onLoad={() => setLoaded(url)}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded === url ? 'opacity-100' : 'opacity-0'}`}
+        />
+      ) : null}
+      {(!url || loaded !== url) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-200 to-marigold-100">
+          <span className="font-display text-6xl font-bold text-white/80">{profile.first_name.slice(0, 1)}</span>
         </div>
       )}
 
       {count > 1 && (
-        <div className="absolute inset-x-3 top-3 flex gap-1" aria-hidden>
+        <div className="absolute inset-x-4 top-3 flex gap-1" aria-hidden>
           {Array.from({ length: count }, (_, i) => (
-            <span key={i} className={`h-1 flex-1 rounded-full ${i === index ? 'bg-white' : 'bg-white/40'}`} />
+            <span
+              key={i}
+              className={`h-1 flex-1 rounded-full shadow-sm transition-colors ${i === index ? 'bg-white' : 'bg-white/35'}`}
+            />
           ))}
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 pt-16 text-white">
-        <p className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold">
-            {profile.first_name}, {profile.age}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-5 pb-5 pt-20 text-white">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="font-display text-[1.75rem] font-bold leading-tight">
+            {profile.first_name}
+            <span className="font-semibold text-white/85">, {profile.age}</span>
           </span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 font-mono text-xs">{profile.public_code}</span>
+          <BadgeCheck className="h-6 w-6 fill-sky-500 text-white" strokeWidth={2} aria-label="Verified" />
         </p>
-        {profile.bio && !hideBio && <p className="mt-1 line-clamp-3 text-sm text-white/90">{profile.bio}</p>}
+        <p className="mt-0.5 font-mono text-[11px] tracking-wider text-white/65">{profile.public_code}</p>
+        {profile.bio && !hideBio && <p className="mt-2 line-clamp-2 text-sm leading-snug text-white/90">{profile.bio}</p>}
+        {footer}
       </div>
     </div>
   )

@@ -1,82 +1,118 @@
-import { useEffect, useState } from 'react'
+import { ChevronRight, MessageCircle, UsersRound } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useShell } from '../components/AppShell'
-import { useSignedPhotos } from '../components/ProfileCard'
-import { ErrorText, Spinner } from '../components/ui'
+import Avatar from '../components/Avatar'
+import { LinkButton, EmptyState, ErrorText, PageHeader, Skeleton, Tag } from '../components/ui'
 import { markNotificationsRead, type MatchItem } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
+import { timeAgo } from '../lib/format'
 import { eventDate, type MyGroup } from '../lib/groups'
 import { supabase } from '../lib/supabase'
 
-function MatchRow({ match }: { match: MatchItem }) {
-  const [url] = useSignedPhotos(match.photo_path ? [match.photo_path] : [])
-  const subtitle = match.unread ? 'New message' : match.last_message_at ? 'Open chat' : 'Say hi 👋'
-
+// Matches nobody has written to yet, as a row of avatars.
+function NewMatches({ matches }: { matches: MatchItem[] }) {
   return (
-    <li>
-      <Link
-        to={`/chat/${match.conversation_id}`}
-        className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-3 hover:border-brand-500"
-      >
-        <span className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-neutral-200">
-          {url && <img src={url} alt="" className="h-full w-full object-cover" />}
-        </span>
+    <section className="mb-6">
+      <h2 className="mb-3 text-sm font-bold text-neutral-800">New matches</h2>
+      <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+        {matches.map((m) => (
+          <li key={m.match_id} className="animate-rise">
+            <Link to={`/chat/${m.conversation_id}`} className="flex w-[4.5rem] flex-col items-center gap-1.5 active:scale-95">
+              <Avatar path={m.photo_path} name={m.first_name} className="h-16 w-16 text-xl" ring />
+              <span className="w-full truncate text-center text-xs font-semibold text-neutral-800">{m.first_name}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function Row({
+  to,
+  avatar,
+  title,
+  tag,
+  subtitle,
+  time,
+  highlight,
+}: {
+  to: string
+  avatar: ReactNode
+  title: string
+  tag?: ReactNode
+  subtitle: string
+  time: string
+  highlight: boolean
+}) {
+  return (
+    <li className="animate-rise">
+      <Link to={to} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-neutral-100 active:scale-[0.99]">
+        {avatar}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="font-semibold text-neutral-900">
-              {match.first_name}, {match.age}
-            </span>
-            {match.is_new && (
-              <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">New</span>
-            )}
+            <span className="truncate font-semibold text-neutral-900">{title}</span>
+            {tag}
           </span>
-          <span className="block font-mono text-xs text-neutral-500">{match.public_code}</span>
-          <span className={`block text-sm ${match.unread ? 'font-semibold text-brand-700' : 'text-neutral-500'}`}>
-            {subtitle}
-          </span>
+          <span className={`block truncate text-sm ${highlight ? 'font-semibold text-brand-700' : 'text-neutral-500'}`}>{subtitle}</span>
         </span>
-        {match.unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-600" aria-label="Unread messages" />}
+        <span className="flex shrink-0 flex-col items-end gap-1.5">
+          {time && <span className="text-[11px] text-neutral-400">{time}</span>}
+          {highlight ? (
+            <span className="h-2.5 w-2.5 rounded-full bg-brand-600" aria-label="Needs attention" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-neutral-300" />
+          )}
+        </span>
       </Link>
     </li>
+  )
+}
+
+function MatchRow({ match }: { match: MatchItem }) {
+  return (
+    <Row
+      to={`/chat/${match.conversation_id}`}
+      avatar={<Avatar path={match.photo_path} name={match.first_name} />}
+      title={`${match.first_name}, ${match.age}`}
+      tag={match.is_new && <Tag tone="marigold">New</Tag>}
+      subtitle={match.unread ? 'New message' : 'Open chat'}
+      time={timeAgo(match.last_message_at)}
+      highlight={match.unread}
+    />
   )
 }
 
 // Admins with requests waiting go to the manage screen; everyone else to the chat.
 function GroupRow({ group }: { group: MyGroup }) {
   const review = group.role === 'admin' && group.pending_requests > 0
+  const details = [`${group.member_count}/${group.max_members} people`, eventDate(group.event_date)].filter(Boolean).join(' · ')
   const subtitle = group.unread
     ? 'New message'
     : review
       ? `${group.pending_requests} request${group.pending_requests === 1 ? '' : 's'} to review`
       : group.last_message_at
-        ? 'Open group chat'
+        ? details
         : 'Say hi to the group 👋'
-  const details = [`${group.member_count}/${group.max_members} people`, eventDate(group.event_date)].filter(Boolean).join(' · ')
 
   return (
-    <li>
-      <Link
-        to={review ? `/groups/${group.group_id}/manage` : `/chat/${group.conversation_id}`}
-        className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-3 hover:border-brand-500"
-      >
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xl font-bold text-brand-700">
+    <Row
+      to={review ? `/groups/${group.group_id}/manage` : `/chat/${group.conversation_id}`}
+      avatar={
+        <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-plum-500 to-plum-700 font-display text-xl font-bold text-white">
           {group.title.slice(0, 1).toUpperCase()}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
-            <span className="truncate font-semibold text-neutral-900">{group.title}</span>
-            {group.is_new && (
-              <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">New</span>
-            )}
-          </span>
-          <span className="block text-xs text-neutral-500">{details}</span>
-          <span className={`block text-sm ${group.unread || review ? 'font-semibold text-brand-700' : 'text-neutral-500'}`}>
-            {subtitle}
+          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-canvas bg-marigold-400 text-plum-900">
+            <UsersRound className="h-3 w-3" strokeWidth={2.6} />
           </span>
         </span>
-        {(group.unread || review) && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-600" aria-label="Needs attention" />}
-      </Link>
-    </li>
+      }
+      title={group.title}
+      tag={group.is_new && <Tag tone="marigold">New</Tag>}
+      subtitle={subtitle}
+      time={timeAgo(group.last_message_at)}
+      highlight={group.unread || review}
+    />
   )
 }
 
@@ -97,42 +133,50 @@ export default function Matches() {
     })
   }, [refreshBadges])
 
+  const fresh = matches?.filter((m) => !m.last_message_at) ?? []
+  // People with messages and every group, most recent first.
+  const threads = [
+    ...(matches ?? []).filter((m) => m.last_message_at).map((m) => ({ at: m.last_message_at, el: <MatchRow key={m.match_id} match={m} /> })),
+    ...(groups ?? []).map((g) => ({ at: g.last_message_at ?? '', el: <GroupRow key={g.group_id} group={g} /> })),
+  ].sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
+
   return (
     <>
-      <h1 className="text-lg font-bold text-neutral-900">Matches</h1>
-      <p className="mt-1 text-sm text-neutral-600">Chat here, then continue on socials. Your socials are shared only with the people here.</p>
+      <PageHeader title="Chats" subtitle="Your socials are shared only with the people here." />
 
-      <div className="mt-4">
-        <ErrorText>{error}</ErrorText>
-      </div>
-      {(!matches || !groups) && !error && <Spinner />}
-      {matches?.length === 0 && groups?.length === 0 && (
-        <div className="mt-12 text-center">
-          <p className="font-semibold text-neutral-700">No matches yet</p>
-          <p className="mt-1 text-sm text-neutral-500">
-            When you and someone like each other, or you join a group, they show up here.
-          </p>
+      <ErrorText>{error}</ErrorText>
+      {(!matches || !groups) && !error && (
+        <div className="space-y-3" aria-label="Loading">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-3 px-2">
+              <Skeleton className="h-14 w-14 !rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
-      {groups && groups.length > 0 && (
-        <>
-          <h2 className="mt-5 text-sm font-semibold text-neutral-800">Groups</h2>
-          <ul className="mt-2 space-y-3">
-            {groups.map((g) => (
-              <GroupRow key={g.group_id} group={g} />
-            ))}
-          </ul>
-        </>
+      {matches?.length === 0 && groups?.length === 0 && (
+        <EmptyState
+          icon={MessageCircle}
+          title="No chats yet"
+          action={
+            <LinkButton to="/discover">
+              Start discovering
+            </LinkButton>
+          }
+        >
+          When you and someone like each other, or you join a group, you can chat here.
+        </EmptyState>
       )}
-      {matches && matches.length > 0 && (
-        <>
-          {groups && groups.length > 0 && <h2 className="mt-5 text-sm font-semibold text-neutral-800">People</h2>}
-          <ul className="mt-2 space-y-3">
-            {matches.map((m) => (
-              <MatchRow key={m.match_id} match={m} />
-            ))}
-          </ul>
-        </>
+      {fresh.length > 0 && <NewMatches matches={fresh} />}
+      {threads.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-sm font-bold text-neutral-800">Messages</h2>
+          <ul className="-mx-2">{threads.map((t) => t.el)}</ul>
+        </section>
       )}
     </>
   )

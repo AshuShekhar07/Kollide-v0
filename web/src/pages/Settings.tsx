@@ -1,7 +1,10 @@
+import { ChevronRight, FileText, Lock, LogOut, ShieldCheck, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Avatar from '../components/Avatar'
+import { BackLink } from '../components/BackLink'
 import { Sheet } from '../components/SafetyDialogs'
-import { Button, ErrorText, Spinner, inputClass } from '../components/ui'
+import { Button, ErrorText, Section, Spinner, inputClass } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import type { Database } from '../lib/database.types'
 import { friendlyError, functionError } from '../lib/errors'
@@ -34,20 +37,19 @@ function BlockedList() {
   }
 
   return (
-    <section className="mt-6">
-      <h2 className="text-sm font-semibold text-neutral-800">Blocked people</h2>
-      <p className="mt-0.5 text-xs text-neutral-500">
-        Unblocking lets you see each other in Discover again. Chats that closed stay closed.
-      </p>
-      <div className="mt-2">
-        <ErrorText>{error}</ErrorText>
-      </div>
+    <Section title="Blocked people" hint="Unblocking lets you see each other in Discover again. Chats that closed stay closed.">
+      <ErrorText>{error}</ErrorText>
       {!people && !error && <Spinner />}
-      {people?.length === 0 && <p className="mt-2 text-sm text-neutral-500">You haven't blocked anyone.</p>}
+      {people?.length === 0 && (
+        <p className="flex items-center gap-2 rounded-3xl border border-dashed border-neutral-200 px-4 py-4 text-sm text-neutral-500">
+          <ShieldCheck className="h-4 w-4" /> You haven't blocked anyone.
+        </p>
+      )}
       {people && people.length > 0 && (
-        <ul className="mt-2 divide-y divide-neutral-100 rounded-2xl border border-neutral-200 bg-white">
+        <ul className="divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-200/80 bg-surface shadow-sm">
           {people.map((p) => (
-            <li key={p.user_id} className="flex items-center gap-3 px-3 py-2.5">
+            <li key={p.user_id} className="flex items-center gap-3 px-4 py-3">
+              <Avatar path={null} name={p.first_name ?? 'K'} className="h-10 w-10" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold text-neutral-900">{p.first_name ?? 'Kollide user'}</span>
                 <span className="block font-mono text-xs text-neutral-500">{p.public_code}</span>
@@ -65,7 +67,7 @@ function BlockedList() {
           ))}
         </ul>
       )}
-    </section>
+    </Section>
   )
 }
 
@@ -127,34 +129,36 @@ export default function Settings() {
 
   return (
     <>
-      <Link to="/profile" className="text-sm font-semibold text-brand-700">
-        ← Profile
-      </Link>
-      <h1 className="mt-3 text-lg font-bold text-neutral-900">Settings</h1>
+      <BackLink to="/profile">Profile</BackLink>
+      <h1 className="mt-3 text-2xl font-bold text-neutral-900">Settings</h1>
 
       <BlockedList />
 
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold text-neutral-800">Your data</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          Read what we collect and how long we keep it in our{' '}
-          <Link to="/privacy" className="font-semibold text-brand-700 underline">
-            Privacy Policy
-          </Link>{' '}
-          and{' '}
-          <Link to="/terms" className="font-semibold text-brand-700 underline">
-            Terms
-          </Link>
-          .
-        </p>
-      </section>
+      <Section title="Your data" hint="What we collect and how long we keep it.">
+        <ul className="divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-200/80 bg-surface shadow-sm">
+          {[
+            { to: '/privacy', label: 'Privacy Policy', icon: Lock },
+            { to: '/terms', label: 'Terms of Service', icon: FileText },
+          ].map((l) => (
+            <li key={l.to}>
+              <Link to={l.to} className="flex items-center gap-3 px-4 py-3.5 font-semibold text-neutral-800 hover:bg-neutral-50">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100">
+                  <l.icon className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex-1">{l.label}</span>
+                <ChevronRight className="h-4 w-4 text-neutral-400" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Section>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-8 space-y-2">
         <Button variant="secondary" className="w-full" onClick={signOut}>
-          Sign out
+          <LogOut className="h-4 w-4" /> Sign out
         </Button>
-        <Button variant="ghost" className="w-full text-red-700 hover:bg-red-50" onClick={() => setDeleting(true)}>
-          Delete account
+        <Button variant="ghost" className="w-full !text-red-700 hover:!bg-red-50" onClick={() => setDeleting(true)}>
+          <Trash2 className="h-4 w-4" /> Delete account
         </Button>
       </div>
 

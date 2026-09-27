@@ -47,3 +47,15 @@ export function spotsLeft(g: { member_count: number; max_members: number }) {
   const n = Math.max(g.max_members - g.member_count, 0)
   return n === 0 ? 'Full' : `${n} spot${n === 1 ? '' : 's'} left`
 }
+
+// { month: 'OCT', day: '11', weekday: 'Sat' } for the calendar chip on group cards.
+export function dateParts(iso: string | null) {
+  if (!iso) return null
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return {
+    month: date.toLocaleDateString('en-IN', { month: 'short' }).toUpperCase(),
+    day: String(d),
+    weekday: date.toLocaleDateString('en-IN', { weekday: 'short' }),
+  }
+}

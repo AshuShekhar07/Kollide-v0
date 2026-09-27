@@ -1,3 +1,5 @@
+import { ChevronLeft, Lock } from 'lucide-react'
+import StepHeader from '../../components/StepHeader'
 import { useState, type FormEvent } from 'react'
 import { Button, ErrorText, Field, inputClass } from '../../components/ui'
 import { friendlyError } from '../../lib/errors'
@@ -41,16 +43,13 @@ export default function ContactStep({ data, reload, onNext, onBack }: StepProps)
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">How can matches reach you?</h1>
-        <p className="mt-1 text-neutral-600">
-          These stay private. They're only shown to someone after you match with them or join the same group.
-        </p>
-      </div>
+      <StepHeader icon={Lock} title="How can matches reach you?">
+        These stay private. They're only shown to someone after you match with them or join the same group.
+      </StepHeader>
 
       <Field label="Phone number">
         <div className="flex">
-          <span className="flex items-center rounded-l-xl border border-r-0 border-neutral-300 bg-neutral-50 px-3 text-neutral-600">
+          <span className="flex items-center rounded-l-2xl border border-r-0 border-neutral-200 bg-neutral-100 px-3.5 font-semibold text-neutral-700">
             +91
           </span>
           <input
@@ -67,12 +66,12 @@ export default function ContactStep({ data, reload, onNext, onBack }: StepProps)
       </Field>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-medium text-neutral-800">
+        <legend className="text-sm font-semibold text-neutral-800">
           Social handles <span className="font-normal text-neutral-500">(at least one)</span>
         </legend>
         {SOCIALS.map((s) => (
           <label key={s.key} className="flex items-center gap-3">
-            <span className="w-24 shrink-0 text-sm text-neutral-600">{s.label}</span>
+            <span className="w-24 shrink-0 text-sm font-medium text-neutral-700">{s.label}</span>
             <input
               value={socials[s.key]}
               inputMode={s.key === 'whatsapp' ? 'numeric' : 'text'}
@@ -90,7 +89,7 @@ export default function ContactStep({ data, reload, onNext, onBack }: StepProps)
       <div className="flex gap-3">
         {onBack && (
           <Button type="button" variant="secondary" onClick={onBack}>
-            Back
+            <ChevronLeft className="h-4 w-4" /> Back
           </Button>
         )}
         <Button type="submit" className="flex-1" loading={saving}>

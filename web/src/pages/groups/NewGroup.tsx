@@ -1,6 +1,8 @@
+import { Minus, Plus, Sparkles } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Button, ErrorText, Field, Spinner, inputClass } from '../../components/ui'
+import { useNavigate } from 'react-router-dom'
+import { BackLink } from '../../components/BackLink'
+import { Button, EmptyState, ErrorText, Field, PageHeader, Spinner, inputClass } from '../../components/ui'
 import { useAuth } from '../../lib/auth-context'
 import { fetchLiveActivity, type LiveActivity } from '../../lib/discovery'
 import { friendlyError } from '../../lib/errors'
@@ -51,20 +53,23 @@ export default function NewGroup() {
 
   if (activity === undefined && !error) return <Spinner />
 
+
   return (
     <>
-      <Link to="/groups" className="text-sm font-semibold text-brand-700">
-        ← Groups
-      </Link>
-      <h1 className="mt-3 text-lg font-bold text-neutral-900">Start a group</h1>
-      <p className="mt-1 text-sm text-neutral-600">
-        You'll be the group admin: you choose who joins. Everyone in the group gets one shared chat.
-      </p>
+      <BackLink to="/groups">Groups</BackLink>
+      <div className="mt-3">
+        <PageHeader
+          title="Start a group"
+          subtitle="You'll be the admin and choose who joins. Everyone in the group shares one chat."
+        />
+      </div>
 
       {activity === null ? (
-        <p className="mt-6 text-sm text-neutral-600">Add Garba &amp; Dandiya on the People tab to start a group.</p>
+        <EmptyState icon={Sparkles} title="Add Garba & Dandiya first">
+          Add Garba &amp; Dandiya on the People tab to start a group.
+        </EmptyState>
       ) : (
-        <form onSubmit={submit} className="mt-5 space-y-4">
+        <form onSubmit={submit} className="space-y-4">
           <Field label="Group name">
             <input
               value={title}
@@ -96,15 +101,40 @@ export default function NewGroup() {
               className={inputClass}
             />
           </Field>
-          <Field label="Group size, including you">
-            <select value={size} onChange={(e) => setSize(Number(e.target.value))} className={inputClass}>
-              {Array.from({ length: MAX_GROUP_SIZE - 1 }, (_, i) => i + 2).map((n) => (
-                <option key={n} value={n}>
-                  {n} people
-                </option>
+          <div>
+            <span className="mb-1.5 block text-sm font-semibold text-neutral-800" id="size-label">
+              Group size, including you
+            </span>
+            <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-surface p-2 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setSize((n) => Math.max(2, n - 1))}
+                disabled={size <= 2}
+                aria-label="Fewer people"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 transition active:scale-90 disabled:opacity-30"
+              >
+                <Minus className="h-5 w-5" />
+              </button>
+              <p className="text-center" aria-live="polite" aria-labelledby="size-label">
+                <span className="font-display text-2xl font-bold text-neutral-900">{size}</span>
+                <span className="ml-1 text-sm text-neutral-500">people</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setSize((n) => Math.min(MAX_GROUP_SIZE, n + 1))}
+                disabled={size >= MAX_GROUP_SIZE}
+                aria-label="More people"
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 transition active:scale-90 disabled:opacity-30"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+            <span className="mt-1.5 flex gap-1" aria-hidden>
+              {Array.from({ length: MAX_GROUP_SIZE }, (_, i) => (
+                <span key={i} className={`h-1.5 flex-1 rounded-full transition ${i < size ? 'bg-brand-500' : 'bg-neutral-200'}`} />
               ))}
-            </select>
-          </Field>
+            </span>
+          </div>
 
           <ErrorText>{error}</ErrorText>
           <Button type="submit" className="w-full" loading={busy}>

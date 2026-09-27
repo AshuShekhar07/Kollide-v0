@@ -1,25 +1,17 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import AboutView from '../../components/AboutView'
 import { useShell } from '../../components/AppShell'
 import { Sheet } from '../../components/SafetyDialogs'
-import { Button, ErrorText, Spinner } from '../../components/ui'
+import { BackLink } from '../../components/BackLink'
+import { Capacity } from '../../components/GroupBits'
+import { Button, ErrorText, PageHeader, Section, Spinner, Tag } from '../../components/ui'
 import { useAuth } from '../../lib/auth-context'
 import { markNotificationsRead } from '../../lib/discovery'
 import { friendlyError } from '../../lib/errors'
 import type { GroupDetail as Group, GroupMember, InterestedPerson } from '../../lib/groups'
 import { supabase } from '../../lib/supabase'
 import { MemberAvatar } from './GroupDetail'
-
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
-  return (
-    <section className="mt-6">
-      <h2 className="text-sm font-semibold text-neutral-800">{title}</h2>
-      {hint && <p className="mt-0.5 text-xs text-neutral-500">{hint}</p>}
-      <div className="mt-2">{children}</div>
-    </section>
-  )
-}
 
 function PersonRow({ person, children }: { person: InterestedPerson; children: ReactNode }) {
   return (
@@ -30,9 +22,9 @@ function PersonRow({ person, children }: { person: InterestedPerson; children: R
           <p className="font-semibold text-neutral-900">
             {person.first_name}, {person.age}
             {person.seeking === 'group' && (
-              <span className="ml-2 rounded-full bg-marigold-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-neutral-800">
+              <Tag tone="marigold" className="ml-2">
                 Wants a group
-              </span>
+              </Tag>
             )}
           </p>
           <p className="font-mono text-xs text-neutral-500">{person.public_code}</p>
@@ -46,7 +38,7 @@ function PersonRow({ person, children }: { person: InterestedPerson; children: R
   )
 }
 
-const listClass = 'divide-y divide-neutral-100 rounded-2xl border border-neutral-200 bg-white'
+const listClass = 'divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-200/80 bg-surface shadow-sm'
 const smallBtn = 'px-4 py-2 text-sm'
 
 export default function ManageGroup() {
@@ -89,9 +81,7 @@ export default function ManageGroup() {
   if (!group || !people) {
     return error ? (
       <>
-        <Link to={`/groups/${id}`} className="text-sm font-semibold text-brand-700">
-          ← Group
-        </Link>
+        <BackLink to={`/groups/${id}`}>Group</BackLink>
         <div className="mt-6">
           <ErrorText>{error}</ErrorText>
         </div>
@@ -109,13 +99,16 @@ export default function ManageGroup() {
 
   return (
     <>
-      <Link to={`/groups/${group.id}`} className="text-sm font-semibold text-brand-700">
-        ← {group.title}
-      </Link>
-      <h1 className="mt-3 text-lg font-bold text-neutral-900">Manage group</h1>
-      <p className="mt-1 text-sm text-neutral-600">
-        {group.member_count}/{group.max_members} people.{' '}
-        {full ? 'The group is full. Remove someone to make room.' : 'Everyone here is verified.'}
+      <BackLink to={`/groups/${group.id}`}>{group.title}</BackLink>
+      <div className="mt-3">
+        <PageHeader
+          title="Manage group"
+          subtitle={full ? 'The group is full. Remove someone to make room.' : 'Everyone here is verified.'}
+        />
+      </div>
+      <Capacity count={group.member_count} max={group.max_members} />
+      <p className="mt-1.5 text-xs font-medium text-neutral-500">
+        {group.member_count}/{group.max_members} people
       </p>
       {error && (
         <div className="mt-3">
@@ -125,7 +118,7 @@ export default function ManageGroup() {
 
       <Section title={`Requests (${requests.length})`}>
         {requests.length === 0 ? (
-          <p className="text-sm text-neutral-500">No one is waiting right now.</p>
+          <p className="rounded-3xl border border-dashed border-neutral-200 px-4 py-5 text-center text-sm text-neutral-500">No one is waiting right now.</p>
         ) : (
           <ul className={listClass}>
             {requests.map((p) => (
@@ -159,7 +152,7 @@ export default function ManageGroup() {
 
       <Section title={`Members (${group.member_count})`}>
         {members.length === 0 ? (
-          <p className="text-sm text-neutral-500">Just you so far. Approve requests or invite people below.</p>
+          <p className="rounded-3xl border border-dashed border-neutral-200 px-4 py-5 text-center text-sm text-neutral-500">Just you so far. Approve requests or invite people below.</p>
         ) : (
           <ul className={listClass}>
             {members.map((m) => (
@@ -169,7 +162,7 @@ export default function ManageGroup() {
                   <span className="block truncate font-semibold text-neutral-900">{m.first_name}</span>
                   <span className="block font-mono text-xs text-neutral-500">{m.public_code}</span>
                 </span>
-                <Button variant="ghost" className={`${smallBtn} text-red-700`} disabled={!!busy} onClick={() => setRemoving(m)}>
+                <Button variant="ghost" className={`${smallBtn} !text-red-700 hover:!bg-red-50`} disabled={!!busy} onClick={() => setRemoving(m)}>
                   Remove
                 </Button>
               </li>
@@ -200,7 +193,7 @@ export default function ManageGroup() {
 
       <Section title="People you can invite" hint="Verified people going to Garba. People looking for a group come first.">
         {candidates.length === 0 ? (
-          <p className="text-sm text-neutral-500">No one else to invite right now. Check back later.</p>
+          <p className="rounded-3xl border border-dashed border-neutral-200 px-4 py-5 text-center text-sm text-neutral-500">No one else to invite right now. Check back later.</p>
         ) : (
           <ul className={listClass}>
             {candidates.map((p) => (

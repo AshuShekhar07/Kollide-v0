@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import BangaloreCheck from '../../components/BangaloreCheck'
-import { ErrorText, FullScreenSpinner } from '../../components/ui'
+import { ErrorText, FullScreenSpinner, Logo } from '../../components/ui'
 import { homePathFor, useAuth } from '../../lib/auth-context'
 import { friendlyError } from '../../lib/errors'
 import { supabase } from '../../lib/supabase'
@@ -116,14 +116,27 @@ export default function Onboarding() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-md px-4 pb-16 pt-6">
+    <main className="mx-auto min-h-dvh max-w-md px-4 pb-16 pt-[max(env(safe-area-inset-top),1.5rem)]">
       <header>
-        <span className="text-lg font-extrabold tracking-tight text-brand-700">Kollide</span>
+        <div className="flex items-center justify-between">
+          <Logo className="text-2xl" />
+          <span className="text-xs font-semibold text-neutral-500">
+            Step {current + 1} of {STEPS.length}
+          </span>
+        </div>
         <ol className="mt-4 flex gap-1.5" aria-label="Progress">
           {STEPS.map((label, i) => (
-            <li key={label} className="flex-1">
-              <span className={`block h-1.5 rounded-full ${i <= current ? 'bg-brand-600' : 'bg-neutral-200'}`} />
-              <span className={`mt-1 block text-[11px] ${i === current ? 'font-semibold text-brand-700' : 'text-neutral-400'}`}>
+            <li key={label} className="flex-1" aria-current={i === current ? 'step' : undefined}>
+              <span className="block h-1.5 overflow-hidden rounded-full bg-neutral-200">
+                <span
+                  className={`block h-full rounded-full bg-gradient-to-r from-marigold-400 to-brand-500 transition-all duration-500 ${
+                    i <= current ? 'w-full' : 'w-0'
+                  }`}
+                />
+              </span>
+              <span
+                className={`mt-1.5 block truncate text-[10px] font-semibold ${i === current ? 'text-brand-700' : i < current ? 'text-neutral-500' : 'text-neutral-400'}`}
+              >
                 {label}
               </span>
             </li>
@@ -134,7 +147,7 @@ export default function Onboarding() {
       <div className="mt-6">
         <BangaloreCheck />
       </div>
-      <div className="mt-2">
+      <div key={current} className="mt-2 animate-rise">
         {current === 0 && <BasicsStep {...props} />}
         {current === 1 && <PhotosStep {...props} />}
         {current === 2 && <AboutStep {...props} />}

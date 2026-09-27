@@ -1,9 +1,12 @@
+import { Compass, Heart, MessageCircle, UserRound } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../lib/auth-context'
 import { supabase } from '../lib/supabase'
 import BangaloreCheck from './BangaloreCheck'
 import InstallPrompt from './InstallPrompt'
+import { Logo } from './ui'
 
 type ShellContext = { refreshBadges: () => Promise<void> }
 
@@ -13,10 +16,10 @@ export function useShell() {
 
 const TABS = [
   // Groups is part of Discover (People / Groups switch).
-  { to: '/discover', label: 'Discover', badge: null, also: '/groups' },
-  { to: '/likes', label: 'Likes', badge: 'likes' },
-  { to: '/matches', label: 'Matches', badge: 'matches' },
-  { to: '/profile', label: 'Profile', badge: null, also: '/settings' },
+  { to: '/discover', label: 'Discover', icon: Compass, badge: null, also: '/groups' },
+  { to: '/likes', label: 'Likes', icon: Heart, badge: 'likes' },
+  { to: '/matches', label: 'Chats', icon: MessageCircle, badge: 'matches' },
+  { to: '/profile', label: 'Profile', icon: UserRound, badge: null, also: '/settings' },
 ] as const
 
 // Header, bottom tab bar and badge counts for the main app screens.
@@ -64,42 +67,66 @@ export default function AppShell() {
   }, [uid, refreshBadges])
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col">
-      <header className="flex items-center justify-between px-4 pt-4">
-        <span className="text-lg font-extrabold tracking-tight text-brand-700">Kollide</span>
-        <span className="rounded-full bg-neutral-100 px-3 py-1 font-mono text-xs text-neutral-600">
-          {profile?.first_name} · {profile?.public_code}
-        </span>
+    <div className="relative mx-auto flex min-h-dvh max-w-md flex-col">
+      <div
+        className="bandhani pointer-events-none absolute inset-x-0 top-0 h-56 text-brand-300/30 [mask-image:linear-gradient(to_bottom,black,transparent)]"
+        aria-hidden
+      />
+      <header className="sticky top-0 z-30 flex items-center justify-between bg-canvas/85 px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] backdrop-blur-lg">
+        <Link to="/discover" aria-label="Kollide home">
+          <Logo className="text-2xl" />
+        </Link>
+        <Link
+          to="/profile"
+          className="flex items-center gap-2 rounded-full border border-neutral-200 bg-surface py-1 pl-1 pr-3 shadow-sm transition active:scale-95"
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-marigold-400 to-brand-500 text-xs font-bold text-white">
+            {profile?.first_name?.slice(0, 1)}
+          </span>
+          <span className="font-mono text-xs font-medium text-neutral-600">{profile?.public_code}</span>
+        </Link>
       </header>
 
-      <div className="flex flex-1 flex-col px-4 pb-24 pt-4">
+      <div className="flex flex-1 flex-col px-4 pb-28 pt-2">
         <BangaloreCheck />
         <InstallPrompt />
         <Outlet context={{ refreshBadges } satisfies ShellContext} />
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/95 backdrop-blur">
-        <ul className="mx-auto flex max-w-md">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200/70 bg-surface/90 backdrop-blur-xl">
+        <ul className="mx-auto flex max-w-md px-2 pt-1.5">
           {TABS.map((tab) => {
             const count = tab.badge ? badges[tab.badge] : 0
+            const active = location.pathname.startsWith(tab.to) || ('also' in tab && location.pathname.startsWith(tab.also))
+            const Icon = tab.icon
             return (
               <li key={tab.to} className="flex-1">
                 <NavLink
                   to={tab.to}
-                  className={({ isActive }) =>
-                    `flex justify-center py-3 text-sm font-semibold ${
-                      isActive || ('also' in tab && location.pathname.startsWith(tab.also)) ? 'text-brand-700' : 'text-neutral-500'
-                    }`
-                  }
+                  aria-label={count > 0 ? `${tab.label}, ${count} new` : tab.label}
+                  className={`flex flex-col items-center gap-0.5 pb-1 text-[11px] font-semibold transition ${
+                    active ? 'text-brand-700' : 'text-neutral-500'
+                  }`}
                 >
-                  <span className="relative">
-                    {tab.label}
+                  <span className="relative flex h-8 w-14 items-center justify-center">
+                    {active && (
+                      <motion.span
+                        layoutId="tab-pill"
+                        className="absolute inset-0 rounded-full bg-brand-100"
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                    <Icon
+                      className={`relative h-[22px] w-[22px] ${active ? 'fill-brand-700/15' : ''}`}
+                      strokeWidth={active ? 2.3 : 1.9}
+                    />
                     {count > 0 && (
-                      <span className="absolute -right-5 -top-2 min-w-5 rounded-full bg-brand-600 px-1.5 text-center text-[11px] leading-5 text-white">
+                      <span className="absolute right-1.5 top-0 min-w-[18px] animate-pop rounded-full border-2 border-surface bg-marigold-500 px-1 text-center text-[10px] font-bold leading-[14px] text-white">
                         {count > 9 ? '9+' : count}
                       </span>
                     )}
                   </span>
+                  {tab.label}
                 </NavLink>
               </li>
             )

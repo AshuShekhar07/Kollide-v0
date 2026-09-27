@@ -1,3 +1,5 @@
+import { Camera, ChevronLeft } from 'lucide-react'
+import StepHeader from '../../components/StepHeader'
 import { useState } from 'react'
 import PhotoEditor, { MAX_PHOTOS, MIN_PHOTOS } from '../../components/PhotoEditor'
 import { Button } from '../../components/ui'
@@ -9,20 +11,17 @@ export default function PhotosStep({ data, reload, onNext, onBack }: StepProps) 
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Add your photos</h1>
-        <p className="mt-1 text-neutral-600">
-          Add {MIN_PHOTOS}–{MAX_PHOTOS} clear photos of yourself. The first one is your main photo. Our team compares
+      <StepHeader icon={Camera} title="Add your photos">
+        Add {MIN_PHOTOS}–{MAX_PHOTOS} clear photos of yourself. The first one is your main photo. Our team compares
           them with your verification video.
-        </p>
-      </div>
+      </StepHeader>
 
       <PhotoEditor uid={data.profile.id} photos={photos} reload={reload} onBusyChange={setBusy} />
 
       <div className="flex gap-3">
         {onBack && (
           <Button variant="secondary" onClick={onBack} disabled={busy}>
-            Back
+            <ChevronLeft className="h-4 w-4" /> Back
           </Button>
         )}
         <Button className="flex-1" onClick={onNext} disabled={photos.length < MIN_PHOTOS || busy}>

@@ -1,5 +1,6 @@
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { BadgeCheck, Heart, Hourglass, Info, RotateCcw, Sparkles, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import AboutView from '../components/AboutView'
 import { useShell } from '../components/AppShell'
@@ -7,7 +8,7 @@ import DiscoverTabs from '../components/DiscoverTabs'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard from '../components/ProfileCard'
 import { Sheet } from '../components/SafetyDialogs'
-import { Button, ErrorText, Spinner } from '../components/ui'
+import { Button, EmptyState, ErrorText, Skeleton, Tag } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { fetchLiveActivity, type Feed, type FeedProfile, type LiveActivity, type MatchResult } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
@@ -62,15 +63,15 @@ function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir;
       <ProfileCard profile={profile} photoIndex={photo} className="h-full w-full" />
       <motion.span
         style={{ opacity: likeOpacity }}
-        className="absolute left-5 top-8 -rotate-12 rounded-lg border-4 border-green-500 px-3 py-1 text-2xl font-extrabold text-green-500"
+        className="absolute left-5 top-10 flex -rotate-12 items-center gap-1.5 rounded-2xl border-[3px] border-green-400 bg-green-500/20 px-3 py-1 font-display text-2xl font-extrabold text-green-300 backdrop-blur-sm"
       >
-        LIKE
+        <Heart className="h-6 w-6 fill-current" /> LIKE
       </motion.span>
       <motion.span
         style={{ opacity: passOpacity }}
-        className="absolute right-5 top-8 rotate-12 rounded-lg border-4 border-red-500 px-3 py-1 text-2xl font-extrabold text-red-500"
+        className="absolute right-5 top-10 flex rotate-12 items-center gap-1.5 rounded-2xl border-[3px] border-red-400 bg-red-500/20 px-3 py-1 font-display text-2xl font-extrabold text-red-300 backdrop-blur-sm"
       >
-        PASS
+        <X className="h-6 w-6" strokeWidth={3} /> PASS
       </motion.span>
     </motion.div>
   )
@@ -94,16 +95,20 @@ function AddLiveActivity({ onAdded }: { onAdded: () => void }) {
   }
 
   return (
-    <div className="mt-16 text-center">
-      <h1 className="text-xl font-bold text-neutral-900">Garba &amp; Dandiya is live</h1>
-      <p className="mt-2 text-neutral-600">The activities you picked are coming soon. Add Garba to start meeting people now.</p>
-      <Button className="mt-6" onClick={add} loading={busy}>
-        Add Garba &amp; Dandiya
-      </Button>
-      <div className="mt-4">
-        <ErrorText>{error}</ErrorText>
-      </div>
-    </div>
+    <>
+      <EmptyState
+        icon={Sparkles}
+        title="Garba & Dandiya is live"
+        action={
+          <Button onClick={add} loading={busy}>
+            Add Garba &amp; Dandiya
+          </Button>
+        }
+      >
+        The activities you picked are coming soon. Add Garba to start meeting people now.
+      </EmptyState>
+      <ErrorText>{error}</ErrorText>
+    </>
   )
 }
 
@@ -120,7 +125,7 @@ export default function Discover() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [dir, setDir] = useState<Dir>(1)
-  const [matchName, setMatchName] = useState<string | null>(null)
+  const [matchName, setMatchName] = useState<{ name: string; photo: string | null } | null>(null)
   const [aboutOpen, setAboutOpen] = useState(false)
 
   // Swipes are sent in the background; the next feed fetch waits for them so
@@ -181,7 +186,7 @@ export default function Discover() {
           ? supabase.rpc('like_profile', args).then(({ data, error }) => {
               if (error) return setError(friendlyError(error))
               if ((data as unknown as MatchResult).matched) {
-                setMatchName(top.first_name)
+                setMatchName({ name: top.first_name, photo: top.photo_paths[0] ?? null })
                 refreshBadges()
               }
             })
@@ -205,13 +210,18 @@ export default function Discover() {
   const next = queue[1]
   const outOfViews = !verified && viewsLeft === 0
 
+  const seeking = SEEKING_OPTIONS.find((o) => o.value === profile?.seeking)?.short ?? 'the same thing'
+
   return (
     <>
       <DiscoverTabs />
       {!verified && (
-        <div className="mb-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
-          <span className="font-semibold">Pending verification.</span> Your likes will be delivered once you're
-          verified — usually within 24 hours.
+        <div className="mb-3 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+          <Hourglass className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            <span className="font-semibold">Verification pending.</span> Your likes are delivered once you're verified,
+            usually within 24 hours.
+          </p>
         </div>
       )}
 
@@ -219,101 +229,166 @@ export default function Discover() {
         <AddLiveActivity onAdded={loadActivity} />
       ) : (
         <>
-          <div className="flex items-baseline justify-between">
-            <h1 className="text-lg font-bold text-neutral-900">{activity?.name ?? 'Discover'}</h1>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-bold text-neutral-900">{activity?.name ?? 'Discover'}</h1>
+              <Link to="/profile" className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-neutral-500">
+                Looking for {seeking}
+                <span className="font-semibold text-brand-700">· Change</span>
+              </Link>
+            </div>
             {!verified && viewsLeft !== null && (
-              <span className="text-xs text-neutral-500">{viewsLeft} new profiles left today</span>
+              <Tag tone="amber" className="shrink-0">
+                {viewsLeft} left today
+              </Tag>
             )}
           </div>
-          <p className="text-xs text-neutral-500">
-            People looking for {SEEKING_OPTIONS.find((o) => o.value === profile?.seeking)?.short ?? 'the same thing'}.{' '}
-            <Link to="/profile" className="font-semibold text-brand-700">
-              Change
-            </Link>
-          </p>
 
           {/* Fills the space between the header and the buttons, so they stay above the tab bar. */}
-          <div className="relative mt-3 max-h-[36rem] min-h-72 w-full flex-1">
-            {next && <ProfileCard key={next.id} profile={next} photoIndex={0} className="absolute inset-0 h-full w-full scale-95 opacity-80" />}
+          <div className="relative mt-3 max-h-[36rem] min-h-80 w-full flex-1">
+            {next && (
+              <ProfileCard
+                key={next.id}
+                profile={next}
+                photoIndex={0}
+                className="absolute inset-0 h-full w-full translate-y-2 scale-[0.94] opacity-70"
+              />
+            )}
             <AnimatePresence custom={dir}>
               {top && <SwipeCard key={top.id} profile={top} dir={dir} onDecide={decide} />}
             </AnimatePresence>
 
-            {!top && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-neutral-200 p-6 text-center">
-                {loading ? (
-                  <Spinner label="Finding people…" />
-                ) : outOfViews ? (
-                  <>
-                    <p className="font-semibold text-neutral-900">That's everyone for today</p>
-                    <p className="mt-1 text-sm text-neutral-600">
-                      Unverified accounts can see a limited number of new profiles a day. Once you're verified, there's no
+            {!top &&
+              (loading ? (
+                <div className="absolute inset-0 overflow-hidden rounded-[2rem]" role="status" aria-label="Finding people">
+                  <Skeleton className="h-full w-full !rounded-[2rem]" />
+                  <div className="absolute inset-x-5 bottom-6 space-y-2">
+                    <Skeleton className="h-7 w-40 !bg-neutral-300/60" />
+                    <Skeleton className="h-4 w-56 !bg-neutral-300/60" />
+                  </div>
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200 bg-surface">
+                  {outOfViews ? (
+                    <EmptyState icon={Hourglass} title="That's everyone for today">
+                      Unverified accounts see a limited number of new profiles a day. Once you're verified, there's no
                       limit.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="font-semibold text-neutral-900">You've seen everyone for now</p>
-                    <p className="mt-1 text-sm text-neutral-600">New people join every day. Check back later.</p>
-                    {activity && (
-                      <Button variant="secondary" className="mt-4" onClick={() => loadFeed(activity.id)}>
-                        Refresh
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+                    </EmptyState>
+                  ) : (
+                    <EmptyState
+                      icon={Sparkles}
+                      title="You've seen everyone for now"
+                      action={
+                        activity && (
+                          <div className="flex flex-col items-center gap-2">
+                            <Button variant="secondary" onClick={() => loadFeed(activity.id)}>
+                              <RotateCcw className="h-4 w-4" /> Refresh
+                            </Button>
+                            <Link to="/groups" className="text-sm font-semibold text-brand-700">
+                              Or browse groups →
+                            </Link>
+                          </div>
+                        )
+                      }
+                    >
+                      New people join every day. Check back soon.
+                    </EmptyState>
+                  )}
+                </div>
+              ))}
           </div>
 
           <div className="mt-2">
             <ErrorText>{error}</ErrorText>
           </div>
 
-          <div className="mt-3 flex justify-center gap-6">
-            <button
-              type="button"
-              onClick={() => decide(-1)}
-              disabled={!top}
-              aria-label="Pass"
-              className="flex h-16 w-16 items-center justify-center rounded-full border border-neutral-200 bg-white text-3xl text-red-500 shadow-md transition hover:scale-105 disabled:opacity-40"
-            >
-              ✕
-            </button>
-            <button
-              type="button"
+          <div className="mt-3 flex items-center justify-center gap-5">
+            <ActionButton label="Pass" onClick={() => decide(-1)} disabled={!top} className="h-16 w-16 border border-neutral-200 bg-surface text-red-500">
+              <X className="h-8 w-8" strokeWidth={2.6} />
+            </ActionButton>
+            <ActionButton
+              label={top ? `About ${top.first_name}` : 'About'}
               onClick={() => setAboutOpen(true)}
               disabled={!top}
-              aria-label={top ? `About ${top.first_name}` : 'About'}
-              className="flex h-12 w-12 items-center justify-center self-center rounded-full border border-neutral-200 bg-white text-lg font-bold text-brand-700 shadow-md transition hover:scale-105 disabled:opacity-40"
+              className="h-12 w-12 border border-neutral-200 bg-surface text-brand-700"
             >
-              i
-            </button>
-            <button
-              type="button"
+              <Info className="h-5 w-5" strokeWidth={2.4} />
+            </ActionButton>
+            <ActionButton
+              label="Like"
               onClick={() => decide(1)}
               disabled={!top}
-              aria-label="Like"
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-600 text-3xl text-white shadow-md transition hover:scale-105 disabled:opacity-40"
+              className="h-16 w-16 bg-gradient-to-br from-plum-500 to-plum-700 text-white shadow-plum-600/40"
             >
-              ♥
-            </button>
+              <Heart className="h-8 w-8 fill-current" />
+            </ActionButton>
           </div>
         </>
       )}
 
       {aboutOpen && top && (
         <Sheet label={`About ${top.first_name}`} onClose={() => setAboutOpen(false)}>
-          <h2 className="mb-3 text-lg font-bold text-neutral-900">
-            {top.first_name}, {top.age}
-          </h2>
+          <div className="mb-4 flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-neutral-900">
+              {top.first_name}, {top.age}
+            </h2>
+            <Tag tone="brand">
+              <BadgeCheck className="h-3.5 w-3.5" /> Verified
+            </Tag>
+          </div>
           <AboutView userId={top.id} bio={top.bio} />
-          <Button variant="secondary" className="mt-4 w-full" onClick={() => setAboutOpen(false)}>
-            Close
-          </Button>
+          <div className="mt-5 flex gap-3">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => {
+                setAboutOpen(false)
+                decide(-1)
+              }}
+            >
+              <X className="h-4 w-4" /> Pass
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setAboutOpen(false)
+                decide(1)
+              }}
+            >
+              <Heart className="h-4 w-4 fill-current" /> Like
+            </Button>
+          </div>
         </Sheet>
       )}
-      {matchName && <MatchDialog name={matchName} onClose={() => setMatchName(null)} />}
+      {matchName && <MatchDialog name={matchName.name} photoPath={matchName.photo} onClose={() => setMatchName(null)} />}
     </>
+  )
+}
+
+function ActionButton({
+  label,
+  onClick,
+  disabled,
+  className,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  disabled: boolean
+  className: string
+  children: ReactNode
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      whileTap={{ scale: 0.86 }}
+      whileHover={{ scale: 1.06 }}
+      className={`flex items-center justify-center rounded-full shadow-lg shadow-black/10 transition-opacity disabled:opacity-40 ${className}`}
+    >
+      {children}
+    </motion.button>
   )
 }

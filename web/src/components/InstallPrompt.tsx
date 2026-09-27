@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 // Install banner for the main app (§6.2). Android/Chrome gets the browser's
@@ -57,7 +58,7 @@ export default function InstallPrompt() {
   if (hidden || (!event && !isIos())) return null
 
   return (
-    <div className="mb-3 flex items-center gap-3 rounded-2xl bg-brand-50 px-4 py-3 text-sm text-brand-900" role="status">
+    <div className="mb-3 flex animate-rise items-center gap-3 rounded-2xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm text-brand-900" role="status">
       <img src="/icon-192.png" alt="" className="h-9 w-9 shrink-0 rounded-xl" />
       <p className="min-w-0 flex-1">
         {event ? (
@@ -69,12 +70,12 @@ export default function InstallPrompt() {
         )}
       </p>
       {event && (
-        <button type="button" onClick={install} className="shrink-0 rounded-full bg-brand-600 px-3 py-1.5 font-semibold text-white">
+        <button type="button" onClick={install} className="shrink-0 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 px-3.5 py-1.5 font-semibold text-white shadow-sm active:scale-95">
           Install
         </button>
       )}
-      <button type="button" onClick={dismiss} className="shrink-0 px-1 text-lg leading-none text-brand-700" aria-label="Dismiss">
-        ×
+      <button type="button" onClick={dismiss} className="shrink-0 rounded-full p-1 text-brand-700 hover:bg-brand-100" aria-label="Dismiss">
+        <X className="h-4 w-4" />
       </button>
     </div>
   )

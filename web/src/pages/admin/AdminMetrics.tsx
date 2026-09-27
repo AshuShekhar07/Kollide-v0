@@ -41,7 +41,7 @@ function hoursSince(iso: string) {
 
 function Stat({ label, value, warn }: { label: string; value: ReactNode; warn?: boolean }) {
   return (
-    <div className={`rounded-2xl border p-4 ${warn ? 'border-red-200 bg-red-50' : 'border-neutral-200 bg-white'}`}>
+    <div className={`rounded-2xl border p-4 ${warn ? 'border-red-200 bg-red-50' : 'border-neutral-200 bg-surface'}`}>
       <p className="text-xs font-medium text-neutral-500">{label}</p>
       <p className={`mt-1 text-2xl font-bold ${warn ? 'text-red-700' : 'text-neutral-900'}`}>{value}</p>
     </div>
@@ -128,7 +128,7 @@ export default function AdminMetrics() {
             {m.votes.length === 0 ? (
               <p className="mt-2 text-sm text-neutral-500">No votes yet.</p>
             ) : (
-              <ul className="mt-2 divide-y divide-neutral-100 rounded-2xl border border-neutral-200 bg-white text-sm">
+              <ul className="mt-2 divide-y divide-neutral-100 rounded-2xl border border-neutral-200 bg-surface text-sm">
                 {m.votes.map((v) => (
                   <li key={v.activity} className="flex justify-between px-4 py-2">
                     <span>{v.activity}</span>

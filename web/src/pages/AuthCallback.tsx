@@ -1,6 +1,7 @@
+import { LogIn } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
-import { FullScreenSpinner } from '../components/ui'
+import { Navigate } from 'react-router-dom'
+import { LinkButton, EmptyState, FullScreenSpinner } from '../components/ui'
 import { homePathFor, useAuth } from '../lib/auth-context'
 
 // Google redirects here with ?code=…; supabase-js exchanges it automatically
@@ -20,12 +21,18 @@ export default function AuthCallback() {
 
   if (oauthError || timedOut) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center px-4 text-center">
-        <h1 className="text-xl font-bold text-neutral-900">Sign-in didn't complete</h1>
-        <p className="mt-2 text-neutral-600">{oauthError ? 'Google sign-in was cancelled or failed.' : 'This is taking too long.'}</p>
-        <Link to="/login" className="mt-6 font-semibold text-brand-600 underline underline-offset-4">
-          Try again
-        </Link>
+      <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4">
+        <EmptyState
+          icon={LogIn}
+          title="Sign-in didn't complete"
+          action={
+            <LinkButton to="/login">
+              Try again
+            </LinkButton>
+          }
+        >
+          {oauthError ? 'Google sign-in was cancelled or failed.' : 'This is taking too long.'}
+        </EmptyState>
       </main>
     )
   }

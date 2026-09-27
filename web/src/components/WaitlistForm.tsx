@@ -1,9 +1,10 @@
+import { PartyPopper } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 
 type State = 'idle' | 'submitting' | 'done' | 'error'
 
-export default function WaitlistForm() {
+export default function WaitlistForm({ id = 'waitlist-email' }: { id?: string }) {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<State>('idle')
   const [error, setError] = useState('')
@@ -23,7 +24,8 @@ export default function WaitlistForm() {
 
   if (state === 'done') {
     return (
-      <p className="rounded-2xl bg-white/15 px-4 py-3 text-sm font-medium text-white" role="status">
+      <p className="flex animate-pop items-center gap-2 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/25" role="status">
+        <PartyPopper className="h-5 w-5 shrink-0 text-marigold-300" />
         You're on the list. We'll email you the moment Kollide opens.
       </p>
     )
@@ -32,29 +34,29 @@ export default function WaitlistForm() {
   return (
     <form onSubmit={onSubmit} className="w-full">
       <div className="flex flex-col gap-2 sm:flex-row">
-        <label htmlFor="waitlist-email" className="sr-only">
+        <label htmlFor={id} className="sr-only">
           Email address
         </label>
         <input
-          id="waitlist-email"
+          id={id}
           type="email"
           required
           autoComplete="email"
           placeholder="you@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="min-w-0 flex-1 rounded-full bg-white px-5 py-3 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-4 focus:ring-marigold-400/60"
+          className="min-w-0 flex-1 rounded-full bg-white px-5 py-3.5 text-plum-950 shadow-lg shadow-black/10 placeholder:text-[#8a7d72] focus:outline-none focus:ring-4 focus:ring-marigold-400/60"
         />
         <button
           type="submit"
           disabled={state === 'submitting'}
-          className="rounded-full bg-marigold-400 px-6 py-3 font-semibold text-brand-900 transition hover:bg-marigold-500 disabled:opacity-60"
+          className="rounded-full bg-marigold-400 px-6 py-3.5 font-bold text-plum-900 shadow-lg shadow-marigold-500/30 transition hover:brightness-105 active:scale-[0.97] disabled:opacity-60"
         >
           {state === 'submitting' ? 'Joining…' : 'Join the waitlist'}
         </button>
       </div>
       {state === 'error' && (
-        <p className="mt-2 text-sm text-marigold-400" role="alert">
+        <p className="mt-2 text-sm font-medium text-marigold-300" role="alert">
           {error}
         </p>
       )}

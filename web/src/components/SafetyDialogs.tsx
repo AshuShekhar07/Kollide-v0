@@ -1,4 +1,5 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { motion } from 'motion/react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { REPORT_REASONS } from '../lib/chat'
 import type { Database } from '../lib/database.types'
 import { friendlyError } from '../lib/errors'
@@ -9,18 +10,38 @@ type Reason = Database['public']['Enums']['report_reason']
 type Target = { userId: string; name: string }
 
 export function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    // Keep the page behind from scrolling while the sheet is open.
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = overflow
+    }
+  }, [onClose])
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-6"
+    <motion.div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 backdrop-blur-[2px] sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={label}
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
     >
-      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl">
-        {children}
-      </div>
-    </div>
+      <motion.div
+        className="pb-safe max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-[2rem] bg-surface px-5 pt-3 shadow-2xl sm:rounded-[2rem] sm:pb-5"
+        initial={{ y: 60, opacity: 0.5 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+      >
+        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-neutral-200 sm:hidden" aria-hidden />
+        <div className="pb-4">{children}</div>
+      </motion.div>
+    </motion.div>
   )
 }
 
