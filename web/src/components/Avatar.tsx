@@ -15,7 +15,7 @@ export default function Avatar({
   const [url] = useSignedPhotos(path ? [path] : [])
   return (
     <span
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-200 to-marigold-100 font-display font-bold text-plum-700 ${
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 font-display font-bold text-brand-700 ${
         ring ? 'ring-[3px] ring-marigold-400 ring-offset-2 ring-offset-canvas' : ''
       } ${className}`}
     >

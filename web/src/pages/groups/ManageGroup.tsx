@@ -104,7 +104,7 @@ export default function ManageGroup() {
   const members = group.members.filter((m) => m.user_id !== profile?.id)
 
   return (
-    <>
+    <div className="lg:max-w-2xl">
       <BackLink to={`/groups/${group.id}`}>{group.title}</BackLink>
       <div className="mt-3">
         <PageHeader
@@ -248,6 +248,6 @@ export default function ManageGroup() {
           </div>
         </Sheet>
       )}
-    </>
+    </div>
   )
 }

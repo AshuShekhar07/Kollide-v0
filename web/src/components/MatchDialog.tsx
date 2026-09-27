@@ -30,14 +30,13 @@ export default function MatchDialog({
   const [url] = useSignedPhotos(photoPath ? [photoPath] : [])
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-plum-900/95 via-plum-800/95 to-plum-950/95 p-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/95 p-6 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="match-title"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <div className="bandhani pointer-events-none absolute inset-0 text-white/[0.06]" aria-hidden />
       <div className="relative w-full max-w-sm text-center text-white">
         <div className="relative mx-auto h-36 w-36">
           {CONFETTI.map((c, i) => (

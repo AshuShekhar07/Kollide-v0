@@ -128,9 +128,9 @@ export default function Settings() {
   const [deleting, setDeleting] = useState(false)
 
   return (
-    <>
+    <div className="lg:max-w-2xl">
       <BackLink to="/profile">Profile</BackLink>
-      <h1 className="mt-3 text-2xl font-bold text-neutral-900">Settings</h1>
+      <h1 className="mt-3 text-3xl font-extrabold text-neutral-900 lg:text-4xl">Settings</h1>
 
       <BlockedList />
 
@@ -163,6 +163,6 @@ export default function Settings() {
       </div>
 
       {deleting && <DeleteAccount onClose={() => setDeleting(false)} />}
-    </>
+    </div>
   )
 }

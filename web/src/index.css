@@ -8,48 +8,53 @@
  * and `canvas` (page background) do.
  */
 @theme {
-  --color-canvas: #fff8f1;
+  /* Kollide's look (matches the landing page): white pages, near-black ink,
+     marigold orange accents and deep navy for dark surfaces. */
+  --color-canvas: #ffffff;
   --color-surface: #ffffff;
   /* Selected pills and chips sitting on a neutral-100 track. */
   --color-raised: #ffffff;
+  /* Primary buttons and active states: near-black on light, white on dark. */
+  --color-ink: #111111;
+  --color-on-ink: #ffffff;
 
-  /* Warm neutrals, so cream pages don't look grey. */
-  --color-neutral-50: #faf5ef;
-  --color-neutral-100: #f3ebe2;
-  --color-neutral-200: #e8ddd1;
-  --color-neutral-300: #d6c8b9;
-  --color-neutral-400: #a8998b;
-  --color-neutral-500: #7d6f63;
-  --color-neutral-600: #62564c;
-  --color-neutral-700: #4a4039;
-  --color-neutral-800: #332b26;
-  --color-neutral-900: #211b17;
+  --color-neutral-50: #f8f8f8;
+  --color-neutral-100: #f2f2f3;
+  --color-neutral-200: #e6e6e8;
+  --color-neutral-300: #d2d2d6;
+  --color-neutral-400: #9d9da5;
+  --color-neutral-500: #6e6e76;
+  --color-neutral-600: #515158;
+  --color-neutral-700: #3b3b41;
+  --color-neutral-800: #242428;
+  --color-neutral-900: #111111;
 
-  --color-brand-50: #fdf1f7;
-  --color-brand-100: #fae1ee;
-  --color-brand-200: #f4c0dc;
-  --color-brand-300: #e893c1;
-  --color-brand-500: #c2327f;
-  --color-brand-600: #a3246a;
-  --color-brand-700: #7a1f5c;
-  --color-brand-800: #5c1745;
-  --color-brand-900: #3d0f2e;
+  /* Accent: the wordmark's orange. */
+  --color-brand-50: #fdf3ec;
+  --color-brand-100: #fbe4d3;
+  --color-brand-200: #f6c7a3;
+  --color-brand-300: #ee9f68;
+  --color-brand-500: #e0661a;
+  --color-brand-600: #c9560f;
+  --color-brand-700: #a8450c;
+  --color-brand-800: #83360b;
+  --color-brand-900: #5c260a;
 
-  /* Deep magentas that stay deep in dark mode: backgrounds under white text. */
-  --color-plum-500: #c2327f;
-  --color-plum-600: #a3246a;
-  --color-plum-700: #7a1f5c;
-  --color-plum-800: #5c1745;
-  --color-plum-900: #3d0f2e;
-  --color-plum-950: #24081b;
+  /* Deep navy that stays deep in dark mode: backgrounds under white text. */
+  --color-plum-500: #2f3677;
+  --color-plum-600: #232960;
+  --color-plum-700: #1a1f4a;
+  --color-plum-800: #13173a;
+  --color-plum-900: #0d0f22;
+  --color-plum-950: #080916;
 
-  --color-marigold-50: #fff7e6;
-  --color-marigold-100: #ffeac2;
-  --color-marigold-300: #fcc868;
-  --color-marigold-400: #fbb13c;
-  --color-marigold-500: #f59e0b;
-  --color-marigold-600: #d97706;
-  --color-marigold-800: #8a4b06;
+  --color-marigold-50: #fff8e6;
+  --color-marigold-100: #fdedc0;
+  --color-marigold-300: #f8d65e;
+  --color-marigold-400: #f4c51c;
+  --color-marigold-500: #e8a810;
+  --color-marigold-600: #c98a00;
+  --color-marigold-800: #7d5400;
 
   --font-sans: 'Plus Jakarta Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -86,34 +91,36 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --color-canvas: #140d11;
-    --color-surface: #1f161b;
-    --color-raised: #45363e;
+    --color-canvas: #0b0c1a;
+    --color-surface: #13152a;
+    --color-raised: #2a2d4a;
+    --color-ink: #ffffff;
+    --color-on-ink: #0d0f22;
 
-    --color-neutral-50: #251b20;
-    --color-neutral-100: #2d2228;
-    --color-neutral-200: #3b2e35;
-    --color-neutral-300: #4f4148;
-    --color-neutral-400: #7c6d74;
-    --color-neutral-500: #a1939a;
-    --color-neutral-600: #bdb0b6;
-    --color-neutral-700: #d4c9ce;
-    --color-neutral-800: #e8dfe3;
-    --color-neutral-900: #f8f2f4;
+    --color-neutral-50: #171a31;
+    --color-neutral-100: #1d2039;
+    --color-neutral-200: #2a2d4a;
+    --color-neutral-300: #3c405f;
+    --color-neutral-400: #6f7392;
+    --color-neutral-500: #9a9db6;
+    --color-neutral-600: #b8bace;
+    --color-neutral-700: #d3d4e2;
+    --color-neutral-800: #e8e9f1;
+    --color-neutral-900: #f7f7fb;
 
-    --color-brand-50: #34172a;
-    --color-brand-100: #451d36;
-    --color-brand-200: #5e2749;
-    --color-brand-300: #8a3a6a;
-    --color-brand-500: #e0559f;
-    --color-brand-600: #c93a86;
-    --color-brand-700: #f28cc0;
-    --color-brand-800: #f7b3d6;
-    --color-brand-900: #fbd8ea;
+    --color-brand-50: #2e1a10;
+    --color-brand-100: #3d2212;
+    --color-brand-200: #5c3317;
+    --color-brand-300: #8f4d1e;
+    --color-brand-500: #f07a1e;
+    --color-brand-600: #e0661a;
+    --color-brand-700: #f7a061;
+    --color-brand-800: #f9bf91;
+    --color-brand-900: #fcdcc2;
 
-    --color-marigold-50: #2e2210;
-    --color-marigold-100: #3d2c10;
-    --color-marigold-800: #fcc868;
+    --color-marigold-50: #2e2410;
+    --color-marigold-100: #3d2f10;
+    --color-marigold-800: #f8d65e;
 
     --color-red-50: #3a1519;
     --color-red-100: #4a1a1f;
@@ -149,7 +156,7 @@ h2,
 h3,
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 /* Bandhani: rows of tie-dye dots, for festive surfaces. Colour comes from

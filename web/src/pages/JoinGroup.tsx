@@ -20,7 +20,7 @@ function Steps({ current }: { current: 0 | 1 | 2 }) {
               i < current
                 ? 'bg-green-100 text-green-800'
                 : i === current
-                  ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white'
+                  ? 'bg-ink text-on-ink'
                   : 'bg-neutral-100 text-neutral-500'
             }`}
           >
@@ -197,8 +197,7 @@ export default function JoinGroup() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md">
-      <div className="relative overflow-hidden bg-gradient-to-br from-plum-700 via-plum-600 to-plum-500 px-4 pb-20 pt-[max(env(safe-area-inset-top),1.5rem)] text-white">
-        <div className="bandhani pointer-events-none absolute inset-0 text-white/[0.08]" aria-hidden />
+      <div className="relative overflow-hidden bg-plum-900 px-4 pb-20 pt-[max(env(safe-area-inset-top),1.5rem)] text-white">
         <div className="relative">
           <Link to={session ? '/start' : '/'} aria-label="Kollide home">
             <Logo tone="white" className="text-2xl" />
@@ -227,7 +226,7 @@ export default function JoinGroup() {
       </div>
 
       <div className="relative -mt-12 px-4 pb-12">
-        <div className="animate-rise rounded-3xl border border-neutral-200/80 bg-surface p-5 shadow-lg shadow-plum-900/10">
+        <div className="animate-rise rounded-3xl border border-neutral-200/80 bg-surface p-5 ">
           {action}
           {error && (
             <div className="mt-3">

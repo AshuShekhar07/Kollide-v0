@@ -191,84 +191,88 @@ export default function GroupDetail() {
     <>
       <BackLink to="/groups">Groups</BackLink>
 
-      <div className="relative mt-3 overflow-hidden rounded-3xl bg-gradient-to-br from-plum-600 via-plum-700 to-plum-900 p-5 text-white shadow-lg shadow-plum-900/20">
-        <div className="bandhani pointer-events-none absolute inset-0 text-white/[0.07]" aria-hidden />
-        <div className="relative">
-          <div className="flex items-start gap-3">
-            <DateChip date={group.event_date} tone="glass" />
-            <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-bold leading-tight">{group.title}</h1>
-              {group.venue && (
-                <p className="mt-1 flex items-center gap-1 text-sm text-white/80">
-                  <MapPin className="h-4 w-4 shrink-0" /> {group.venue}
+      <div className="lg:mt-4 lg:grid lg:grid-cols-[1fr_22rem] lg:items-start lg:gap-10">
+        <div>
+          <div className="relative mt-3 overflow-hidden rounded-[28px] bg-plum-900 p-5 text-white lg:mt-0 lg:p-8">
+            <div className="relative">
+              <div className="flex items-start gap-3">
+                <DateChip date={group.event_date} tone="glass" />
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl font-extrabold leading-tight lg:text-4xl">{group.title}</h1>
+                  {group.venue && (
+                    <p className="mt-1 flex items-center gap-1 text-sm text-white/80">
+                      <MapPin className="h-4 w-4 shrink-0" /> {group.venue}
+                    </p>
+                  )}
+                  {eventDate(group.event_date) && <p className="mt-0.5 text-sm text-white/70">{eventDate(group.event_date)}</p>}
+                </div>
+              </div>
+              {group.description && <p className="mt-4 whitespace-pre-wrap text-[15px] leading-relaxed text-white/90">{group.description}</p>}
+              <div className="mt-4">
+                <Capacity count={group.member_count} max={group.max_members} tone="glass" />
+                <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-white/80">
+                  <UsersRound className="h-3.5 w-3.5" />
+                  {group.member_count}/{group.max_members} people · {closed ? 'Closed' : spotsLeft(group)}
                 </p>
-              )}
-              {eventDate(group.event_date) && <p className="mt-0.5 text-sm text-white/70">{eventDate(group.event_date)}</p>}
+              </div>
             </div>
           </div>
-          {group.description && <p className="mt-4 whitespace-pre-wrap text-[15px] leading-relaxed text-white/90">{group.description}</p>}
-          <div className="mt-4">
-            <Capacity count={group.member_count} max={group.max_members} tone="glass" />
-            <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-white/80">
-              <UsersRound className="h-3.5 w-3.5" />
-              {group.member_count}/{group.max_members} people · {closed ? 'Closed' : spotsLeft(group)}
-            </p>
-          </div>
+
+          <div className="mt-5">{action}</div>
+          {actionError && (
+            <div className="mt-3">
+              <ErrorText>{actionError}</ErrorText>
+            </div>
+          )}
+        </div>
+        <div>
+          <h2 className="mt-7 text-lg font-bold text-neutral-900 lg:mt-0">Who's going</h2>
+          {!inGroup && (
+            <p className="mt-0.5 text-xs text-neutral-500">Photos and socials are shared once you're in the group.</p>
+          )}
+          <ul className="mt-2.5 divide-y divide-neutral-100 overflow-hidden rounded-[28px] border border-neutral-200 bg-surface">
+            {group.members.map((m) => {
+              const me = m.user_id === profile?.id
+              return (
+                <li key={m.user_id} className="flex items-center gap-3 px-3 py-2.5">
+                  <MemberAvatar path={m.photo_path} name={m.first_name} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate font-semibold text-neutral-900">{me ? 'You' : m.first_name}</span>
+                      {m.role === 'admin' && (
+                        <Tag tone="marigold">
+                          <Crown className="h-3 w-3" /> Admin
+                        </Tag>
+                      )}
+                    </span>
+                    <span className="block font-mono text-xs text-neutral-500">{m.public_code}</span>
+                  </span>
+                  {inGroup && !me && (
+                    <button
+                      type="button"
+                      onClick={() => setDialog({ kind: 'member', member: m })}
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+                      aria-label={`Options for ${m.first_name}`}
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                    </button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+
+          {inGroup && (
+            <button
+              type="button"
+              onClick={() => setDialog({ kind: 'leave' })}
+              className="mx-auto mt-6 flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4" /> Leave group
+            </button>
+          )}
         </div>
       </div>
-
-      <div className="mt-5">{action}</div>
-      {actionError && (
-        <div className="mt-3">
-          <ErrorText>{actionError}</ErrorText>
-        </div>
-      )}
-
-      <h2 className="mt-7 text-base font-bold text-neutral-900">Who's going</h2>
-      {!inGroup && (
-        <p className="mt-0.5 text-xs text-neutral-500">Photos and socials are shared once you're in the group.</p>
-      )}
-      <ul className="mt-2.5 divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-200/80 bg-surface shadow-sm">
-        {group.members.map((m) => {
-          const me = m.user_id === profile?.id
-          return (
-            <li key={m.user_id} className="flex items-center gap-3 px-3 py-2.5">
-              <MemberAvatar path={m.photo_path} name={m.first_name} />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
-                  <span className="truncate font-semibold text-neutral-900">{me ? 'You' : m.first_name}</span>
-                  {m.role === 'admin' && (
-                    <Tag tone="marigold">
-                      <Crown className="h-3 w-3" /> Admin
-                    </Tag>
-                  )}
-                </span>
-                <span className="block font-mono text-xs text-neutral-500">{m.public_code}</span>
-              </span>
-              {inGroup && !me && (
-                <button
-                  type="button"
-                  onClick={() => setDialog({ kind: 'member', member: m })}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
-                  aria-label={`Options for ${m.first_name}`}
-                >
-                  <MoreHorizontal className="h-5 w-5" />
-                </button>
-              )}
-            </li>
-          )
-        })}
-      </ul>
-
-      {inGroup && (
-        <button
-          type="button"
-          onClick={() => setDialog({ kind: 'leave' })}
-          className="mx-auto mt-6 flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-        >
-          <LogOut className="h-4 w-4" /> Leave group
-        </button>
-      )}
 
       {dialog?.kind === 'leave' && (
         <LeaveDialog

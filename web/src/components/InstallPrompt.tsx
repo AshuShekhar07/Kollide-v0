@@ -70,7 +70,7 @@ export default function InstallPrompt() {
         )}
       </p>
       {event && (
-        <button type="button" onClick={install} className="shrink-0 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 px-3.5 py-1.5 font-semibold text-white shadow-sm active:scale-95">
+        <button type="button" onClick={install} className="shrink-0 rounded-full bg-ink px-3.5 py-1.5 font-semibold text-on-ink shadow-sm active:scale-95">
           Install
         </button>
       )}

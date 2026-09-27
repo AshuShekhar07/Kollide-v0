@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import BangaloreCheck from '../../components/BangaloreCheck'
 import PendingInviteBanner from '../../components/PendingInviteBanner'
+import SplitScreen from '../../components/SplitScreen'
 import { ErrorText, FullScreenSpinner, Logo } from '../../components/ui'
 import { homePathFor, useAuth } from '../../lib/auth-context'
 import { startPathFor } from '../../lib/invite'
@@ -118,46 +119,74 @@ export default function Onboarding() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-4 pb-16 pt-[max(env(safe-area-inset-top),1.5rem)]">
-      <header>
-        <div className="flex items-center justify-between">
-          <Logo className="text-2xl" />
-          <span className="text-xs font-semibold text-neutral-500">
+    <SplitScreen
+      image="/landing/together-dandiya.webp"
+      aside={
+        <>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-marigold-300">
             Step {current + 1} of {STEPS.length}
-          </span>
-        </div>
-        <ol className="mt-4 flex gap-1.5" aria-label="Progress">
-          {STEPS.map((label, i) => (
-            <li key={label} className="flex-1" aria-current={i === current ? 'step' : undefined}>
-              <span className="block h-1.5 overflow-hidden rounded-full bg-neutral-200">
+          </p>
+          <p className="mt-3 font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.03em]">
+            Let's get you ready for garba night.
+          </p>
+          <ol className="mt-8 space-y-2.5 text-sm">
+            {STEPS.map((label, i) => (
+              <li key={label} className={`flex items-center gap-3 ${i === current ? 'font-semibold text-white' : 'text-white/55'}`}>
                 <span
-                  className={`block h-full rounded-full bg-gradient-to-r from-marigold-400 to-brand-500 transition-all duration-500 ${
-                    i <= current ? 'w-full' : 'w-0'
+                  className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
+                    i < current ? 'bg-marigold-400 text-plum-900' : i === current ? 'bg-white text-plum-900' : 'ring-1 ring-white/30'
                   }`}
-                />
-              </span>
-              <span
-                className={`mt-1.5 block truncate text-[10px] font-semibold ${i === current ? 'text-brand-700' : i < current ? 'text-neutral-500' : 'text-neutral-400'}`}
-              >
+                >
+                  {i + 1}
+                </span>
                 {label}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </header>
+              </li>
+            ))}
+          </ol>
+        </>
+      }
+    >
+      <main className="mx-auto min-h-dvh max-w-md px-4 pb-16 pt-[max(env(safe-area-inset-top),1.5rem)] lg:max-w-lg lg:pt-14">
+        <header>
+          <div className="flex items-center justify-between">
+            <Logo className="text-[1.7rem] lg:invisible" />
+            <span className="text-xs font-semibold text-neutral-500">
+              Step {current + 1} of {STEPS.length}
+            </span>
+          </div>
+          <ol className="mt-4 flex gap-1.5" aria-label="Progress">
+            {STEPS.map((label, i) => (
+              <li key={label} className="flex-1" aria-current={i === current ? 'step' : undefined}>
+                <span className="block h-1.5 overflow-hidden rounded-full bg-neutral-200">
+                  <span
+                    className={`block h-full rounded-full bg-brand-500 transition-all duration-500 ${
+                      i <= current ? 'w-full' : 'w-0'
+                    }`}
+                  />
+                </span>
+                <span
+                  className={`mt-1.5 block truncate text-[10px] font-semibold ${i === current ? 'text-neutral-900' : i < current ? 'text-neutral-500' : 'text-neutral-400'}`}
+                >
+                  {label}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </header>
 
-      <div className="mt-6">
-        <PendingInviteBanner />
-        <BangaloreCheck />
-      </div>
-      <div key={current} className="mt-2 animate-rise">
-        {current === 0 && <BasicsStep {...props} />}
-        {current === 1 && <PhotosStep {...props} />}
-        {current === 2 && <AboutStep {...props} />}
-        {current === 3 && <ContactStep {...props} />}
-        {current === 4 && <ActivitiesStep {...props} />}
-        {current === VERIFY && <VideoStep {...props} />}
-      </div>
-    </main>
+        <div className="mt-6">
+          <PendingInviteBanner />
+          <BangaloreCheck />
+        </div>
+        <div key={current} className="mt-2 animate-rise">
+          {current === 0 && <BasicsStep {...props} />}
+          {current === 1 && <PhotosStep {...props} />}
+          {current === 2 && <AboutStep {...props} />}
+          {current === 3 && <ContactStep {...props} />}
+          {current === 4 && <ActivitiesStep {...props} />}
+          {current === VERIFY && <VideoStep {...props} />}
+        </div>
+      </main>
+    </SplitScreen>
   )
 }

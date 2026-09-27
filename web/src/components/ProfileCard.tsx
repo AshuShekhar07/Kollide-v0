@@ -48,7 +48,7 @@ export default function ProfileCard({
   const [loaded, setLoaded] = useState<string | null>(null)
 
   return (
-    <div className={`relative select-none overflow-hidden rounded-[2rem] bg-neutral-200 shadow-xl shadow-plum-900/20 ${className}`}>
+    <div className={`relative select-none overflow-hidden rounded-[2rem] bg-neutral-200 shadow-xl shadow-black/15 ${className}`}>
       {url ? (
         <img
           key={url}
@@ -60,7 +60,7 @@ export default function ProfileCard({
         />
       ) : null}
       {(!url || loaded !== url) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-200 to-marigold-100">
+        <div className="absolute inset-0 flex items-center justify-center bg-brand-100">
           <span className="font-display text-6xl font-bold text-white/80">{profile.first_name.slice(0, 1)}</span>
         </div>
       )}

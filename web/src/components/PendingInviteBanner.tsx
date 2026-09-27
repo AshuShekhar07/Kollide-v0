@@ -43,8 +43,7 @@ export default function PendingInviteBanner() {
       : "You can ask to join once you're verified."
 
   return (
-    <div className="relative mb-3 flex animate-rise items-center gap-3 overflow-hidden rounded-3xl bg-gradient-to-br from-plum-600 to-plum-800 p-3 pr-2 text-white shadow-md shadow-plum-900/20">
-      <div className="bandhani pointer-events-none absolute inset-0 text-white/[0.07]" aria-hidden />
+    <div className="relative mb-3 flex animate-rise items-center gap-3 overflow-hidden rounded-3xl bg-plum-900 p-3 pr-2 text-white">
       <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-marigold-400 text-plum-900">
         <PartyPopper className="h-5 w-5" />
       </span>
