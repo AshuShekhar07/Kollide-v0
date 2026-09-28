@@ -76,9 +76,9 @@ select ok(not exists (select 1 from storage.buckets where public), 'both storage
 -- Scheduled jobs (§5.7)
 ---------------------------------------------------------------------------
 select is((select array_agg(jobname || ' ' || schedule order by jobname) from cron.job),
-          array['cleanup-videos 7 * * * *', 'prune-profile-views 30 21 * * *', 'retry-emails */15 * * * *',
-                'sweep-orphan-uploads 37 * * * *'],
-          'hourly video cleanup and orphan sweep, daily view pruning, email retries are scheduled');
+          array['cleanup-videos 7 * * * *', 'prune-events-log 40 21 * * *', 'prune-profile-views 30 21 * * *',
+                'retry-emails */15 * * * *', 'sweep-orphan-uploads 37 * * * *'],
+          'hourly video cleanup and orphan sweep, daily event and view pruning, email retries are scheduled');
 select ok(not exists (select 1 from cron.job where command ~* '(reports|conversations|messages|bans)'),
           'no job touches reports, conversations, messages or bans');
 select ok(not has_function_privilege('authenticated', 'private.call_edge_function(text, jsonb)', 'execute'),
