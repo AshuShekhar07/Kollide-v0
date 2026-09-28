@@ -4,6 +4,7 @@ import { useSignedPhotos } from '../../components/ProfileCard'
 import { Button, ErrorText, Spinner } from '../../components/ui'
 import type { Database } from '../../lib/database.types'
 import { friendlyError } from '../../lib/errors'
+import { thumbPath } from '../../lib/photos'
 import { supabase } from '../../lib/supabase'
 
 type NewPhoto = Database['public']['Functions']['admin_new_photos']['Returns'][number]
@@ -31,7 +32,7 @@ function Row({ item, onDone }: { item: NewPhoto; onDone: () => void }) {
     setBusy(keep ? 'keep' : 'remove')
     setError('')
     const { data: path, error } = await supabase.rpc('admin_review_photo', { p_photo_id: item.photo_id, p_keep: keep })
-    if (!error && path) await supabase.storage.from('photos').remove([path])
+    if (!error && path) await supabase.storage.from('photos').remove([path, thumbPath(path)])
     setBusy(null)
     if (error) return setError(friendlyError(error))
     onDone()

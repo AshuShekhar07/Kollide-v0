@@ -251,6 +251,7 @@ export default function Profile() {
               photoIndex={previewPhoto}
               className="aspect-[3/4] w-full"
               hideBio
+              size="full"
             />
           </button>
           <div className="mt-4">

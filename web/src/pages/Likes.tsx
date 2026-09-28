@@ -16,7 +16,7 @@ import { eventDate, spotsLeft, type GroupInvite } from '../lib/groups'
 import { supabase } from '../lib/supabase'
 
 function LikeTile({ like, onOpen }: { like: IncomingLike; onOpen: () => void }) {
-  const [url] = useSignedPhotos(like.photo_paths.slice(0, 1))
+  const [url] = useSignedPhotos(like.photo_paths.slice(0, 1), 'thumb')
   return (
     <button
       type="button"
@@ -89,7 +89,7 @@ function LikeDetail({
           </button>
         </div>
         <button type="button" className="block w-full" aria-label="Next photo" onClick={() => setPhoto((p) => p + 1)}>
-          <ProfileCard profile={like} photoIndex={photo} className="aspect-[3/4] w-full" hideBio />
+          <ProfileCard profile={like} photoIndex={photo} className="aspect-[3/4] w-full" hideBio size="full" />
         </button>
         <div className="mt-5 lg:mt-0">
           <h2 className="mb-4 hidden text-4xl font-extrabold text-neutral-900 lg:block">

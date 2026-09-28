@@ -27,7 +27,7 @@ export default function MatchDialog({
   onClose: () => void
 }) {
   const navigate = useNavigate()
-  const [url] = useSignedPhotos(photoPath ? [photoPath] : [])
+  const [url] = useSignedPhotos(photoPath ? [photoPath] : [], 'thumb')
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-plum-900/95 p-6 backdrop-blur-sm"
