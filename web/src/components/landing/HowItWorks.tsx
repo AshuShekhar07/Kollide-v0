@@ -31,7 +31,9 @@ const STEPS = [
     points: ['Private chat', 'Swap socials', 'Block in one tap'],
     photo: '/landing/step-venue.webp',
     alt: 'A festival ground at dusk strung with fabric, flags and fairy lights',
-    position: '50% 68%',
+    position: '50% 50%',
+    // A tall photo: show all of it, over a soft blurred copy of itself.
+    fit: 'contain' as const,
     bg: G.peacock,
     fg: G.cream,
   },
@@ -76,14 +78,35 @@ function StepCard({ index, progress }: { index: number; progress: MotionValue<nu
           </ul>
         </div>
         <div className="relative hidden overflow-hidden md:block">
-          <motion.img
-            src={step.photo}
-            alt={step.alt}
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ scale: photoScale, objectPosition: step.position }}
-          />
+          {'fit' in step && step.fit === 'contain' ? (
+            <>
+              <motion.img
+                src={step.photo}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-70 blur-2xl"
+                style={{ scale: photoScale }}
+              />
+              <img
+                src={step.photo}
+                alt={step.alt}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-contain drop-shadow-2xl"
+              />
+            </>
+          ) : (
+            <motion.img
+              src={step.photo}
+              alt={step.alt}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ scale: photoScale, objectPosition: step.position }}
+            />
+          )}
         </div>
       </motion.article>
     </div>

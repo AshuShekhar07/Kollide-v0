@@ -157,7 +157,7 @@ export default function Wordmark({
         style={hidden}
         fillRule="evenodd"
         fill={c.e}
-        d="M916 214 L862 214 L900 250.3 A81 80 0 1 1 916 214 Z M808 190 A29 30 0 0 1 866 190 Z"
+        d="M916 214 A81 80 0 1 0 888.1 262.3 L858.5 226.3 A35 33 0 0 1 803.8 214 Z M803 190 A35 33 0 0 1 869 190 Z"
       />
     </svg>
   )

@@ -102,7 +102,6 @@ function HeroCurtain({
   const curtainRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const reduced = useReducedMotion()
-  const days = useDaysToGo()
   const { scrollYProgress } = useScroll({ target: curtainRef, offset: ['start end', 'start start'] })
   const heroScale = useTransform(scrollYProgress, (p) => (reduced ? 1 : 1 - 0.08 * p))
   const heroDim = useTransform(scrollYProgress, (p) => (reduced ? 0 : 0.6 * p))
@@ -160,13 +159,8 @@ function HeroCurtain({
 
           <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-5 pb-10 sm:px-8 lg:px-12">
             <FadeUp play={ready}>
-              <p className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full bg-[#FFF4E4]/12 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] ring-1 ring-[#FFF4E4]/25 backdrop-blur-sm sm:text-[13px]">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ backgroundColor: G.haldi }} />
-                  <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: G.haldi }} />
-                </span>
-                Navratri 2026 in Bangalore
-                {days > 0 && <span style={{ color: G.haldi }}>{days} days to go</span>}
+              <p className="text-base font-semibold sm:text-lg" style={{ color: G.haldi }}>
+                Navratri starts Sunday, October 11, in Bangalore.
               </p>
             </FadeUp>
             <RevealText
