@@ -1,176 +1,118 @@
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from 'motion/react'
-import { useRef, useSyncExternalStore } from 'react'
+import { Check } from 'lucide-react'
+import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
+import { useRef } from 'react'
+import { G } from './garba'
 import { FadeUp, RevealText } from './Reveal'
 
 const STEPS = [
   {
     title: 'Get verified',
-    body: 'Record a 10-second face video. A real person on our team checks it against your photos, usually within 24 hours. No bots, no catfish: everyone you meet has been through the same check.',
-    points: ['10-second face video', 'Checked by hand', 'Usually within 24 hours'],
+    body: 'Record a 10-second face video. A real person on our team checks it against your photos, usually within 24 hours. You can browse and like while you wait; your likes are delivered the moment you are approved.',
+    points: ['10-second face video', 'Checked by a person', 'Usually within 24 hours'],
+    photo: '/landing/garba-hero-poster.jpg',
+    alt: 'A garba ground at night, lit up and full of dancers',
+    bg: G.rani,
+    fg: G.cream,
   },
   {
     title: 'Find your people',
-    body: "Tell us which nights you're going and who you'd like to meet. Match with someone to go with, or join a group heading to the same garba ground. You can start your own group and invite people too.",
-    points: ['One-on-one matches', 'Groups of up to 10', 'Same garba night'],
+    body: "Pick the nights you're going and who you'd like to meet. Match with one person to go with, or join a group of up to 10 heading to the same garba. Start your own group and share the invite link.",
+    points: ['One-on-one matches', 'Groups of 2 to 10', 'Same night, same ground'],
+    photo: '/landing/together-fistbump.webp',
+    alt: 'Friends bumping fists in a circle',
+    bg: G.marigold,
+    fg: G.ink,
   },
   {
     title: 'Chat and show up',
-    body: "Plan the night in chat: where to meet, what to wear, who's bringing the dandiya. Swap socials once you match, then dance till late.",
-    points: ['Private chat', 'Swap socials', 'Block and report in one tap'],
+    body: "Plan the night in chat: where to meet, what to wear, who's bringing the dandiya. When you're ready, swap Instagram or WhatsApp and dance till late.",
+    points: ['Private chat', 'Swap socials', 'Block in one tap'],
+    photo: '/landing/together-dandiya.webp',
+    alt: 'Friends crossing dandiya sticks into a star',
+    bg: G.peacock,
+    fg: G.cream,
   },
 ]
 
-const WIDE_QUERY = '(min-width: 768px)'
-
-function subscribeWide(onChange: () => void) {
-  const mq = window.matchMedia(WIDE_QUERY)
-  mq.addEventListener('change', onChange)
-  return () => mq.removeEventListener('change', onChange)
-}
-
-function useWide() {
-  return useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE_QUERY).matches, () => true)
-}
-
-const number = (i: number) => String(i + 1).padStart(2, '0')
 const clamp = (v: number) => Math.min(Math.max(v, 0), 1)
 
-// One step in the pinned view. Each owns a third of the scroll: it slides up
-// and in, holds, then slides up and out as the next one arrives.
-function PinnedStep({ index, progress }: { index: number; progress: MotionValue<number> }) {
-  const n = STEPS.length
-  const start = index / n
-  const end = (index + 1) / n
-  const first = index === 0
-  const last = index === n - 1
-  const fade = 0.07
-  // Computed in JS (a function transform) rather than handed to the browser
-  // as a native scroll animation, which mis-maps these multi-stop ranges.
-  const phase = (p: number) => {
-    // One step leaves before the next arrives, so they never overlap.
-    const inT = first ? 1 : clamp((p - start) / fade)
-    const outT = last ? 0 : clamp((p - (end - fade)) / fade)
-    return { inT, outT }
-  }
-  const opacity = useTransform(progress, (p) => {
-    const { inT, outT } = phase(p)
-    return Math.min(inT, 1 - outT)
-  })
-  const y = useTransform(progress, (p) => {
-    const { inT, outT } = phase(p)
-    return outT > 0 ? -90 * outT : 90 * (1 - inT)
-  })
+// One card in the stack. It pins near the top; as later cards slide over it,
+// it shrinks back a little so the stack reads as a pile.
+function StepCard({ index, progress }: { index: number; progress: MotionValue<number> }) {
+  const reduced = useReducedMotion()
   const step = STEPS[index]
+  const n = STEPS.length
+  const target = 1 - (n - 1 - index) * 0.05
+  const scale = useTransform(progress, (p) => (reduced ? 1 : 1 - (1 - target) * clamp((p - index / n) / (1 - index / n))))
+  const photoScale = useTransform(progress, (p) => (reduced ? 1 : 1.25 - 0.25 * clamp((p - (index - 0.6) / n) * n)))
 
   return (
-    <motion.li className="absolute inset-0 flex flex-col justify-center" style={{ opacity, y }}>
-      <span className="text-outline-orange block font-display text-[7rem] font-extrabold leading-none tracking-[-0.04em] lg:text-[9rem]">
-        {number(index)}
-      </span>
-      <h3 className="mt-4 text-4xl font-extrabold tracking-[-0.025em] lg:text-5xl">{step.title}</h3>
-      <p className="mt-5 max-w-lg text-lg leading-relaxed text-[#111]/70">{step.body}</p>
-      <ul className="mt-7 flex flex-wrap gap-2">
-        {step.points.map((p) => (
-          <li key={p} className="rounded-full border border-[#111]/15 px-4 py-2 text-sm font-semibold">
-            {p}
-          </li>
-        ))}
-      </ul>
-    </motion.li>
+    <div className="sticky top-0 flex h-[100svh] items-center justify-center px-4 sm:px-8">
+      <motion.article
+        className="bandhani-soft relative grid w-full max-w-6xl origin-top overflow-hidden rounded-[40px] shadow-2xl shadow-[#2A0E1B]/25 md:grid-cols-[1.1fr_1fr]"
+        style={{ scale, top: `calc(-4vh + ${index * 26}px)`, backgroundColor: step.bg, color: step.fg }}
+      >
+        <div className="relative flex flex-col justify-center p-7 sm:p-10 lg:p-14">
+          <span
+            className="font-display text-7xl font-extrabold leading-none tracking-[-0.04em] sm:text-8xl lg:text-9xl"
+            style={{ WebkitTextStroke: `2px ${step.fg}`, color: 'transparent' }}
+          >
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <h3 className="mt-4 font-display text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl lg:text-5xl">{step.title}</h3>
+          <p className="mt-4 max-w-md text-base leading-relaxed opacity-85 sm:text-lg">{step.body}</p>
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {step.points.map((p) => (
+              <li
+                key={p}
+                className="inline-flex items-center gap-1.5 rounded-full border border-current/30 px-3.5 py-1.5 text-sm font-semibold"
+              >
+                <Check className="h-4 w-4" strokeWidth={3} /> {p}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative hidden overflow-hidden md:block">
+          <motion.img
+            src={step.photo}
+            alt={step.alt}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ scale: photoScale }}
+          />
+        </div>
+      </motion.article>
+    </div>
   )
 }
 
-// Wide screens: "How it works" stays pinned on the left while the three steps
-// take turns on the right as you scroll. A bar tracks progress.
-function Pinned() {
-  const ref = useRef<HTMLElement>(null)
+/**
+ * How it works, as a stack of colourful cards: each one pins and the next
+ * slides up over it, like invites piling up before a big night.
+ */
+export default function HowItWorks() {
+  const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  // "How it works" grows into place as the section pins. Function transforms
-  // keep these in JS rather than native scroll animations.
-  const headingScale = useTransform(scrollYProgress, (p) => 0.86 + 0.14 * clamp(p / 0.12))
-  const headingOpacity = useTransform(scrollYProgress, (p) => 0.4 + 0.6 * clamp(p / 0.06))
-  const bar = useTransform(scrollYProgress, (p) => clamp((p - 0.02) / 0.96))
 
   return (
-    <section ref={ref} className="relative h-[330vh]" aria-label="How it works">
-      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-[1fr_1.1fr] gap-16 px-8 lg:px-12">
-          <motion.div className="origin-left" style={{ scale: headingScale, opacity: headingOpacity }}>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#E0661A]">Three steps to your first night out</p>
-            <h2 className="mt-5 font-display text-[5.5rem] font-extrabold leading-[0.92] tracking-[-0.045em] lg:text-[7.5rem]">
-              How it works
-            </h2>
-            <div className="mt-12 flex items-center gap-5">
-              <div className="relative h-1 w-48 overflow-hidden rounded-full bg-[#111]/10">
-                <motion.div className="absolute inset-0 origin-left rounded-full bg-[#E0661A]" style={{ scaleX: bar }} />
-              </div>
-              <ol className="flex gap-3 text-sm font-semibold text-[#111]/45">
-                {STEPS.map((s, i) => (
-                  <StepTick key={s.title} index={i} progress={scrollYProgress} />
-                ))}
-              </ol>
-            </div>
-          </motion.div>
-          <ol className="relative h-[34rem]">
-            {STEPS.map((s, i) => (
-              <PinnedStep key={s.title} index={i} progress={scrollYProgress} />
-            ))}
-          </ol>
-        </div>
+    <section id="how-it-works" className="relative pt-24 md:pt-32" aria-label="How it works">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+        <FadeUp>
+          <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: G.rani }}>
+            How it works
+          </p>
+        </FadeUp>
+        <RevealText
+          text="From your couch to the circle in three steps."
+          className="mt-4 max-w-4xl font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl"
+        />
+      </div>
+      <div ref={ref} className="relative mt-4">
+        {STEPS.map((s, i) => (
+          <StepCard key={s.title} index={i} progress={scrollYProgress} />
+        ))}
       </div>
     </section>
   )
-}
-
-function StepTick({ index, progress }: { index: number; progress: MotionValue<number> }) {
-  const n = STEPS.length
-  const color = useTransform(progress, (p) => (p >= index / n - 0.02 ? '#111111' : 'rgba(17,17,17,0.35)'))
-  return <motion.li style={{ color }}>{number(index)}</motion.li>
-}
-
-// Phones and reduced motion: a plain list where each step rises into view.
-function Stacked() {
-  return (
-    <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6" aria-label="How it works">
-      <FadeUp>
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#E0661A]">Three steps to your first night out</p>
-      </FadeUp>
-      <RevealText
-        text="How it works"
-        className="mt-4 font-display text-6xl font-extrabold leading-[0.95] tracking-[-0.04em] sm:text-7xl"
-      />
-      <ol className="mt-14 space-y-16">
-        {STEPS.map((step, i) => (
-          <li key={step.title}>
-            <FadeUp>
-              <span className="text-outline-orange block font-display text-8xl font-extrabold leading-none tracking-[-0.04em]">
-                {number(i)}
-              </span>
-              <h3 className="mt-3 text-3xl font-extrabold tracking-[-0.025em]">{step.title}</h3>
-              <p className="mt-3 text-lg leading-relaxed text-[#111]/70">{step.body}</p>
-              <ul className="mt-5 flex flex-wrap gap-2">
-                {step.points.map((p) => (
-                  <li key={p} className="rounded-full border border-[#111]/15 px-3.5 py-1.5 text-sm font-semibold">
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </FadeUp>
-          </li>
-        ))}
-      </ol>
-    </section>
-  )
-}
-
-export default function HowItWorks() {
-  const wide = useWide()
-  const reduced = useReducedMotion()
-  return wide && !reduced ? <Pinned /> : <Stacked />
 }

@@ -136,14 +136,14 @@ export default function LogoIntro({ onReveal, onDone }: { onReveal: () => void; 
   return (
     <div
       ref={scope}
-      className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-[#fff] px-6"
+      className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-[#FFF4E4] px-6"
       style={{ clipPath: 'inset(0% 0% 0% 0%)' }}
       aria-hidden
     >
       <div data-intro="logo" className="w-full max-w-[640px]">
         <Wordmark intro={!reduced} className="h-auto w-full" />
       </div>
-      <p className="absolute bottom-[max(env(safe-area-inset-bottom),1.5rem)] text-xs font-medium tracking-wide text-[#111]/40">
+      <p className="absolute bottom-[max(env(safe-area-inset-bottom),1.5rem)] text-xs font-medium tracking-wide text-[#2A0E1B]/40">
         Tap to skip
       </p>
     </div>

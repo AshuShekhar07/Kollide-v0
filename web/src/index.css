@@ -64,6 +64,8 @@
   --animate-float: float 6s ease-in-out infinite;
   --animate-shimmer: shimmer 1.4s linear infinite;
   --animate-marquee: marquee 38s linear infinite;
+  --animate-sway: sway 3.2s ease-in-out infinite;
+  --animate-spin-slow: turn 18s linear infinite;
 
   @keyframes pop {
     0% { transform: scale(0.6); opacity: 0; }
@@ -80,6 +82,14 @@
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
+  }
+  @keyframes turn {
+    to { transform: rotate(360deg); }
+  }
+  /* A toran flag swinging from its string. */
+  @keyframes sway {
+    0%, 100% { transform: rotate(-6deg); }
+    50% { transform: rotate(6deg); }
   }
   /* Scrolls a strip whose content is repeated twice, so -50% loops seamlessly. */
   @keyframes marquee {
@@ -166,6 +176,14 @@ h3,
     radial-gradient(circle at center, currentColor 1.4px, transparent 1.8px);
   background-size: 18px 18px;
   background-position: 0 0, 9px 9px;
+}
+
+/* Bandhani dots in soft white, over whatever background colour is set. */
+@utility bandhani-soft {
+  background-image: radial-gradient(circle at center, rgb(255 255 255 / 0.14) 1.6px, transparent 2px),
+    radial-gradient(circle at center, rgb(255 255 255 / 0.14) 1.6px, transparent 2px);
+  background-size: 22px 22px;
+  background-position: 0 0, 11px 11px;
 }
 
 /* A hanging toran of marigold-and-magenta triangles, for the top edge of

@@ -10,7 +10,7 @@ const EASE_IN = [0.55, 0, 0.85, 0.35] as const
  * keyboard focus): the letters bob, the dandiya sticks swing apart and hit
  * again, and the spark pops. A hover mid-play is ignored so it never jumps.
  */
-export default function HoverWordmark({ className }: { className?: string }) {
+export default function HoverWordmark({ className, tone = 'light' }: { className?: string; tone?: 'light' | 'dark' }) {
   const [scope, animate] = useAnimate<HTMLSpanElement>()
   const reduced = useReducedMotion()
   const playing = useRef(false)
@@ -52,7 +52,7 @@ export default function HoverWordmark({ className }: { className?: string }) {
 
   return (
     <span ref={scope} className="inline-block" onPointerEnter={play} onFocus={play}>
-      <Wordmark className={className} />
+      <Wordmark className={className} tone={tone} />
     </span>
   )
 }
