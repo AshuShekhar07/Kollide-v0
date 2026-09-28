@@ -9,8 +9,9 @@ const STEPS = [
     title: 'Get verified',
     body: 'Record a 10-second face video. A real person on our team checks it against your photos, usually within 24 hours. You can browse and like while you wait; your likes are delivered the moment you are approved.',
     points: ['10-second face video', 'Checked by a person', 'Usually within 24 hours'],
-    photo: '/landing/garba-hero-poster.jpg',
-    alt: 'A garba ground at night, lit up and full of dancers',
+    photo: '/landing/step-verified.webp',
+    alt: 'A fluffy white dog in black goggles, looking very verified',
+    position: '50% 45%',
     bg: G.rani,
     fg: G.cream,
   },
@@ -18,8 +19,9 @@ const STEPS = [
     title: 'Find your people',
     body: "Pick the nights you're going and who you'd like to meet. Match with one person to go with, or join a group of up to 10 heading to the same garba. Start your own group and share the invite link.",
     points: ['One-on-one matches', 'Groups of 2 to 10', 'Same night, same ground'],
-    photo: '/landing/together-fistbump.webp',
-    alt: 'Friends bumping fists in a circle',
+    photo: '/landing/step-people.webp',
+    alt: 'A group of friends in garba outfits laughing under a canopy of coloured fabric',
+    position: '50% 62%',
     bg: G.marigold,
     fg: G.ink,
   },
@@ -27,8 +29,9 @@ const STEPS = [
     title: 'Chat and show up',
     body: "Plan the night in chat: where to meet, what to wear, who's bringing the dandiya. When you're ready, swap Instagram or WhatsApp and dance till late.",
     points: ['Private chat', 'Swap socials', 'Block in one tap'],
-    photo: '/landing/together-dandiya.webp',
-    alt: 'Friends crossing dandiya sticks into a star',
+    photo: '/landing/step-venue.webp',
+    alt: 'A festival ground at dusk strung with fabric, flags and fairy lights',
+    position: '50% 68%',
     bg: G.peacock,
     fg: G.cream,
   },
@@ -79,7 +82,7 @@ function StepCard({ index, progress }: { index: number; progress: MotionValue<nu
             loading="lazy"
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
-            style={{ scale: photoScale }}
+            style={{ scale: photoScale, objectPosition: step.position }}
           />
         </div>
       </motion.article>
