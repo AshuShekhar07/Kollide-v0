@@ -665,6 +665,11 @@ isOneToOne: false
               "conversation_id": string,"event_date": string,"group_id": string,"is_new": boolean,"last_message_at": string,"max_members": number,"member_count": number,"pending_requests": number,"role": Database["public"]['Enums']["group_role"],"title": string,"unread": boolean
             }[]
                            },
+"get_profile_answers":
+{ Args: { "p_user_id": string }; Returns: {
+              "answer": string,"prompt_key": string,"question": string
+            }[]
+                           },
 "invite_to_group":
 { Args: { "p_group_id": string,"p_user_id": string }; Returns: undefined
                            },

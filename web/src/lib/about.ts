@@ -15,13 +15,9 @@ export async function fetchPrompts(): Promise<Prompt[]> {
   return data
 }
 
-// RLS only returns answers for profiles the caller may see.
+// get_profile_answers only returns answers for profiles the caller may see.
 export async function fetchAnswers(userId: string): Promise<ShownAnswer[]> {
-  const { data, error } = await supabase
-    .from('profile_answers')
-    .select('prompt_key, answer, prompts(question)')
-    .eq('user_id', userId)
-    .order('position')
+  const { data, error } = await supabase.rpc('get_profile_answers', { p_user_id: userId })
   if (error) throw error
-  return data.map((a) => ({ prompt_key: a.prompt_key, answer: a.answer, question: a.prompts.question }))
+  return data.map((a) => ({ prompt_key: a.prompt_key, answer: a.answer, question: a.question }))
 }

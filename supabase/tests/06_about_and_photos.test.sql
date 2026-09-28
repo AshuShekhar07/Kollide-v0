@@ -82,8 +82,8 @@ select lives_ok($$select public.save_about('Civil engineer. I love long walks.',
 select is((select count(*)::int from public.profile_answers where user_id = pg_temp.uid(2)), 1, 'old answers are gone');
 
 select pg_temp.login_as(3);
-select is((select answer from public.profile_answers where user_id = pg_temp.uid(2)), 'Guitar',
-          'other verified users can read answers');
+select is_empty($$select answer from public.profile_answers where user_id = pg_temp.uid(2)$$,
+                'other verified users can no longer read answers directly (KOL-06)');
 select pg_temp.login_as(13);
 select is((select count(*)::int from public.profile_answers where user_id = pg_temp.uid(2)), 0,
           'unverified users can''t read answers of profiles their feed hasn''t served');
