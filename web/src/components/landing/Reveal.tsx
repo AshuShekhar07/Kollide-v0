@@ -24,12 +24,17 @@ export function RevealText({
   className,
   play,
   delay = 0,
+  accent,
+  accentClassName = '',
 }: {
   text: string
   as?: Tag
   className?: string
   play?: boolean
   delay?: number
+  /** Words (matched without punctuation) to style with `accentClassName`. */
+  accent?: string[]
+  accentClassName?: string
 }) {
   const Component = motion[as]
   const trigger =
@@ -44,7 +49,12 @@ export function RevealText({
         {text.split(' ').map((w, i) => (
           <span key={i}>
             <span className="-mb-[0.14em] inline-block overflow-hidden pb-[0.14em] align-top">
-              <motion.span className="inline-block will-change-transform" variants={word}>
+              <motion.span
+                className={`inline-block will-change-transform ${
+                  accent?.includes(w.replace(/[^\p{L}\p{N}']/gu, '')) ? accentClassName : ''
+                }`}
+                variants={word}
+              >
                 {w}
               </motion.span>
             </span>{' '}

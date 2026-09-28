@@ -1,30 +1,25 @@
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
-import {
-  ArrowDown,
-  ArrowUpRight,
-  Check,
-  Coffee,
-  Dices,
-  Feather,
-  Footprints,
-  Mountain,
-  Music,
-  Sparkles,
-  type LucideIcon,
-} from 'lucide-react'
-import { motion, MotionConfig, useReducedMotion, useScroll, useTransform } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { ArrowDown, ArrowUpRight, BadgeCheck } from 'lucide-react'
+import { motion, MotionConfig, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import Details from '../components/landing/Details'
+import { G } from '../components/landing/garba'
 import HoverSwap from '../components/landing/HoverSwap'
+import HoverWordmark from '../components/landing/HoverWordmark'
+import HowItWorks from '../components/landing/HowItWorks'
 import LogoIntro from '../components/landing/LogoIntro'
+import NineNights from '../components/landing/NineNights'
 import { FadeUp, RevealText } from '../components/landing/Reveal'
+import Toran from '../components/landing/Toran'
+import WhatsNext from '../components/landing/WhatsNext'
 import Wordmark from '../components/landing/Wordmark'
 import WaitlistForm from '../components/WaitlistForm'
 import { supabase } from '../lib/supabase'
 
-// The landing page uses fixed hex colours (not the theme's neutral-* tokens)
-// so it stays white and near-black when the phone is in dark mode.
+// The landing page uses the fixed garba palette in `garba.ts` (not the app's
+// theme tokens) so it looks the same when the phone is in dark mode.
 
 type Activity = { slug: string; name: string; status: 'live' | 'coming_soon' }
 
@@ -39,198 +34,195 @@ const FALLBACK_COMING_SOON: Activity[] = [
   { slug: 'cafe_hopping', name: 'Cafe hopping', status: 'coming_soon' },
 ]
 
-const ACTIVITY_ICONS: Record<string, LucideIcon> = {
-  trekking: Mountain,
-  badminton: Feather,
-  concerts: Music,
-  running: Footprints,
-  board_games: Dices,
-  cafe_hopping: Coffee,
-}
-
-const STEPS = [
-  {
-    title: 'Get verified',
-    body: 'Record a 10-second face video. Our team checks every profile by hand, so everyone you meet is real.',
-  },
-  {
-    title: 'Find your people',
-    body: 'Match with someone to go with, or join a group heading to the same garba night.',
-  },
-  {
-    title: 'Chat and show up',
-    body: 'Plan the night in chat, swap socials when you match, and dance till late.',
-  },
-]
-
 // The intro plays once per page load, not on every in-app visit to `/`.
 let introPlayed = false
 
 // Navratri 2026 opens the night of Oct 11 (IST).
 const NAVRATRI = new Date('2026-10-11T18:00:00+05:30')
 
-function Countdown() {
+function useDaysToGo() {
   const [days] = useState(() => Math.ceil((NAVRATRI.getTime() - Date.now()) / 86_400_000))
-  if (days <= 0) return <span>Navratri is here · Oct 11–19</span>
+  return days
+}
+
+function Countdown() {
+  const days = useDaysToGo()
+  if (days <= 0) return <span>Navratri is here, Oct 11 to 19</span>
   return (
     <span>
-      <strong className="font-bold text-[#fff]">{days}</strong> day{days === 1 ? '' : 's'} to Navratri · Oct 11–19
+      <strong className="font-bold">{days}</strong> day{days === 1 ? '' : 's'} to Navratri
     </span>
   )
 }
 
-const VOTES_KEY = 'kollide:votes'
-
-function readVotes(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(VOTES_KEY) ?? '[]')
-  } catch {
-    return []
-  }
-}
-
-// "I'd want this" (§6.1): logged as a coming_soon_vote event. The browser
-// remembers its own votes so the button stays ticked.
-function VoteButton({ slug }: { slug: string }) {
-  const [voted, setVoted] = useState(() => readVotes().includes(slug))
-  const [busy, setBusy] = useState(false)
-
-  async function vote() {
-    setBusy(true)
-    const { error } = await supabase.rpc('vote_coming_soon', { p_slug: slug })
-    setBusy(false)
-    if (error) return
-    setVoted(true)
-    try {
-      localStorage.setItem(VOTES_KEY, JSON.stringify([...new Set([...readVotes(), slug])]))
-    } catch {
-      /* storage unavailable; the vote still counted */
-    }
-  }
-
+// A slowly spinning circular badge in the hero, like a garba circle. It also
+// takes you to the next section.
+function CircleBadge({ onClick }: { onClick: () => void }) {
+  const text = 'nine nights · one big circle · '
   return (
     <button
       type="button"
-      onClick={vote}
-      disabled={voted || busy}
-      className={`mt-4 inline-flex w-full items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${
-        voted
-          ? 'bg-[#e8f5ec] text-[#1d6b3a]'
-          : 'border border-[#111]/15 text-[#111] hover:border-[#111] hover:bg-[#111] hover:text-[#fff]'
-      }`}
+      onClick={onClick}
+      aria-label="See how it works"
+      className="group relative flex h-28 w-28 items-center justify-center rounded-full transition hover:scale-105 sm:h-32 sm:w-32"
     >
-      {voted ? (
-        <>
-          <Check className="h-3.5 w-3.5" strokeWidth={3} /> Noted, thanks!
-        </>
-      ) : busy ? (
-        'Saving…'
-      ) : (
-        "I'd want this"
-      )}
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full animate-spin-slow" aria-hidden>
+        <defs>
+          <path id="hero-circle" d="M50 50 m-38 0 a38 38 0 1 1 76 0 a38 38 0 1 1 -76 0" />
+        </defs>
+        <text fill={G.cream} fontSize="9.2" fontWeight="700" letterSpacing="1.6" style={{ textTransform: 'uppercase' }}>
+          <textPath href="#hero-circle">{text}</textPath>
+        </text>
+      </svg>
+      <span
+        className="flex h-12 w-12 items-center justify-center rounded-full transition group-hover:translate-y-0.5"
+        style={{ backgroundColor: G.haldi, color: G.ink }}
+      >
+        <ArrowDown className="h-5 w-5" />
+      </span>
     </button>
   )
 }
 
-function Eyebrow({ children, className = 'text-[#E0661A]' }: { children: string; className?: string }) {
-  return <p className={`text-xs font-bold uppercase tracking-[0.22em] ${className}`}>{children}</p>
-}
-
-const HEADING = 'font-extrabold leading-[1.05] tracking-[-0.025em]'
-
-function Hero({ ready, onJoin }: { ready: boolean; onJoin: () => void }) {
-  const ref = useRef<HTMLElement>(null)
+/**
+ * The hero, pinned while the rest of the page slides up over it like a
+ * curtain. As the curtain rises, the hero sinks back and dims.
+ */
+function HeroCurtain({
+  ready,
+  onJoin,
+  onHow,
+  children,
+}: {
+  ready: boolean
+  onJoin: () => void
+  onHow: () => void
+  children: ReactNode
+}) {
+  const curtainRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const reduced = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
-  const videoScale = useTransform(scrollYProgress, [0, 1], reduced ? [1, 1] : [1, 1.15])
-  const textY = useTransform(scrollYProgress, [0, 1], reduced ? ['0%', '0%'] : ['0%', '-35%'])
-  const textOpacity = useTransform(scrollYProgress, [0, 0.7], reduced ? [1, 1] : [1, 0])
+  const { scrollYProgress } = useScroll({ target: curtainRef, offset: ['start end', 'start start'] })
+  const heroScale = useTransform(scrollYProgress, (p) => (reduced ? 1 : 1 - 0.08 * p))
+  const heroDim = useTransform(scrollYProgress, (p) => (reduced ? 0 : 0.6 * p))
+  const radius = useTransform(scrollYProgress, (p) => (reduced ? 40 : 56 - 40 * p))
+
+  // Once the page has fully covered the hero, stop the video playing unseen.
+  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+    const video = videoRef.current
+    if (!video || reduced) return
+    if (p >= 1 && !video.paused) video.pause()
+    else if (p < 1 && video.paused) video.play().catch(() => {})
+  })
 
   return (
-    <section ref={ref} className="relative flex h-[100svh] min-h-[560px] flex-col overflow-hidden">
-      <motion.div className="absolute inset-0" style={{ scale: videoScale }} aria-hidden>
-        <video
-          className="h-full w-full object-cover opacity-50"
-          src="/landing/garba-hero.mp4"
-          poster="/landing/garba-hero-poster.jpg"
-          autoPlay={!reduced}
-          muted
-          loop
-          playsInline
-          preload={reduced ? 'none' : 'auto'}
-        />
-      </motion.div>
-      {/* A soft white wash behind the text, and a fade into the page below. */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 62% 48% at 50% 50%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0) 100%)',
-        }}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-[#fff]/0 to-[#fff]"
-        aria-hidden
-      />
+    <div className="relative">
+      <section className="sticky top-0 h-[100svh] min-h-[600px] overflow-hidden" style={{ backgroundColor: G.maroon }}>
+        <motion.div className="absolute inset-0 origin-top" style={{ scale: heroScale }}>
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            src="/landing/garba-hero.mp4"
+            poster="/landing/garba-hero-poster.jpg"
+            autoPlay={!reduced}
+            muted
+            loop
+            playsInline
+            preload={reduced ? 'none' : 'auto'}
+            aria-hidden
+          />
+          {/* A warm maroon wash so the cream type reads over the dancing. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(180deg, ${G.maroon}CC 0%, ${G.maroon}66 38%, ${G.ink}B3 78%, ${G.ink}F2 100%)`,
+            }}
+            aria-hidden
+          />
+          <motion.div className="absolute inset-0 bg-[#000]" style={{ opacity: heroDim }} aria-hidden />
+        </motion.div>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1.25rem)] sm:px-6">
-        <Link to="/" aria-label="Kollide home">
-          <Wordmark className="h-7 w-auto sm:h-8" />
-        </Link>
-        <Link
-          to="/start"
-          className="rounded-full bg-[#111] px-5 py-2.5 text-sm font-semibold text-[#fff] transition hover:bg-[#333] active:scale-95"
-        >
-          Sign in
-        </Link>
-      </header>
+        <div className="relative z-10 flex h-full flex-col" style={{ color: G.cream }}>
+          <Toran className="text-[#FFF4E4]" />
+          <header className="flex w-full items-center justify-between px-4 pt-1 sm:px-6 lg:px-8">
+            <Link to="/" aria-label="Kollide home" className="-ml-1">
+              <HoverWordmark tone="dark" className="h-10 w-auto sm:h-12 lg:h-14" />
+            </Link>
+            <Link
+              to="/start"
+              className="rounded-full px-5 py-2.5 text-sm font-semibold transition hover:brightness-95 active:scale-95"
+              style={{ backgroundColor: G.cream, color: G.ink }}
+            >
+              Sign in
+            </Link>
+          </header>
+
+          <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-5 pb-10 sm:px-8 lg:px-12">
+            <FadeUp play={ready}>
+              <p className="text-base font-semibold sm:text-lg" style={{ color: G.haldi }}>
+                Navratri starts Sunday, October 11, in Bangalore.
+              </p>
+            </FadeUp>
+            <RevealText
+              as="h1"
+              play={ready}
+              delay={0.1}
+              text="Find people to show up with, not just swipe past."
+              accent={['show', 'up', 'with']}
+              accentClassName="text-[#F6C33B]"
+              className="mt-6 max-w-5xl font-display text-[2.9rem] font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-7xl lg:text-[6.5rem]"
+            />
+            <FadeUp play={ready} delay={0.45}>
+              <p className="mt-6 max-w-xl text-lg leading-relaxed opacity-85 sm:text-xl">
+                Kollide matches you with verified people heading to the same garba nights. Go as a pair, or join a
+                group of up to 10.
+              </p>
+            </FadeUp>
+            <FadeUp play={ready} delay={0.6}>
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onJoin}
+                  className="group inline-flex items-center gap-2 rounded-full py-4 pl-7 pr-6 text-base font-bold shadow-xl shadow-black/25 transition hover:-translate-y-0.5 active:scale-[0.97]"
+                  style={{ backgroundColor: G.haldi, color: G.ink }}
+                >
+                  Join the waitlist
+                  <ArrowUpRight className="h-5 w-5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onHow}
+                  className="rounded-full px-6 py-4 text-base font-semibold ring-1 ring-[#FFF4E4]/40 transition hover:bg-[#FFF4E4]/10"
+                >
+                  How it works
+                </button>
+              </div>
+              <p className="mt-6 flex items-center gap-2 text-sm opacity-75">
+                <BadgeCheck className="h-4 w-4" style={{ color: G.haldi }} /> Every profile is checked by a person before
+                anyone can see it.
+              </p>
+            </FadeUp>
+          </div>
+
+          <motion.div
+            className="absolute bottom-20 right-5 hidden sm:right-8 sm:block lg:right-12"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={ready ? { opacity: 1, scale: 1 } : undefined}
+            transition={{ type: 'spring', stiffness: 160, damping: 16, delay: 1 }}
+          >
+            <CircleBadge onClick={onHow} />
+          </motion.div>
+        </div>
+      </section>
 
       <motion.div
-        className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 text-center"
-        style={{ y: textY, opacity: textOpacity }}
+        ref={curtainRef}
+        className="relative z-10 -mt-12 shadow-[0_-30px_60px_-20px_rgba(42,14,27,0.45)]"
+        style={{ backgroundColor: G.cream, borderTopLeftRadius: radius, borderTopRightRadius: radius }}
       >
-        <FadeUp play={ready}>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#111]/70 sm:text-xs sm:tracking-[0.22em]">
-            Garba nights · Bangalore · Oct 11–19
-          </p>
-        </FadeUp>
-        <RevealText
-          as="h1"
-          play={ready}
-          delay={0.1}
-          text="Find people to show up with, not just swipe past."
-          className="mt-5 text-[2.6rem] font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl"
-        />
-        <FadeUp play={ready} delay={0.55}>
-          <button
-            type="button"
-            onClick={onJoin}
-            className="group mt-9 inline-flex items-center gap-2 rounded-full bg-[#111] py-3.5 pl-6 pr-5 font-semibold text-[#fff] shadow-lg shadow-black/15 transition hover:bg-[#333] active:scale-[0.97]"
-          >
-            Join the waitlist
-            <ArrowUpRight className="h-5 w-5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-          </button>
-        </FadeUp>
+        {children}
       </motion.div>
-
-      <motion.div className="relative z-10" style={{ opacity: textOpacity }} aria-hidden>
-        <motion.div
-          className="flex flex-col items-center gap-1 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-xs font-semibold uppercase tracking-[0.2em] text-[#111]/60"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: ready ? 1 : 0 }}
-          transition={{ duration: 0.6, delay: ready ? 1 : 0 }}
-        >
-          Scroll
-          <motion.span
-            animate={reduced ? undefined : { y: [0, 6, 0] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <ArrowDown className="h-4 w-4" />
-          </motion.span>
-        </motion.div>
-      </motion.div>
-    </section>
+    </div>
   )
 }
 
@@ -240,6 +232,7 @@ function StorySection({
   body,
   base,
   reveal,
+  frame,
   mirrored = false,
 }: {
   eyebrow: string
@@ -247,46 +240,47 @@ function StorySection({
   body: string
   base: { src: string; alt: string; position?: string }
   reveal: { src: string; alt: string; position?: string }
+  frame: string
   mirrored?: boolean
 }) {
+  const ref = useRef<HTMLElement>(null)
+  const reduced = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  // The coloured block behind the photo slides out from under it as you scroll.
+  const shift = useTransform(scrollYProgress, (p) => (reduced ? 18 : 6 + 26 * Math.min(p * 1.6, 1)))
+  const offset = useTransform(shift, (v) => `${mirrored ? -v : v}px`)
+
   return (
     <section
-      className={`mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 sm:px-6 md:gap-14 md:py-28 ${
-        mirrored ? 'md:grid-cols-[1fr_1.4fr]' : 'md:grid-cols-[1.4fr_1fr]'
+      ref={ref}
+      className={`mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 sm:px-8 md:gap-16 md:py-28 lg:px-12 ${
+        mirrored ? 'md:grid-cols-[1fr_1.35fr]' : 'md:grid-cols-[1.35fr_1fr]'
       }`}
     >
-      {/* Tall on phones, landscape on wider screens. */}
-      <div className={`mx-auto w-full max-w-md md:max-w-none ${mirrored ? 'md:order-2' : ''}`}>
+      <div className={`relative mx-auto w-full max-w-md md:max-w-none ${mirrored ? 'md:order-2' : ''}`}>
+        <motion.div
+          className="bandhani-soft absolute inset-0 rounded-[28px]"
+          style={{ backgroundColor: frame, x: offset, y: shift }}
+          aria-hidden
+        />
+        {/* Tall on phones, landscape on wider screens. */}
         <HoverSwap base={base} reveal={reveal} className="md:aspect-[4/3]" />
       </div>
       <div className={mirrored ? 'md:order-1' : ''}>
         <FadeUp>
-          <Eyebrow>{eyebrow}</Eyebrow>
+          <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: G.rani }}>
+            {eyebrow}
+          </p>
         </FadeUp>
-        <RevealText text={heading} className={`mt-4 text-4xl sm:text-5xl lg:text-6xl ${HEADING}`} />
+        <RevealText
+          text={heading}
+          className="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-6xl"
+        />
         <FadeUp delay={0.15}>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-[#111]/70">{body}</p>
+          <p className="mt-6 max-w-md text-lg leading-relaxed opacity-75">{body}</p>
         </FadeUp>
       </div>
     </section>
-  )
-}
-
-function Marquee({ names }: { names: string[] }) {
-  const items = [...names, ...names]
-  return (
-    <div className="relative mt-12 overflow-hidden border-y border-[#111]/10 py-6" aria-hidden>
-      <div className="flex w-max animate-marquee items-center">
-        {items.map((name, i) => (
-          <span key={i} className="flex items-center">
-            <span className="text-outline whitespace-nowrap px-6 font-display text-6xl font-extrabold tracking-[-0.02em] sm:text-8xl">
-              {name}
-            </span>
-            <span className="h-3 w-3 shrink-0 rounded-full bg-[#E0661A]" />
-          </span>
-        ))}
-      </div>
-    </div>
   )
 }
 
@@ -313,11 +307,11 @@ export default function Landing() {
       })
   }, [])
 
-  // Keep the page white around the edges (overscroll) even in dark mode.
+  // Keep the page cream around the edges (overscroll) even in dark mode.
   useEffect(() => {
     const root = document.documentElement
     const prev = { bg: root.style.backgroundColor, scheme: root.style.colorScheme }
-    root.style.backgroundColor = '#fff'
+    root.style.backgroundColor = G.cream
     root.style.colorScheme = 'light'
     return () => {
       root.style.backgroundColor = prev.bg
@@ -336,16 +330,16 @@ export default function Landing() {
     }
   }, [introDone, reduced])
 
-  function scrollToWaitlist() {
-    const target = document.getElementById('waitlist')
+  function scrollToId(id: string, offset = -24) {
+    const target = document.getElementById(id)
     if (!target) return
-    if (lenisRef.current) lenisRef.current.scrollTo(target, { offset: -24, duration: 1.6 })
+    if (lenisRef.current) lenisRef.current.scrollTo(target, { offset, duration: 1.6 })
     else target.scrollIntoView({ block: 'start' })
   }
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen overflow-x-clip bg-[#fff] text-[#111] [color-scheme:light]">
+      <div className="min-h-screen overflow-x-clip [color-scheme:light]" style={{ backgroundColor: G.cream, color: G.ink }}>
         {!introDone && (
           <LogoIntro
             onReveal={() => setReady(true)}
@@ -356,140 +350,86 @@ export default function Landing() {
           />
         )}
 
-        <Hero ready={ready} onJoin={scrollToWaitlist} />
+        <HeroCurtain ready={ready} onJoin={() => scrollToId('waitlist')} onHow={() => scrollToId('how-it-works', 0)}>
+          <main>
+            <NineNights />
 
-        <main>
-          <StorySection
-            eyebrow="Navratri 2026"
-            heading="It's that time of the year."
-            body="Nine nights of garba are almost here. Celebrate them together: make new friends, find your crowd, and assemble a group to dance with."
-            base={{ src: '/landing/together-fistbump.webp', alt: 'Friends bumping fists in a circle at a garba night' }}
-            reveal={{ src: '/landing/together-dandiya.webp', alt: 'Friends crossing dandiya sticks into a star' }}
-          />
-
-          <StorySection
-            mirrored
-            eyebrow="For the nights that matter"
-            heading="Find yourself a garba partner."
-            body="This Navratri, find someone to share the circle with, and make your night a little more special."
-            base={{
-              src: '/landing/partner-dupatta.webp',
-              alt: "A boy fixing a girl's skirt on the garba ground",
-              position: '50% 65%',
-            }}
-            reveal={{ src: '/landing/partner-bangle.webp', alt: "A girl's bangle caught on a boy's kurta" }}
-          />
-
-          <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
-            <FadeUp>
-              <Eyebrow>How it works</Eyebrow>
-            </FadeUp>
-            <RevealText
-              text="Three steps to your first night out."
-              className={`mt-4 max-w-2xl text-4xl sm:text-5xl ${HEADING}`}
+            <StorySection
+              eyebrow="Navratri 2026"
+              heading="It's that time of the year."
+              body="Nine nights of garba are almost here. Celebrate them together: make new friends, find your crowd, and assemble a group to dance with."
+              base={{ src: '/landing/together-fistbump.webp', alt: 'Friends bumping fists in a circle at a garba night' }}
+              reveal={{ src: '/landing/together-dandiya.webp', alt: 'Friends crossing dandiya sticks into a star' }}
+              frame={G.marigold}
             />
-            <ol className="mt-12 grid gap-4 md:grid-cols-3">
-              {STEPS.map((step, i) => (
-                <li key={step.title}>
-                  <FadeUp delay={i * 0.1} className="h-full">
-                    <div className="h-full rounded-[28px] border border-[#111]/10 bg-[#fff] p-7">
-                      <span className="font-display text-6xl font-extrabold leading-none tracking-[-0.03em] text-[#E0661A]">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <h3 className="mt-8 text-2xl font-bold">{step.title}</h3>
-                      <p className="mt-2 leading-relaxed text-[#111]/65">{step.body}</p>
-                    </div>
-                  </FadeUp>
-                </li>
-              ))}
-            </ol>
-          </section>
 
-          <section className="py-20 md:py-28">
-            <div className="mx-auto max-w-6xl px-4 sm:px-6">
-              <FadeUp>
-                <Eyebrow>Coming soon</Eyebrow>
-              </FadeUp>
-              <RevealText text="Garba is just the start." className={`mt-4 text-4xl sm:text-5xl ${HEADING}`} />
-              <FadeUp delay={0.1}>
-                <p className="mt-5 max-w-lg text-lg leading-relaxed text-[#111]/70">
-                  After Navratri, Kollide opens up to more ways to meet people. Tell us what you'd use next.
-                </p>
-              </FadeUp>
-            </div>
+            <StorySection
+              mirrored
+              eyebrow="For the nights that matter"
+              heading="Find yourself a garba partner."
+              body="This Navratri, find someone to share the circle with, and make your night a little more special."
+              base={{
+                src: '/landing/partner-dupatta.webp',
+                alt: "A boy fixing a girl's skirt on the garba ground",
+                position: '50% 65%',
+              }}
+              reveal={{ src: '/landing/partner-bangle.webp', alt: "A girl's bangle caught on a boy's kurta" }}
+              frame={G.rani}
+            />
 
-            <Marquee names={comingSoon.map((a) => a.name)} />
+            <HowItWorks />
 
-            <ul className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
-              {comingSoon.map((a, i) => {
-                const Icon = ACTIVITY_ICONS[a.slug] ?? Sparkles
-                return (
-                  <li key={a.slug}>
-                    <FadeUp delay={(i % 3) * 0.08} className="h-full">
-                      <div className="flex h-full flex-col rounded-3xl border border-[#111]/10 bg-[#fff] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#111] hover:shadow-[0_12px_30px_-12px_rgba(17,17,17,0.25)]">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#E0661A]">
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          <span className="rounded-full bg-[#111]/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#111]/55">
-                            Soon
-                          </span>
-                        </div>
-                        <p className="mt-5 flex-1 font-display text-lg font-bold leading-tight">{a.name}</p>
-                        {fromDb && <VoteButton slug={a.slug} />}
-                      </div>
-                    </FadeUp>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
+            <Details />
 
-          <section id="waitlist" className="scroll-mt-6 px-4 pb-16 sm:px-6">
-            <FadeUp className="mx-auto max-w-6xl">
-              <div className="relative overflow-hidden rounded-[2rem] bg-[#0d0f22] px-6 py-14 text-center text-[#fff] sm:px-12 sm:py-20">
+            <WhatsNext activities={comingSoon} canVote={fromDb} />
+
+            <section id="waitlist" className="scroll-mt-6 px-4 pb-16 pt-16 sm:px-6 md:pt-24">
+              <FadeUp className="mx-auto max-w-7xl">
                 <div
-                  className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#F4C51C]/10 blur-3xl"
-                  aria-hidden
-                />
-                <div className="relative mx-auto max-w-xl">
-                  <Wordmark tone="dark" className="mx-auto h-12 w-auto sm:h-14" />
-                  <RevealText
-                    text="Don't go alone this Navratri."
-                    className={`mt-8 text-4xl sm:text-5xl ${HEADING}`}
-                  />
-                  <p className="mt-4 text-[#fff]/70">
-                    Join the waitlist and we'll email you the moment Kollide opens in Bangalore.
-                  </p>
-                  <div className="mx-auto mt-8 max-w-md text-left">
-                    <WaitlistForm />
+                  className="bandhani-soft relative overflow-hidden rounded-[40px] px-6 pb-14 pt-4 text-center sm:px-12 sm:pb-20"
+                  style={{ backgroundColor: G.maroon, color: G.cream }}
+                >
+                  <Toran className="-mx-6 text-[#FFF4E4] sm:-mx-12" />
+                  <div className="relative mx-auto mt-10 max-w-xl">
+                    <Wordmark tone="dark" className="mx-auto h-12 w-auto sm:h-14" />
+                    <RevealText
+                      text="Don't go alone this Navratri."
+                      className="mt-8 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-6xl"
+                    />
+                    <p className="mt-5 text-lg opacity-80">
+                      Join the waitlist and we'll email you the moment Kollide opens in Bangalore.
+                    </p>
+                    <div className="mx-auto mt-8 max-w-md text-left">
+                      <WaitlistForm />
+                    </div>
+                    <p className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm opacity-80">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: G.haldi }} /> Opening
+                        Sunday, Oct 4
+                      </span>
+                      <Countdown />
+                    </p>
                   </div>
-                  <p className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-[#fff]/70">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-[#F4C51C]" /> Opening Sunday, Oct 4
-                    </span>
-                    <Countdown />
-                  </p>
                 </div>
-              </div>
-            </FadeUp>
-          </section>
-        </main>
+              </FadeUp>
+            </section>
+          </main>
 
-        <footer className="mx-auto flex max-w-6xl flex-col gap-4 px-4 pb-10 pt-4 text-sm text-[#111]/60 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="flex items-center gap-3">
-            <Wordmark className="h-6 w-auto" />
-            <span>© 2026 · Made in Bangalore</span>
-          </div>
-          <p className="flex gap-5">
-            <Link to="/privacy" className="underline-offset-4 hover:text-[#111] hover:underline">
-              Privacy Policy
-            </Link>
-            <Link to="/terms" className="underline-offset-4 hover:text-[#111] hover:underline">
-              Terms
-            </Link>
-          </p>
-        </footer>
+          <footer className="mx-auto flex max-w-7xl flex-col gap-4 px-5 pb-10 pt-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
+            <div className="flex items-center gap-3 opacity-80">
+              <Wordmark className="h-6 w-auto" />
+              <span>© 2026 · Made in Bangalore</span>
+            </div>
+            <p className="flex gap-5 opacity-70">
+              <Link to="/privacy" className="underline-offset-4 hover:underline">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" className="underline-offset-4 hover:underline">
+                Terms
+              </Link>
+            </p>
+          </footer>
+        </HeroCurtain>
       </div>
     </MotionConfig>
   )
