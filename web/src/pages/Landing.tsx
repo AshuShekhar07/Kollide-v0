@@ -1,24 +1,15 @@
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
-import {
-  ArrowDown,
-  ArrowUpRight,
-  Check,
-  Coffee,
-  Dices,
-  Feather,
-  Footprints,
-  Mountain,
-  Music,
-  Sparkles,
-  type LucideIcon,
-} from 'lucide-react'
+import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import { motion, MotionConfig, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import HoverSwap from '../components/landing/HoverSwap'
+import HoverWordmark from '../components/landing/HoverWordmark'
+import HowItWorks from '../components/landing/HowItWorks'
 import LogoIntro from '../components/landing/LogoIntro'
 import { FadeUp, RevealText } from '../components/landing/Reveal'
+import WhatsNext from '../components/landing/WhatsNext'
 import Wordmark from '../components/landing/Wordmark'
 import WaitlistForm from '../components/WaitlistForm'
 import { supabase } from '../lib/supabase'
@@ -39,30 +30,6 @@ const FALLBACK_COMING_SOON: Activity[] = [
   { slug: 'cafe_hopping', name: 'Cafe hopping', status: 'coming_soon' },
 ]
 
-const ACTIVITY_ICONS: Record<string, LucideIcon> = {
-  trekking: Mountain,
-  badminton: Feather,
-  concerts: Music,
-  running: Footprints,
-  board_games: Dices,
-  cafe_hopping: Coffee,
-}
-
-const STEPS = [
-  {
-    title: 'Get verified',
-    body: 'Record a 10-second face video. Our team checks every profile by hand, so everyone you meet is real.',
-  },
-  {
-    title: 'Find your people',
-    body: 'Match with someone to go with, or join a group heading to the same garba night.',
-  },
-  {
-    title: 'Chat and show up',
-    body: 'Plan the night in chat, swap socials when you match, and dance till late.',
-  },
-]
-
 // The intro plays once per page load, not on every in-app visit to `/`.
 let introPlayed = false
 
@@ -76,59 +43,6 @@ function Countdown() {
     <span>
       <strong className="font-bold text-[#fff]">{days}</strong> day{days === 1 ? '' : 's'} to Navratri · Oct 11–19
     </span>
-  )
-}
-
-const VOTES_KEY = 'kollide:votes'
-
-function readVotes(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(VOTES_KEY) ?? '[]')
-  } catch {
-    return []
-  }
-}
-
-// "I'd want this" (§6.1): logged as a coming_soon_vote event. The browser
-// remembers its own votes so the button stays ticked.
-function VoteButton({ slug }: { slug: string }) {
-  const [voted, setVoted] = useState(() => readVotes().includes(slug))
-  const [busy, setBusy] = useState(false)
-
-  async function vote() {
-    setBusy(true)
-    const { error } = await supabase.rpc('vote_coming_soon', { p_slug: slug })
-    setBusy(false)
-    if (error) return
-    setVoted(true)
-    try {
-      localStorage.setItem(VOTES_KEY, JSON.stringify([...new Set([...readVotes(), slug])]))
-    } catch {
-      /* storage unavailable; the vote still counted */
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={vote}
-      disabled={voted || busy}
-      className={`mt-4 inline-flex w-full items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${
-        voted
-          ? 'bg-[#e8f5ec] text-[#1d6b3a]'
-          : 'border border-[#111]/15 text-[#111] hover:border-[#111] hover:bg-[#111] hover:text-[#fff]'
-      }`}
-    >
-      {voted ? (
-        <>
-          <Check className="h-3.5 w-3.5" strokeWidth={3} /> Noted, thanks!
-        </>
-      ) : busy ? (
-        'Saving…'
-      ) : (
-        "I'd want this"
-      )}
-    </button>
   )
 }
 
@@ -174,9 +88,9 @@ function Hero({ ready, onJoin }: { ready: boolean; onJoin: () => void }) {
         aria-hidden
       />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1.25rem)] sm:px-6">
-        <Link to="/" aria-label="Kollide home">
-          <Wordmark className="h-7 w-auto sm:h-8" />
+      <header className="relative z-10 flex w-full items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1.25rem)] sm:px-6 lg:px-8">
+        <Link to="/" aria-label="Kollide home" className="-ml-1">
+          <HoverWordmark className="h-10 w-auto sm:h-12 lg:h-14" />
         </Link>
         <Link
           to="/start"
@@ -272,24 +186,6 @@ function StorySection({
   )
 }
 
-function Marquee({ names }: { names: string[] }) {
-  const items = [...names, ...names]
-  return (
-    <div className="relative mt-12 overflow-hidden border-y border-[#111]/10 py-6" aria-hidden>
-      <div className="flex w-max animate-marquee items-center">
-        {items.map((name, i) => (
-          <span key={i} className="flex items-center">
-            <span className="text-outline whitespace-nowrap px-6 font-display text-6xl font-extrabold tracking-[-0.02em] sm:text-8xl">
-              {name}
-            </span>
-            <span className="h-3 w-3 shrink-0 rounded-full bg-[#E0661A]" />
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export default function Landing() {
   const [comingSoon, setComingSoon] = useState<Activity[]>(FALLBACK_COMING_SOON)
   const [fromDb, setFromDb] = useState(false)
@@ -380,76 +276,15 @@ export default function Landing() {
             reveal={{ src: '/landing/partner-bangle.webp', alt: "A girl's bangle caught on a boy's kurta" }}
           />
 
-          <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
-            <FadeUp>
-              <Eyebrow>How it works</Eyebrow>
-            </FadeUp>
-            <RevealText
-              text="Three steps to your first night out."
-              className={`mt-4 max-w-2xl text-4xl sm:text-5xl ${HEADING}`}
-            />
-            <ol className="mt-12 grid gap-4 md:grid-cols-3">
-              {STEPS.map((step, i) => (
-                <li key={step.title}>
-                  <FadeUp delay={i * 0.1} className="h-full">
-                    <div className="h-full rounded-[28px] border border-[#111]/10 bg-[#fff] p-7">
-                      <span className="font-display text-6xl font-extrabold leading-none tracking-[-0.03em] text-[#E0661A]">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <h3 className="mt-8 text-2xl font-bold">{step.title}</h3>
-                      <p className="mt-2 leading-relaxed text-[#111]/65">{step.body}</p>
-                    </div>
-                  </FadeUp>
-                </li>
-              ))}
-            </ol>
-          </section>
+          <HowItWorks />
 
-          <section className="py-20 md:py-28">
-            <div className="mx-auto max-w-6xl px-4 sm:px-6">
-              <FadeUp>
-                <Eyebrow>Coming soon</Eyebrow>
-              </FadeUp>
-              <RevealText text="Garba is just the start." className={`mt-4 text-4xl sm:text-5xl ${HEADING}`} />
-              <FadeUp delay={0.1}>
-                <p className="mt-5 max-w-lg text-lg leading-relaxed text-[#111]/70">
-                  After Navratri, Kollide opens up to more ways to meet people. Tell us what you'd use next.
-                </p>
-              </FadeUp>
-            </div>
+          <WhatsNext activities={comingSoon} canVote={fromDb} />
 
-            <Marquee names={comingSoon.map((a) => a.name)} />
-
-            <ul className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
-              {comingSoon.map((a, i) => {
-                const Icon = ACTIVITY_ICONS[a.slug] ?? Sparkles
-                return (
-                  <li key={a.slug}>
-                    <FadeUp delay={(i % 3) * 0.08} className="h-full">
-                      <div className="flex h-full flex-col rounded-3xl border border-[#111]/10 bg-[#fff] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#111] hover:shadow-[0_12px_30px_-12px_rgba(17,17,17,0.25)]">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#E0661A]">
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          <span className="rounded-full bg-[#111]/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#111]/55">
-                            Soon
-                          </span>
-                        </div>
-                        <p className="mt-5 flex-1 font-display text-lg font-bold leading-tight">{a.name}</p>
-                        {fromDb && <VoteButton slug={a.slug} />}
-                      </div>
-                    </FadeUp>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-
-          <section id="waitlist" className="scroll-mt-6 px-4 pb-16 sm:px-6">
+          <section id="waitlist" className="scroll-mt-6 px-4 pb-16 pt-16 sm:px-6 md:pt-24">
             <FadeUp className="mx-auto max-w-6xl">
-              <div className="relative overflow-hidden rounded-[2rem] bg-[#0d0f22] px-6 py-14 text-center text-[#fff] sm:px-12 sm:py-20">
+              <div className="relative overflow-hidden rounded-[2rem] bg-[#111] px-6 py-14 text-center text-[#fff] sm:px-12 sm:py-20">
                 <div
-                  className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#F4C51C]/10 blur-3xl"
+                  className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#E0661A]/20 blur-3xl"
                   aria-hidden
                 />
                 <div className="relative mx-auto max-w-xl">
@@ -466,7 +301,7 @@ export default function Landing() {
                   </div>
                   <p className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-[#fff]/70">
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-[#F4C51C]" /> Opening Sunday, Oct 4
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-[#E0661A]" /> Opening Sunday, Oct 4
                     </span>
                     <Countdown />
                   </p>
