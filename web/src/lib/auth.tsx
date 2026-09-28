@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { AuthContext, type AuthState } from './auth-context'
+import { clearPhotoCache } from './photos'
 import { supabase } from './supabase'
 import type { Profile } from './types'
 
@@ -19,7 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     // Don't call Supabase inside this callback (supabase-js can deadlock);
     // profile loading reacts to the user id below instead.
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data } = supabase.auth.onAuthStateChange((event, next) => {
+      // Signed URLs belong to the user who asked for them.
+      if (event === 'SIGNED_OUT') clearPhotoCache()
       setSession(next)
       setSessionLoaded(true)
     })

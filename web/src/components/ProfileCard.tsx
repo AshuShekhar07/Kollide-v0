@@ -1,6 +1,6 @@
 import { BadgeCheck } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { signedPhotoUrls } from '../lib/photos'
+import { peekPhotoUrl, signedUrlsFor, type PhotoSize } from '../lib/photos'
 
 export type CardProfile = {
   first_name: string
@@ -10,18 +10,24 @@ export type CardProfile = {
   photo_paths: string[]
 }
 
-// Signed URLs for a list of photo paths; re-fetches only when the list changes.
-export function useSignedPhotos(paths: string[]) {
-  const [urls, setUrls] = useState<(string | null)[]>([])
-  const key = paths.join('|')
+// Signed URLs for a list of photo paths. Anything already in the photo cache
+// is returned on the first render (no placeholder flash on remount); only the
+// rest is fetched, and only when the list or size changes.
+export function useSignedPhotos(paths: string[], size: PhotoSize = 'full') {
+  const joined = paths.join('|')
+  const key = `${size}#${joined}`
+  const cached = paths.map((p) => peekPhotoUrl(p, size))
+  const [fetched, setFetched] = useState<{ key: string; urls: (string | null)[] } | null>(null)
   useEffect(() => {
+    const list = joined ? joined.split('|') : []
+    if (list.every((p) => peekPhotoUrl(p, size))) return
     let cancelled = false
-    signedPhotoUrls(key ? key.split('|') : []).then((u) => !cancelled && setUrls(u))
+    signedUrlsFor(list, size).then((urls) => !cancelled && setFetched({ key: `${size}#${joined}`, urls }))
     return () => {
       cancelled = true
     }
-  }, [key])
-  return urls
+  }, [joined, size])
+  return fetched?.key === key ? fetched.urls : cached
 }
 
 // Photo-led profile card. The parent owns `photoIndex`, so it can step
@@ -32,6 +38,7 @@ export default function ProfileCard({
   className = '',
   hideBio = false,
   footer,
+  size = 'thumb',
 }: {
   profile: CardProfile
   photoIndex: number
@@ -40,11 +47,14 @@ export default function ProfileCard({
   hideBio?: boolean
   // Extra content under the name, e.g. a "More about" button.
   footer?: ReactNode
+  // Thumbnails for swipe cards and previews; 'full' for the expanded profile view.
+  size?: PhotoSize
 }) {
-  const urls = useSignedPhotos(profile.photo_paths)
   const count = Math.max(profile.photo_paths.length, 1)
   const index = ((photoIndex % count) + count) % count
-  const url = urls[index]
+  // Only the photo on screen is signed; the others when the user taps to them.
+  const path = profile.photo_paths[index]
+  const [url] = useSignedPhotos(path ? [path] : [], size)
   const [loaded, setLoaded] = useState<string | null>(null)
 
   return (

@@ -24,7 +24,7 @@ begin
 end;
 $$;
 
-select plan(26);
+select plan(30);
 
 create function pg_temp.uid(n int) returns uuid language sql immutable as $$
   select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid;
@@ -78,6 +78,13 @@ select lives_ok($$select pg_temp.put('photos', 21, 'p1')$$, 'the cap is per user
 select throws_ok($$select pg_temp.put('photos', 20, 'intruder')$$, '42501', null, 'nobody writes into another user''s folder');
 reset role;
 
+-- Six photos plus their six thumbnails is exactly the cap.
+select pg_temp.login_as(16);
+select lives_ok($$select pg_temp.put('photos', 16, 'q' || i) from generate_series(1, 6) i$$, '6 photos are allowed');
+select lives_ok($$select pg_temp.put('photos', 16, 'q' || i || '_t') from generate_series(1, 6) i$$, '...and their 6 thumbnails');
+select throws_ok($$select pg_temp.put('photos', 16, 'q7')$$, '42501', null, 'a 13th object is rejected');
+reset role;
+
 ---------------------------------------------------------------------------
 -- Videos: 3 objects per folder
 ---------------------------------------------------------------------------
@@ -124,12 +131,17 @@ insert into storage.objects (bucket_id, name, created_at) values
   ('photos', pg_temp.uid(3) || '/old-orphan.jpg', now() - interval '25 hours'),
   ('photos', pg_temp.uid(3) || '/seed-0.jpg', now() - interval '25 hours'),
   ('photos', pg_temp.uid(3) || '/young-orphan.jpg', now() - interval '2 hours'),
+  -- Thumbnails (KOL-01): one beside Priya's live photo, one whose photo row is gone.
+  ('photos', pg_temp.uid(3) || '/seed-0_t.jpg', now() - interval '25 hours'),
+  ('photos', pg_temp.uid(3) || '/gone_t.jpg', now() - interval '25 hours'),
   ('verification-videos', pg_temp.uid(2) || '/seed.webm', now() - interval '25 hours'),
   ('verification-videos', pg_temp.uid(2) || '/old-orphan.webm', now() - interval '25 hours');
 update storage.objects set created_at = now() - interval '25 hours' where name = pg_temp.uid(3) || '/loose.webm';
 
-select is(pg_temp.orphans('photos'), array[pg_temp.uid(3) || '/old-orphan.jpg'],
-          'only the old photo object with no row is an orphan');
+select is(pg_temp.orphans('photos'), array[pg_temp.uid(3) || '/gone_t.jpg', pg_temp.uid(3) || '/old-orphan.jpg'],
+          'old photo objects with no row, and thumbnails whose photo is gone, are orphans');
+select ok(not ((pg_temp.uid(3) || '/seed-0_t.jpg') = any (pg_temp.orphans('photos'))),
+          'a thumbnail of a live photo is not an orphan');
 select is(pg_temp.orphans('verification-videos'),
           array[pg_temp.uid(2) || '/old-orphan.webm', pg_temp.uid(3) || '/loose.webm'],
           'only old video objects with no row are orphans');

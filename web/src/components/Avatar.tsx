@@ -12,7 +12,7 @@ export default function Avatar({
   className?: string
   ring?: boolean
 }) {
-  const [url] = useSignedPhotos(path ? [path] : [])
+  const [url] = useSignedPhotos(path ? [path] : [], 'thumb')
   return (
     <span
       className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 font-display font-bold text-brand-700 ${

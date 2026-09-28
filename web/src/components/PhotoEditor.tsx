@@ -1,14 +1,25 @@
 import { ChevronLeft, ChevronRight, ImagePlus, Star, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { friendlyError } from '../lib/errors'
-import { compressImage } from '../lib/image'
-import { signedPhotoUrls } from '../lib/photos'
+import { processPhoto } from '../lib/image'
+import { signedPhotoUrls, thumbPath } from '../lib/photos'
 import { supabase } from '../lib/supabase'
 import type { Photo } from '../lib/types'
 import { ErrorText } from './ui'
 
 export const MIN_PHOTOS = 2
 export const MAX_PHOTOS = 6
+
+// Best-effort removal of files from a failed upload. It isn't awaited, and is
+// tried again a few seconds later: right after a rejected upload the first
+// Storage request can stall on a dead connection (seen against local Kong),
+// and a stray thumbnail would count against the 12-object folder cap. Removing
+// twice is harmless, and the hourly orphan sweep catches anything still left.
+function discard(paths: string[]) {
+  const remove = () => void supabase.storage.from('photos').remove(paths).catch(() => {})
+  remove()
+  window.setTimeout(remove, 3000)
+}
 
 // Add, remove and reorder your own photos (onboarding and Profile). RLS
 // limits writes to your own folder and rows; the database keeps you at 2+
@@ -55,14 +66,23 @@ export default function PhotoEditor({
       for (const file of picked) {
         const position = [0, 1, 2, 3, 4, 5].find((n) => !used.has(n))
         if (position === undefined) break
-        const blob = await compressImage(file)
+        const { full, thumb } = await processPhoto(file)
         const path = `${uid}/${crypto.randomUUID()}.jpg`
-        const up = await supabase.storage.from('photos').upload(path, blob, { contentType: 'image/jpeg' })
-        if (up.error) throw up.error
-        const ins = await supabase.from('photos').insert({ user_id: uid, storage_path: path, position })
-        if (ins.error) {
-          await supabase.storage.from('photos').remove([path])
-          throw ins.error
+        const thumbFile = thumbPath(path)
+        const options = { contentType: 'image/jpeg', cacheControl: '3600' }
+        const bucket = supabase.storage.from('photos')
+        // Thumbnail first, then the full image, then the row; if any step
+        // fails, remove whatever was uploaded.
+        try {
+          const upThumb = await bucket.upload(thumbFile, thumb, options)
+          if (upThumb.error) throw upThumb.error
+          const upFull = await bucket.upload(path, full, options)
+          if (upFull.error) throw upFull.error
+          const ins = await supabase.from('photos').insert({ user_id: uid, storage_path: path, position })
+          if (ins.error) throw ins.error
+        } catch (e) {
+          discard([path, thumbFile])
+          throw e
         }
         used.add(position)
       }
@@ -82,7 +102,7 @@ export default function PhotoEditor({
     if (error) {
       setError(friendlyError(error))
     } else {
-      await supabase.storage.from('photos').remove([path])
+      await supabase.storage.from('photos').remove([path, thumbPath(path)])
       const rest = photos.filter((p) => p.id !== id).map((p) => p.id)
       if (rest.length) await supabase.rpc('reorder_photos', { p_ids: rest })
     }

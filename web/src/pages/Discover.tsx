@@ -12,6 +12,7 @@ import { Button, EmptyState, ErrorText, Eyebrow, Skeleton, Tag } from '../compon
 import { useAuth } from '../lib/auth-context'
 import { fetchLiveActivity, type Feed, type FeedProfile, type LiveActivity, type MatchResult } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
+import { signedThumbUrls } from '../lib/photos'
 import { SEEKING_OPTIONS } from '../lib/profile-options'
 import { supabase } from '../lib/supabase'
 
@@ -156,6 +157,9 @@ export default function Discover() {
       return setError(friendlyError(error))
     }
     const feed = data as unknown as Feed
+    // Sign every profile's first photo once, in one request; the cards find
+    // the URLs cached (or share this request) instead of signing again.
+    void signedThumbUrls(feed.profiles.map((p) => p.photo_paths[0]).filter(Boolean))
     setQueue(feed.profiles.filter((p) => !swiped.current.has(p.id)))
     setViewsLeft(feed.views_left)
     setMayHaveMore(feed.profiles.length === BATCH)
