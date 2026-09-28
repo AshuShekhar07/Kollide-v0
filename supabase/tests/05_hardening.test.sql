@@ -61,8 +61,6 @@ select is(
     'conversation_members.last_read_at.UPDATE',
     'notifications.read_at.UPDATE',
     'photos.DELETE', 'photos.INSERT', 'photos.position.UPDATE',
-    'profiles.dob.UPDATE', 'profiles.first_name.UPDATE', 'profiles.gender.UPDATE',
-    'profiles.gender_preference.UPDATE', 'profiles.seeking.UPDATE',
     'user_activities.DELETE', 'user_activities.INSERT'
   ],
   'client write grants are exactly the intended ones'
