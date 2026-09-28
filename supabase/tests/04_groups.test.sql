@@ -65,6 +65,9 @@ $$;
 create function pg_temp.events(event text, n int) returns int language sql stable security definer as $$
   select count(*)::int from public.events_log where name = event and user_id = pg_temp.uid(n);
 $$;
+create function pg_temp.public_code(n int) returns text language sql stable security definer as $$
+  select public_code::text from public.profiles where id = pg_temp.uid(n);
+$$;
 grant execute on all functions in schema pg_temp to authenticated;
 
 ---------------------------------------------------------------------------
@@ -127,7 +130,7 @@ select is(public.get_group(pg_temp.v('g')) -> 'conversation_id', 'null'::jsonb,
 select is(public.get_group(pg_temp.v('g')) #> '{members,0,photo_path}', 'null'::jsonb,
           'non-members see names and codes, not photos');
 select is(public.get_group(pg_temp.v('g')) #>> '{members,0,public_code}',
-          (select public_code::text from public.profiles where id = pg_temp.uid(3)), 'members show public codes');
+          pg_temp.public_code(3), 'members show public codes');
 select throws_ok($$select public.get_contact(pg_temp.uid(3))$$, '42501', null,
                  'no socials before approval');
 
