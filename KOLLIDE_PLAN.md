@@ -287,6 +287,8 @@ All IDs are `uuid`. All timestamps are `timestamptz` with a default of `now()`. 
 **`app_config`**
 - `key`, `value` (jsonb)
 - Holds settings such as `UNVERIFIED_DAILY_VIEW_LIMIT`.
+- Anonymous `join_waitlist` and `vote_coming_soon` calls are capped per function per day, and quietly ignored past the cap.
+  Change the limit with `ANON_DAILY_EVENT_CAP` here (default 2000); the counters live in `private.anon_rate`.
 
 ### 4.2 Storage buckets (both private)
 
@@ -471,6 +473,7 @@ For unverified callers, the function also enforces the daily view limit using `p
 ### 5.7 Scheduled jobs (`pg_cron`)
 - **Hourly:** call `cleanup-videos`.
 - **Daily:** delete `profile_views` rows older than 2 days.
+- **Daily:** delete `waitlist_join` and `account_deleted` events older than 60 days (nothing reads them). Funnel and vote events are kept, because `admin_metrics` totals them all-time.
 - **No job may ever delete anything linked to a report or a `retained` conversation.**
 
 ---
