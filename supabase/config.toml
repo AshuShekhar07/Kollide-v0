@@ -424,6 +424,9 @@ verify_jwt = false
 [functions.cleanup-videos]
 verify_jwt = false
 
+[functions.sweep-orphan-uploads]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

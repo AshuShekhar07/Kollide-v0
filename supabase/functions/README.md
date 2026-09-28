@@ -5,6 +5,7 @@
 | `admin-video-url` | Admin UI (`supabase.functions.invoke`) | User JWT; caller must be in `admins`. Logs `view_video` before returning a 5-minute signed URL. |
 | `send-email` | `email_outbox` insert trigger via `pg_net`; `retry-emails` cron every 15 min | `x-kollide-secret` header (`verify_jwt = false`) |
 | `cleanup-videos` | `cleanup-videos` cron, hourly | `x-kollide-secret` header (`verify_jwt = false`). Deletes video files past `delete_after` through the Storage API. |
+| `sweep-orphan-uploads` | `sweep-orphan-uploads` cron, hourly | `x-kollide-secret` header (`verify_jwt = false`). Deletes `photos` / `verification-videos` files older than 24 h that no row points at, through the Storage API. Logs counts only. |
 | `delete-account` | Settings → Delete account (`supabase.functions.invoke`) | User JWT. Deletes the caller's photos, any unreviewed video, then the auth user. |
 
 The cron jobs (migration `20261003000001_hardening`) reach functions through the same Vault
@@ -26,6 +27,7 @@ Vault secrets. Emails land in Mailpit at http://127.0.0.1:54324.
    supabase functions deploy delete-account
    supabase functions deploy send-email --no-verify-jwt
    supabase functions deploy cleanup-videos --no-verify-jwt
+   supabase functions deploy sweep-orphan-uploads --no-verify-jwt
    ```
 
 2. **Set function secrets.** Generate the hook secret with `openssl rand -hex 32`. For Gmail, use an
@@ -75,7 +77,25 @@ select private.call_edge_function('cleanup-videos');
 select status_code, content from net._http_response order by created desc limit 1;  -- {"deleted":1}
 ```
 
-The row gets `deleted_at` and the file returns 400/404 from Storage. Hosted, check the job history:
+The row gets `deleted_at` and the file returns 400/404 from Storage.
+
+## Testing the orphan sweep
+
+There is no Deno test setup, so this is a manual test (the query deciding what counts as an orphan,
+`orphaned_storage_objects`, is covered by `supabase/tests/10_upload_caps.test.sql`). Restart the
+stack after adding the function, upload a file to `photos` or `verification-videos` as a seeded
+user without creating a row for it, then age it and run the job:
+
+```sql
+update storage.objects set created_at = now() - interval '25 hours' where name = '<the uploaded path>';
+select private.call_edge_function('sweep-orphan-uploads');
+select status_code, content from net._http_response order by created desc limit 1;  -- {"deleted":{"photos":1,...}}
+```
+
+The file now returns 400/404 from Storage, and files with a row, or younger than 24 h, are left alone.
+The function logs counts only, never paths or user ids.
+
+Hosted, check the job history:
 
 ```sql
 select jobname, status, return_message, start_time from cron.job_run_details
