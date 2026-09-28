@@ -151,6 +151,8 @@ export default function VideoStep({ data, reload }: StepProps) {
     }
     const { error } = await supabase.rpc('submit_verification', { p_storage_path: path })
     if (error) {
+      // Best effort: the hourly sweep deletes it if this fails.
+      await supabase.storage.from('verification-videos').remove([path])
       setPhase('preview')
       return setError(friendlyError(error))
     }
