@@ -1,7 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#7a1f5c"/>
-  <g transform="translate(76.8 76.8) scale(0.7)">
-    <path fill="#fff" d="M150 128h66v256h-66zM216 262l100-134h82L292 262l112 122h-84l-104-114z"/>
-    <circle cx="386" cy="150" r="30" fill="#fbb13c"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Kollide">
+  <!-- Maskable: full-bleed background, mark held inside the 80% safe zone. -->
+  <rect width="1024" height="1024" fill="#FFFFFF"/>
+  <g transform="translate(143.36 143.36) scale(0.72)">
+    <rect x="289" y="262" width="137" height="499" rx="30" fill="#26316A"/>
+    <path fill="#EF7B1E" d="M426 511.5 543 262h60z"/>
+    <path fill="#F7A12A" d="M426 511.5 618 262h60z"/>
+    <path fill="#F4C51D" d="M426 511.5 693 262h62z"/>
+    <path fill="#D2342D" d="M426 511.5 543 761h60z"/>
+    <path fill="#EDB7A3" d="M426 511.5 618 761h60z"/>
+    <path fill="#8D1B2A" d="M426 511.5 693 761h62z"/>
+    <circle cx="426" cy="511.5" r="32" fill="#F4C51D"/>
   </g>
 </svg>

@@ -1,11 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#a3246a"/>
-      <stop offset="1" stop-color="#7a1f5c"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <path fill="#fff" d="M150 128h66v256h-66zM216 262l100-134h82L292 262l112 122h-84l-104-114z"/>
-  <circle cx="386" cy="150" r="30" fill="#fbb13c"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Kollide">
+  <!-- Kollide mark: a navy stem, six rays fanning out of a gold spark. -->
+  <rect width="1024" height="1024" rx="224" fill="#FFFFFF"/>
+  <rect x="289" y="262" width="137" height="499" rx="30" fill="#26316A"/>
+  <g>
+    <path fill="#EF7B1E" d="M426 511.5 543 262h60z"/>
+    <path fill="#F7A12A" d="M426 511.5 618 262h60z"/>
+    <path fill="#F4C51D" d="M426 511.5 693 262h62z"/>
+    <path fill="#D2342D" d="M426 511.5 543 761h60z"/>
+    <path fill="#EDB7A3" d="M426 511.5 618 761h60z"/>
+    <path fill="#8D1B2A" d="M426 511.5 693 761h62z"/>
+  </g>
+  <circle cx="426" cy="511.5" r="32" fill="#F4C51D"/>
 </svg>
