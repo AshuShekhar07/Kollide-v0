@@ -336,10 +336,8 @@ export default function Login() {
             aria-hidden
           />
           <h1 className="relative font-display text-[2.1rem] font-extrabold leading-[1.02] tracking-[-0.035em]">{heading}</h1>
-          <p className="mt-2 text-[15px] leading-relaxed opacity-70">
-            {signup
-              ? 'Meet verified people heading to the same garba nights in Bangalore.'
-              : 'Sign in to find your garba people.'}
+          <p className="relative mt-2 text-base leading-relaxed opacity-75">
+            {signup ? 'Your people are out there. Sign up and find them.' : "Back for more Garba? Let's go."}
           </p>
 
           <button
