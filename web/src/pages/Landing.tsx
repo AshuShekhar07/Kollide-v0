@@ -14,7 +14,6 @@ import NineNights from '../components/landing/NineNights'
 import { FadeUp, RevealText } from '../components/landing/Reveal'
 import Toran from '../components/landing/Toran'
 import WhatsNext from '../components/landing/WhatsNext'
-import WhyKollide from '../components/landing/WhyKollide'
 import Wordmark from '../components/landing/Wordmark'
 import WaitlistForm from '../components/WaitlistForm'
 import { supabase } from '../lib/supabase'
@@ -382,8 +381,6 @@ export default function Landing() {
               reveal={{ src: '/landing/partner-bangle.webp', alt: "A girl's bangle caught on a boy's kurta" }}
               frame={G.rani}
             />
-
-            <WhyKollide />
 
             <HowItWorks />
 
