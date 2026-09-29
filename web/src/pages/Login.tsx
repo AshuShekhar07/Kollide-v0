@@ -1,9 +1,16 @@
 import { MailCheck } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
-import { useState, type FormEvent } from 'react'
+import {
+  animate,
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  type AnimationPlaybackControls,
+} from 'motion/react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { G } from '../components/landing/garba'
-import Toran from '../components/landing/Toran'
 import { FullScreenSpinner, Logo } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { startPathFor } from '../lib/invite'
@@ -30,69 +37,219 @@ function GoogleIcon() {
 const FIELD =
   'w-full rounded-2xl border border-[#2A0E1B]/15 bg-[#fff] px-4 py-3 text-[#2A0E1B] transition placeholder:text-[#2A0E1B]/35 focus:border-[#D4246B] focus:outline-none focus:ring-4 focus:ring-[#D4246B]/15'
 const PRIMARY =
-  'flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 font-bold shadow-lg shadow-[#7A0F2E]/25 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50'
+  'flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 font-bold shadow-lg shadow-[#161A3D]/30 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50'
 
 function Spin() {
   return <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
 }
 
-// Sharad Navratri 2026: Sunday Oct 11 to Monday Oct 19.
-const NIGHTS = Array.from({ length: 9 }, (_, i) => {
-  const d = new Date(2026, 9, 11 + i)
-  return { day: d.toLocaleDateString('en-IN', { weekday: 'short' }), date: d.getDate() }
-})
-const NIGHT_COLORS = [G.rani, G.marigold, G.peacock, G.haldi, G.orange, G.leaf, G.rani, G.marigold, G.peacock]
-const LIGHT = new Set<string>([G.marigold, G.haldi])
+// The backdrop: dark woven fabric covered in abhla bharat, the little round
+// mirrors stitched onto chaniya cholis. A soft light follows the cursor (or
+// drifts on its own on phones and when idle) and the mirrors near it glint.
+const FABRIC = '#161A3D'
+const TILE = 128
 
-// The backdrop: a garba ground at night, blurred into glowing lights, with
-// the nine nights of Navratri turning slowly around the card like a circle
-// of dancers.
-function GarbaNight() {
-  const turn = { animationDuration: '90s' }
+// One embroidered motif per tile: a big mirror in a ring of rani thread with
+// marigold petal stitches and haldi dots, and small peacock-rimmed mirrors at
+// the corners (which meet their neighbours to form a staggered pattern).
+function Motif({ lit = false }: { lit?: boolean }) {
+  const c = TILE / 2
+  const petals = Array.from({ length: 8 }, (_, i) => (i / 8) * Math.PI * 2)
+  const glass = lit ? 'url(#mw-lit)' : 'url(#mw-glass)'
+  if (lit) {
+    return (
+      <>
+        {/* A soft halo so lit mirrors glow, not just brighten. */}
+        <circle cx={c} cy={c} r={24} fill="url(#mw-halo)" />
+        <circle cx={c} cy={c} r={12} fill={glass} />
+        {[0, TILE].flatMap((x) =>
+          [0, TILE].map((y) => (
+            <g key={`${x}-${y}`}>
+              <circle cx={x} cy={y} r={13} fill="url(#mw-halo)" />
+              <circle cx={x} cy={y} r={6} fill={glass} />
+            </g>
+          )),
+        )}
+      </>
+    )
+  }
   return (
-    <div className="pointer-events-none absolute inset-0" aria-hidden>
-      <img
-        src="/landing/step-venue.webp"
-        alt=""
-        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-90 blur-xl saturate-150"
+    <>
+      {petals.map((t) => (
+        <line
+          key={t}
+          x1={c + 17 * Math.cos(t)}
+          y1={c + 17 * Math.sin(t)}
+          x2={c + 26 * Math.cos(t)}
+          y2={c + 26 * Math.sin(t)}
+          stroke={G.marigold}
+          strokeWidth={2.4}
+          strokeLinecap="round"
+          strokeDasharray="3 2.5"
+          opacity={0.85}
+        />
+      ))}
+      {petals.map((t) => (
+        <circle key={`d${t}`} cx={c + 31 * Math.cos(t + Math.PI / 8)} cy={c + 31 * Math.sin(t + Math.PI / 8)} r={1.6} fill={G.haldi} opacity={0.8} />
+      ))}
+      <circle cx={c} cy={c} r={14} fill="none" stroke={G.rani} strokeWidth={3.2} strokeDasharray="2.2 1.4" />
+      <circle cx={c} cy={c} r={12} fill={glass} />
+      <circle cx={c - 4} cy={c - 4} r={1.8} fill="#fff" opacity={0.55} />
+      {[0, TILE].flatMap((x) =>
+        [0, TILE].map((y) => (
+          <g key={`${x}-${y}`}>
+            <circle cx={x} cy={y} r={8} fill="none" stroke={G.peacock} strokeWidth={2.4} strokeDasharray="2 1.3" />
+            <circle cx={x} cy={y} r={6} fill={glass} />
+          </g>
+        )),
+      )}
+    </>
+  )
+}
+
+function MirrorPattern({ lit = false }: { lit?: boolean }) {
+  const id = lit ? 'mw-pattern-lit' : 'mw-pattern'
+  return (
+    <svg className="absolute inset-0 h-full w-full" aria-hidden>
+      <defs>
+        <radialGradient id="mw-glass" cx="38%" cy="35%" r="75%">
+          <stop offset="0%" stopColor="#8d91ad" />
+          <stop offset="60%" stopColor="#4a4e70" />
+          <stop offset="100%" stopColor="#2c3052" />
+        </radialGradient>
+        <radialGradient id="mw-lit" cx="40%" cy="38%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="45%" stopColor="#fff3d6" />
+          <stop offset="100%" stopColor="#d9dcef" />
+        </radialGradient>
+        <radialGradient id="mw-halo">
+          <stop offset="0%" stopColor="#fff3d6" stopOpacity="0.75" />
+          <stop offset="100%" stopColor="#fff3d6" stopOpacity="0" />
+        </radialGradient>
+        <pattern id={id} width={TILE} height={TILE} patternUnits="userSpaceOnUse">
+          <Motif lit={lit} />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#${id})`} />
+    </svg>
+  )
+}
+
+function MirrorWork({ sweep }: { sweep: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const reduced = useReducedMotion()
+  const x = useMotionValue(50)
+  const y = useMotionValue(40)
+  const drift = useRef<AnimationPlaybackControls[]>([])
+
+  useMotionValueEvent(x, 'change', (v) => ref.current?.style.setProperty('--lx', `${v}%`))
+  useMotionValueEvent(y, 'change', (v) => ref.current?.style.setProperty('--ly', `${v}%`))
+
+  const stopDrift = useCallback(() => {
+    drift.current.forEach((c) => c.stop())
+    drift.current = []
+  }, [])
+  const startDrift = useCallback(() => {
+    stopDrift()
+    drift.current = [
+      animate(x, [x.get(), 18, 82, 50], { duration: 16, repeat: Infinity, ease: 'easeInOut' }),
+      animate(y, [y.get(), 70, 25, 40], { duration: 11, repeat: Infinity, ease: 'easeInOut' }),
+    ]
+  }, [x, y, stopDrift])
+
+  // Follow a mouse; drift on touch screens and after a few idle seconds.
+  useEffect(() => {
+    if (reduced) return
+    let idle = 0
+    startDrift()
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return
+      stopDrift()
+      x.set((e.clientX / window.innerWidth) * 100)
+      y.set((e.clientY / window.innerHeight) * 100)
+      window.clearTimeout(idle)
+      idle = window.setTimeout(startDrift, 3000)
+    }
+    window.addEventListener('pointermove', onMove)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.clearTimeout(idle)
+      stopDrift()
+    }
+  }, [reduced, x, y, startDrift, stopDrift])
+
+  // A sweep of light across every mirror (when the code is sent).
+  useEffect(() => {
+    if (!sweep || reduced) return
+    stopDrift()
+    y.set(50)
+    const run = animate(x, [-20, 120], { duration: 1.3, ease: [0.45, 0, 0.2, 1] })
+    run.then(startDrift)
+    return () => run.stop()
+  }, [sweep, reduced, x, y, startDrift, stopDrift])
+
+  return (
+    <div
+      ref={ref}
+      className="pointer-events-none absolute inset-0"
+      style={{ backgroundColor: FABRIC, ['--lx' as string]: '50%', ['--ly' as string]: '40%' }}
+      aria-hidden
+    >
+      {/* The weave of the fabric. */}
+      <div
+        className="absolute inset-0 opacity-60"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(45deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 5px)',
+        }}
       />
+      <MirrorPattern />
+      {/* The same mirrors, bright, showing only where the light is. */}
       <div
         className="absolute inset-0"
         style={{
-          background: `radial-gradient(ellipse at center, ${G.maroon}B3 0%, ${G.maroon}80 40%, ${G.ink}D9 100%)`,
+          maskImage: 'radial-gradient(circle 250px at var(--lx) var(--ly), #000 0%, rgb(0 0 0 / 0.55) 40%, transparent 75%)',
+          WebkitMaskImage:
+            'radial-gradient(circle 250px at var(--lx) var(--ly), #000 0%, rgb(0 0 0 / 0.55) 40%, transparent 75%)',
         }}
-      />
-      <div className="bandhani-soft absolute inset-0 opacity-60" />
-
-      <div className="absolute left-1/2 top-1/2 aspect-square w-[max(118vw,40rem)] -translate-x-1/2 -translate-y-1/2 sm:w-[min(56rem,90vh)]">
-        <div className="absolute inset-[6%] rounded-full border-2 border-dashed border-[#FFF4E4]/15" />
-        <ol className="absolute inset-0 animate-spin-slow" style={turn}>
-          {NIGHTS.map((n, i) => {
-            const angle = (i / NIGHTS.length) * Math.PI * 2 - Math.PI / 2
-            const color = NIGHT_COLORS[i]
-            return (
-              <li
-                key={n.date}
-                className="absolute -ml-9 -mt-9 h-[4.5rem] w-[4.5rem] sm:-ml-11 sm:-mt-11 sm:h-[5.5rem] sm:w-[5.5rem]"
-                style={{ left: `${50 + 44 * Math.cos(angle)}%`, top: `${50 + 44 * Math.sin(angle)}%` }}
-              >
-                <span
-                  className="flex h-full w-full animate-spin-slow flex-col items-center justify-center rounded-full shadow-xl shadow-black/30"
-                  style={{
-                    ...turn,
-                    animationDirection: 'reverse',
-                    backgroundColor: color,
-                    color: LIGHT.has(color) ? G.ink : G.cream,
-                  }}
-                >
-                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-80 sm:text-xs">{n.day}</span>
-                  <span className="font-display text-xl font-extrabold leading-none sm:text-2xl">{n.date}</span>
-                </span>
-              </li>
-            )
-          })}
-        </ol>
+      >
+        <MirrorPattern lit />
       </div>
+      {/* The light falling on the cloth itself. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(circle 380px at var(--lx) var(--ly), rgb(255 214 160 / 0.12), transparent 70%)' }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse at center, transparent 35%, rgb(8 9 26 / 0.75) 100%)' }}
+      />
+    </div>
+  )
+}
+
+// One mirror per digit typed, under the code field.
+function CodeMirrors({ count }: { count: number }) {
+  const slots = Math.max(6, count)
+  return (
+    <div className="flex justify-center gap-2" aria-hidden>
+      {Array.from({ length: slots }, (_, i) => {
+        const on = i < count
+        return (
+          <motion.span
+            key={i}
+            className="h-3.5 w-3.5 rounded-full ring-2"
+            style={{
+              ['--tw-ring-color' as string]: on ? G.marigold : 'rgb(42 14 27 / 0.15)',
+              background: on
+                ? 'radial-gradient(circle at 38% 38%, #fff 0 1.5px, #dfe1ec 2px, #8e92ad 100%)'
+                : 'transparent',
+            }}
+            animate={on ? { scale: [1, 1.45, 1] } : { scale: 1 }}
+            transition={{ duration: 0.35 }}
+          />
+        )
+      })}
     </div>
   )
 }
@@ -105,6 +262,8 @@ export default function Login() {
   const [stage, setStage] = useState<'email' | 'code'>('email')
   const [busy, setBusy] = useState<'google' | 'email' | 'code' | null>(null)
   const [error, setError] = useState('')
+  // Bumped when a code is sent, to sweep light across the mirrors.
+  const [sweep, setSweep] = useState(0)
   // Sign in and sign up are the same flow; `?mode=signup` only changes the wording.
   const [params] = useSearchParams()
   const signup = params.get('mode') === 'signup'
@@ -137,6 +296,7 @@ export default function Login() {
     setBusy(null)
     if (error) return setError(friendlyError(error))
     setStage('code')
+    setSweep((n) => n + 1)
   }
 
   async function verifyCode(e: FormEvent) {
@@ -150,12 +310,11 @@ export default function Login() {
   }
 
   return (
-    <main className="relative flex min-h-dvh flex-col overflow-hidden" style={{ backgroundColor: G.maroon, color: G.cream }}>
-      <GarbaNight />
+    <main className="relative flex min-h-dvh flex-col overflow-hidden" style={{ color: G.cream }}>
+      <MirrorWork sweep={sweep} />
 
       <header className="relative z-10">
-        <Toran count={32} className="text-[#FFF4E4]" />
-        <div className="px-5 pt-1 sm:px-8">
+        <div className="px-5 pt-[max(env(safe-area-inset-top),1.25rem)] sm:px-8">
           <Link to="/" aria-label="Back to Kollide" className="inline-block">
             <Logo tone="white" className="text-3xl sm:text-4xl" />
           </Link>
@@ -164,13 +323,19 @@ export default function Login() {
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
         <motion.div
-          className="w-full max-w-[26rem] rounded-[32px] p-6 shadow-2xl shadow-black/40 sm:p-8"
+          className="relative w-full max-w-[26rem] rounded-[32px] p-6 shadow-2xl shadow-black/50 sm:p-8"
           style={{ backgroundColor: G.cream, color: G.ink }}
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: 'spring', stiffness: 220, damping: 24 }}
         >
-          <h1 className="font-display text-[2.1rem] font-extrabold leading-[1.02] tracking-[-0.035em]">{heading}</h1>
+          {/* Embroidered edge: a running stitch just inside the card. */}
+          <span
+            className="pointer-events-none absolute inset-2.5 rounded-[26px] border-2 border-dashed"
+            style={{ borderColor: `${G.marigold}66` }}
+            aria-hidden
+          />
+          <h1 className="relative font-display text-[2.1rem] font-extrabold leading-[1.02] tracking-[-0.035em]">{heading}</h1>
           <p className="mt-2 text-[15px] leading-relaxed opacity-70">
             {signup
               ? 'Meet verified people heading to the same garba nights in Bangalore.'
@@ -196,9 +361,9 @@ export default function Login() {
                 key="email"
                 onSubmit={sendCode}
                 className="space-y-3"
-                initial={{ opacity: 0, x: -24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -24 }}
+                initial={{ opacity: 0, y: -28 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -28 }}
                 transition={{ duration: 0.25 }}
               >
                 <label className="block">
@@ -213,7 +378,7 @@ export default function Login() {
                     className={FIELD}
                   />
                 </label>
-                <button type="submit" disabled={busy === 'email'} className={PRIMARY} style={{ backgroundColor: G.maroon, color: G.cream }}>
+                <button type="submit" disabled={busy === 'email'} className={PRIMARY} style={{ backgroundColor: FABRIC, color: G.cream }}>
                   {busy === 'email' && <Spin />} Email me a code
                 </button>
               </motion.form>
@@ -222,9 +387,9 @@ export default function Login() {
                 key="code"
                 onSubmit={verifyCode}
                 className="space-y-3"
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 24 }}
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 28 }}
                 transition={{ duration: 0.25 }}
               >
                 <p className="flex items-start gap-2.5 rounded-2xl bg-[#2A0E1B]/[0.06] px-3.5 py-3 text-sm">
@@ -248,11 +413,12 @@ export default function Login() {
                     className={`${FIELD} text-center font-mono text-2xl tracking-[0.35em]`}
                   />
                 </label>
+                <CodeMirrors count={code.length} />
                 <button
                   type="submit"
                   disabled={busy === 'code' || code.length < 6}
                   className={PRIMARY}
-                  style={{ backgroundColor: G.maroon, color: G.cream }}
+                  style={{ backgroundColor: FABRIC, color: G.cream }}
                 >
                   {busy === 'code' && <Spin />} Verify and continue
                 </button>
@@ -290,7 +456,7 @@ export default function Login() {
         </motion.div>
       </div>
 
-      <p className="relative z-10 mx-auto max-w-sm px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-center text-xs leading-relaxed opacity-75">
+      <p className="relative z-10 mx-auto mb-[max(env(safe-area-inset-bottom),1.25rem)] max-w-sm rounded-2xl bg-[#161A3D]/80 px-5 py-2.5 text-center text-xs leading-relaxed text-[#FFF4E4]/80 backdrop-blur-sm">
         By continuing you agree to our{' '}
         <Link to="/terms" className="underline">
           Terms
