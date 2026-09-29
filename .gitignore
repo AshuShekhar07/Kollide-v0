@@ -2,3 +2,8 @@
 .env
 .env.*
 !.env.example
+
+# Database dumps are never committed (the backup workflow keeps them as
+# encrypted artifacts only).
+/backup/
+*.sql.gpg
