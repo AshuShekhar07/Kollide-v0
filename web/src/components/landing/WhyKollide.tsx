@@ -76,7 +76,7 @@ function PathsCollide() {
   const burstScale = useTransform(burst, (b) => 0.4 + 0.6 * b)
 
   return (
-    <div ref={ref} className="relative mx-auto h-40 w-full max-w-5xl sm:h-52" aria-hidden>
+    <div ref={ref} className="relative mx-auto h-40 w-full sm:h-56 lg:h-64" aria-hidden>
       <svg viewBox="0 0 1000 200" className="h-full w-full overflow-visible" fill="none">
         <motion.path
           d="M-40 170 C 180 170, 260 40, 420 70 S 470 110, 500 100"
@@ -139,15 +139,15 @@ export default function WhyKollide() {
       className="bandhani-soft relative px-5 py-24 text-center sm:px-8 md:py-36"
       style={{ backgroundColor: RED, color: TEXT, clipPath }}
     >
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-[88rem]">
         <RevealText
           text="Why Kollide?"
-          className="font-display text-6xl font-extrabold leading-[0.95] tracking-[-0.045em] sm:text-7xl md:text-8xl"
+          className="font-display text-6xl font-extrabold leading-[0.95] tracking-[-0.045em] sm:text-8xl lg:text-[9rem]"
         />
 
         <ScrollWords
           text="Plans are easy. Finding people is hard. We handle the second part."
-          className="mx-auto mt-10 max-w-3xl font-display text-3xl font-bold leading-[1.15] tracking-[-0.03em] sm:text-4xl md:text-5xl"
+          className="mx-auto mt-10 font-display text-3xl font-bold leading-[1.1] tracking-[-0.03em] sm:text-5xl lg:text-6xl"
         />
 
         <div className="mt-24 space-y-20 md:mt-32 md:space-y-28">
@@ -155,10 +155,10 @@ export default function WhyKollide() {
             <div key={r.line}>
               <ScrollWords
                 text={r.line}
-                className="mx-auto max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-[-0.04em] sm:text-5xl md:text-6xl"
+                className="mx-auto font-display text-4xl font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl xl:text-8xl"
               />
               <FadeUp delay={0.1}>
-                <p className="mx-auto mt-5 max-w-xl text-lg font-semibold leading-relaxed opacity-90 sm:text-xl">{r.body}</p>
+                <p className="mx-auto mt-6 max-w-4xl text-lg font-bold italic leading-relaxed opacity-95 sm:text-2xl">{r.body}</p>
               </FadeUp>
             </div>
           ))}
@@ -168,10 +168,10 @@ export default function WhyKollide() {
           <PathsCollide />
           <ScrollWords
             text="Your friends couldn’t make it. Your plans still can."
-            className="mx-auto mt-10 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-[-0.04em] sm:text-5xl md:text-6xl"
+            className="mx-auto mt-10 font-display text-4xl font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl xl:text-8xl"
           />
           <FadeUp delay={0.1}>
-            <p className="mt-8 text-xl font-bold sm:text-2xl">
+            <p className="mt-8 text-xl font-bold italic sm:text-3xl">
               Kollide. Where paths collide.
             </p>
           </FadeUp>
