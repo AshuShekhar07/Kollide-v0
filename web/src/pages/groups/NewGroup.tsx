@@ -55,7 +55,7 @@ export default function NewGroup() {
 
 
   return (
-    <div className="lg:max-w-2xl">
+    <div className="mx-auto w-full lg:max-w-2xl">
       <BackLink to="/groups">Groups</BackLink>
       <div className="mt-3">
         <PageHeader

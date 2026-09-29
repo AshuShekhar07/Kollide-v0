@@ -3,7 +3,7 @@ import { BadgeCheck, Hourglass, RotateCcw, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import AboutView from '../components/AboutView'
-import { DandiyaIcon } from '../components/Dandiya'
+import { AnimatedDandiya, DandiyaIcon } from '../components/Dandiya'
 import { useShell } from '../components/AppShell'
 import DiscoverTabs from '../components/DiscoverTabs'
 import MatchDialog from '../components/MatchDialog'
@@ -154,6 +154,8 @@ export default function Discover() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [dir, setDir] = useState<Dir>(1)
+  // Bumped on every kollide, so the button's dandiya clacks.
+  const [kollideClack, setKollideClack] = useState(0)
   const [matchName, setMatchName] = useState<{ name: string; photo: string | null } | null>(null)
 
   // Swipes are sent in the background; the next feed fetch waits for them so
@@ -209,6 +211,7 @@ export default function Discover() {
       setError('')
       swiped.current.add(top.id)
       setDir(d)
+      if (d === 1) setKollideClack((n) => n + 1)
       setQueue((q) => q.slice(1))
 
       const args = { p_target_id: top.id, p_activity_id: activity.id }
@@ -260,143 +263,149 @@ export default function Discover() {
         <AddLiveActivity onAdded={loadActivity} />
       ) : (
         <>
-          <div className="flex items-end justify-between gap-3">
-            {/* Phones keep this to one line so the card gets the room. */}
-            <div className="min-w-0">
-              <Link
-                to="/profile"
-                className="inline-flex max-w-full items-center gap-1 text-xs font-semibold text-neutral-500 lg:text-[11px] lg:font-bold lg:uppercase lg:tracking-[0.2em] lg:text-brand-500"
-              >
-                <span className="font-bold text-brand-500 lg:hidden">{activity?.name ?? 'Discover'} ·</span>
-                <span className="truncate">Looking for {seeking}</span>
-                <span className="shrink-0 font-bold text-neutral-900 lg:text-neutral-400">· Change</span>
-              </Link>
-              <h1 className="mt-1 hidden truncate font-extrabold leading-none tracking-[-0.04em] text-neutral-900 lg:block lg:text-5xl">
-                {activity?.name ?? 'Discover'}
-              </h1>
+          <div className="flex flex-1 flex-col lg:mx-auto lg:w-full lg:max-w-5xl lg:flex-none">
+            <div className={`flex items-end justify-between gap-3 ${top ? '' : 'lg:justify-center lg:text-center'}`}>
+              {/* Phones keep this to one line so the card gets the room. */}
+              <div className="min-w-0">
+                <Link
+                  to="/profile"
+                  className="inline-flex max-w-full items-center gap-1 text-xs font-semibold text-neutral-500 lg:text-[11px] lg:font-bold lg:uppercase lg:tracking-[0.2em] lg:text-brand-500"
+                >
+                  <span className="font-bold text-brand-500 lg:hidden">{activity?.name ?? 'Discover'} ·</span>
+                  <span className="truncate">Looking for {seeking}</span>
+                  <span className="shrink-0 font-bold text-neutral-900 lg:text-neutral-400">· Change</span>
+                </Link>
+                <h1 className="mt-1 hidden truncate font-extrabold leading-none tracking-[-0.04em] text-neutral-900 lg:block lg:text-5xl">
+                  {activity?.name ?? 'Discover'}
+                </h1>
+              </div>
+              {!verified && viewsLeft !== null && (
+                <Tag tone="amber" className="shrink-0">
+                  {viewsLeft} left today
+                </Tag>
+              )}
             </div>
-            {!verified && viewsLeft !== null && (
-              <Tag tone="amber" className="shrink-0">
-                {viewsLeft} left today
-              </Tag>
-            )}
-          </div>
 
-          {/* Phones: the card runs down to just above the tab bar, with the buttons
-              floating over its bottom edge. Desktop: card on the left, profile on the right. */}
-          <div className="-mb-6 mt-3 flex flex-1 flex-col lg:mb-0 lg:mt-6 lg:grid lg:flex-none lg:grid-cols-[minmax(0,26rem)_1fr] lg:items-start lg:gap-12">
-            <div className="flex flex-1 flex-col">
-              <div className="relative mt-1 min-h-96 w-full flex-1 lg:mt-0 lg:h-[min(40rem,calc(100dvh-25rem))] lg:min-h-[26rem] lg:max-h-none lg:flex-none">
-                {next && (
-                  <ProfileCard
-                    key={next.id}
-                    profile={next}
-                    photoIndex={0}
-                    className="absolute inset-0 h-full w-full translate-y-3 rotate-2 scale-[0.93] opacity-60"
-                  />
-                )}
-                <AnimatePresence custom={dir}>
-                  {top && <SwipeCard key={top.id} profile={top} dir={dir} onDecide={decide} />}
-                </AnimatePresence>
+            {/* Phones: the card runs down to just above the tab bar, with the buttons
+                floating over its bottom edge. Desktop: card on the left, profile on the right. */}
+            <div
+              className={`-mb-6 mt-3 flex flex-1 flex-col lg:mb-0 lg:mt-8 lg:flex-none ${
+                top ? 'lg:grid lg:grid-cols-[minmax(0,26rem)_1fr] lg:items-start lg:gap-14' : 'lg:items-center'
+              }`}
+            >
+              <div className={`flex flex-1 flex-col ${top ? '' : 'lg:w-[28rem] lg:flex-none'}`}>
+                <div className="relative mt-1 min-h-96 w-full flex-1 lg:mt-0 lg:h-[min(40rem,calc(100dvh-29rem))] lg:min-h-[26rem] lg:max-h-none lg:flex-none">
+                  {next && (
+                    <ProfileCard
+                      key={next.id}
+                      profile={next}
+                      photoIndex={0}
+                      className="absolute inset-0 h-full w-full translate-y-3 rotate-2 scale-[0.93] opacity-60"
+                    />
+                  )}
+                  <AnimatePresence custom={dir}>
+                    {top && <SwipeCard key={top.id} profile={top} dir={dir} onDecide={decide} />}
+                  </AnimatePresence>
 
-                {!top &&
-                  (loading ? (
-                    <div className="absolute inset-0 overflow-hidden rounded-[2rem]" role="status" aria-label="Finding people">
-                      <Skeleton className="h-full w-full !rounded-[2rem]" />
-                      <div className="absolute inset-x-5 bottom-6 space-y-2">
-                        <Skeleton className="h-7 w-40 !bg-neutral-300/60" />
-                        <Skeleton className="h-4 w-56 !bg-neutral-300/60" />
+                  {!top &&
+                    (loading ? (
+                      <div className="absolute inset-0 overflow-hidden rounded-[2rem]" role="status" aria-label="Finding people">
+                        <Skeleton className="h-full w-full !rounded-[2rem]" />
+                        <div className="absolute inset-x-5 bottom-6 space-y-2">
+                          <Skeleton className="h-7 w-40 !bg-neutral-300/60" />
+                          <Skeleton className="h-4 w-56 !bg-neutral-300/60" />
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200/80 bg-surface">
-                      {outOfViews ? (
-                        <EmptyState icon={Hourglass} title="That's everyone for today">
-                          Unverified accounts see a limited number of new profiles a day. Once you're verified, there's no
-                          limit.
-                        </EmptyState>
-                      ) : (
-                        <EmptyState
-                          icon={Sparkles}
-                          title="You've seen everyone for now"
-                          action={
-                            activity && (
-                              <div className="flex flex-col items-center gap-2">
-                                <Button variant="secondary" onClick={() => loadFeed(activity.id)}>
-                                  <RotateCcw className="h-4 w-4" /> Refresh
-                                </Button>
-                                <Link to="/groups" className="text-sm font-semibold text-brand-700">
-                                  Or browse groups →
-                                </Link>
-                              </div>
-                            )
-                          }
-                        >
-                          New people join every day. Check back soon.
-                        </EmptyState>
-                      )}
-                    </div>
-                  ))}
-              </div>
-              {/* Phones: only float the buttons over a profile, never over the loading
-                  or "seen everyone" card (they'd cover its buttons). */}
-              <div
-                className={`pointer-events-none relative z-20 -mt-[5.5rem] items-center justify-center gap-6 pb-4 lg:mt-5 lg:flex lg:pb-0 [&>*]:pointer-events-auto ${
-                  top ? 'flex' : 'hidden'
-                }`}
-              >
-                <ActionButton
-                  label="Pass"
-                  onClick={() => decide(-1)}
-                  disabled={!top}
-                  className="h-16 w-16 bg-surface text-neutral-900 shadow-maroon-950/20 ring-1 ring-neutral-200"
-                >
-                  <X className="h-8 w-8" strokeWidth={2.6} />
-                </ActionButton>
-                <ActionButton
-                  label="Kollide"
-                  onClick={() => decide(1)}
-                  disabled={!top}
-                  className="h-[4.5rem] w-[4.5rem] bg-rani text-white shadow-rani/35 ring-4 ring-marigold-400/60"
-                >
-                  <DandiyaIcon className="h-9 w-9" strokeWidth={2.4} />
-                </ActionButton>
-              </div>
-              {error && (
-                <div className="mt-2">
-                  <ErrorText>{error}</ErrorText>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200/80 bg-surface">
+                        {outOfViews ? (
+                          <EmptyState icon={Hourglass} title="That's everyone for today">
+                            Unverified accounts see a limited number of new profiles a day. Once you're verified, there's no
+                            limit.
+                          </EmptyState>
+                        ) : (
+                          <EmptyState
+                            icon={Sparkles}
+                            title="You've seen everyone for now"
+                            action={
+                              activity && (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Button variant="secondary" onClick={() => loadFeed(activity.id)}>
+                                    <RotateCcw className="h-4 w-4" /> Refresh
+                                  </Button>
+                                  <Link to="/groups" className="text-sm font-semibold text-brand-700">
+                                    Or browse groups →
+                                  </Link>
+                                </div>
+                              )
+                            }
+                          >
+                            New people join every day. Check back soon.
+                          </EmptyState>
+                        )}
+                      </div>
+                    ))}
                 </div>
-              )}
-            </div>
+                {/* Phones: only float the buttons over a profile, never over the loading
+                    or "seen everyone" card (they'd cover its buttons). */}
+                <div
+                  className={`pointer-events-none relative z-20 -mt-[5.5rem] items-center justify-center gap-6 pb-4 lg:mt-6 lg:pb-0 [&>*]:pointer-events-auto ${
+                    top ? 'flex' : 'hidden'
+                  }`}
+                >
+                  <ActionButton
+                    label="Pass"
+                    onClick={() => decide(-1)}
+                    disabled={!top}
+                    className="h-16 w-16 bg-surface text-neutral-900 shadow-maroon-950/20 ring-1 ring-neutral-200"
+                  >
+                    <X className="h-8 w-8" strokeWidth={2.6} />
+                  </ActionButton>
+                  <ActionButton
+                    label="Kollide"
+                    onClick={() => decide(1)}
+                    disabled={!top}
+                    className="h-[4.5rem] w-[4.5rem] bg-rani text-white shadow-rani/35 ring-4 ring-marigold-400/60"
+                  >
+                    <AnimatedDandiya className="h-9 w-9" strokeWidth={2.4} play={kollideClack} />
+                  </ActionButton>
+                </div>
+                {error && (
+                  <div className="mt-2">
+                    <ErrorText>{error}</ErrorText>
+                  </div>
+                )}
+              </div>
 
-            <aside className="hidden lg:block" aria-label={top ? `About ${top.first_name}` : undefined}>
-              {top ? (
-                <div key={top.id} className="animate-rise">
-                  <Eyebrow>Up next</Eyebrow>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <h2 className="text-5xl font-extrabold leading-none tracking-[-0.04em] text-neutral-900">
-                      {top.first_name}, {top.age}
-                    </h2>
-                    <Tag tone="haldi">
-                      <BadgeCheck className="h-3.5 w-3.5" /> Verified
-                    </Tag>
+              <aside className={top ? 'hidden lg:block' : 'hidden'} aria-label={top ? `About ${top.first_name}` : undefined}>
+                {top ? (
+                  <div key={top.id} className="animate-rise">
+                    <Eyebrow>Up next</Eyebrow>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <h2 className="text-5xl font-extrabold leading-none tracking-[-0.04em] text-neutral-900">
+                        {top.first_name}, {top.age}
+                      </h2>
+                      <Tag tone="haldi">
+                        <BadgeCheck className="h-3.5 w-3.5" /> Verified
+                      </Tag>
+                    </div>
+                    <div className="mt-6 max-w-xl">
+                      <AboutView userId={top.id} bio={top.bio} />
+                    </div>
+                    <p className="mt-8 flex items-center gap-2 text-xs text-neutral-500">
+                      <kbd className="rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">←</kbd> pass
+                      <kbd className="ml-2 rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">→</kbd> kollide
+                      <span className="ml-2">· click the photo to see more</span>
+                    </p>
                   </div>
-                  <div className="mt-6 max-w-xl">
-                    <AboutView userId={top.id} bio={top.bio} />
+                ) : (
+                  <div className="rounded-[28px] border-2 border-dashed border-neutral-200 p-8 text-sm leading-relaxed text-neutral-500">
+                    Profiles show up here with everything they've shared: what they're into, the nights they're going,
+                    and a bit about them.
                   </div>
-                  <p className="mt-8 flex items-center gap-2 text-xs text-neutral-500">
-                    <kbd className="rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">←</kbd> pass
-                    <kbd className="ml-2 rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">→</kbd> kollide
-                    <span className="ml-2">· click the photo to see more</span>
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-[28px] border-2 border-dashed border-neutral-200 p-8 text-sm leading-relaxed text-neutral-500">
-                  Profiles show up here with everything they've shared: what they're into, the nights they're going,
-                  and a bit about them.
-                </div>
-              )}
-            </aside>
+                )}
+              </aside>
+            </div>
           </div>
         </>
       )}
