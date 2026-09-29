@@ -99,45 +99,43 @@ function HeroCurtain({
   children: ReactNode
 }) {
   const curtainRef = useRef<HTMLDivElement>(null)
-  const sceneRef = useRef<HTMLImageElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const reduced = useReducedMotion()
   const { scrollYProgress } = useScroll({ target: curtainRef, offset: ['start end', 'start start'] })
   const heroScale = useTransform(scrollYProgress, (p) => (reduced ? 1 : 1 - 0.08 * p))
   const heroDim = useTransform(scrollYProgress, (p) => (reduced ? 0 : 0.6 * p))
   const radius = useTransform(scrollYProgress, (p) => (reduced ? 40 : 56 - 40 * p))
 
-  // Once the page has fully covered the hero, hide the scene so its
-  // animations stop being painted unseen.
+  // Once the page has fully covered the hero, stop the video playing unseen.
   useMotionValueEvent(scrollYProgress, 'change', (p) => {
-    if (sceneRef.current) sceneRef.current.style.visibility = p >= 1 ? 'hidden' : 'visible'
+    const video = videoRef.current
+    if (!video || reduced) return
+    if (p >= 1 && !video.paused) video.pause()
+    else if (p < 1 && video.paused) video.play().catch(() => {})
   })
 
   return (
     <div className="relative">
       <section className="sticky top-0 h-[100svh] min-h-[600px] overflow-hidden" style={{ backgroundColor: G.maroon }}>
         <motion.div className="absolute inset-0 origin-top" style={{ scale: heroScale }}>
-          {/* An illustrated garba night: vector, so it stays sharp on any
-              screen, and it animates by itself (twirling skirts, clacking
-              sticks, twinkling lights; still under reduced motion). Phones
-              show the right-hand side, where the circle is. */}
-          <img
-            ref={sceneRef}
-            className="h-full w-full object-cover object-[78%_100%] md:object-center"
-            src="/landing/garba-scene.svg"
-            alt=""
-            fetchPriority="high"
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            src="/landing/garba-hero.mp4"
+            poster="/landing/garba-hero-poster.jpg"
+            autoPlay={!reduced}
+            muted
+            loop
+            playsInline
+            preload={reduced ? 'none' : 'auto'}
             aria-hidden
           />
-          {/* Darken behind the words so the cream type reads: from the top on
-              phones, from the left on wider screens. */}
+          {/* A warm maroon wash so the cream type reads over the dancing. */}
           <div
-            className="absolute inset-0 md:hidden"
-            style={{ background: `linear-gradient(180deg, ${G.ink}F0 0%, ${G.ink}D9 55%, ${G.ink}B3 80%, ${G.ink}8C 100%)` }}
-            aria-hidden
-          />
-          <div
-            className="absolute inset-0 hidden md:block"
-            style={{ background: `linear-gradient(90deg, ${G.ink}F2 0%, ${G.ink}B3 38%, ${G.ink}33 62%, ${G.ink}00 78%)` }}
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(180deg, ${G.maroon}CC 0%, ${G.maroon}66 38%, ${G.ink}B3 78%, ${G.ink}F2 100%)`,
+            }}
             aria-hidden
           />
           <motion.div className="absolute inset-0 bg-[#000]" style={{ opacity: heroDim }} aria-hidden />
