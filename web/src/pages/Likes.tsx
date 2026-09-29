@@ -9,6 +9,7 @@ import MatchDialog from '../components/MatchDialog'
 import ProfileCard, { useSignedPhotos } from '../components/ProfileCard'
 import { ReportDialog } from '../components/SafetyDialogs'
 import ProfileStack from '../components/ProfileStack'
+import { SticksScene } from '../components/Scenes'
 import { Button, LinkButton, EmptyState, ErrorText, Eyebrow, PageHeader, Skeleton } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { markNotificationsRead, type IncomingLike, type MatchResult } from '../lib/discovery'
@@ -221,7 +222,7 @@ export default function Likes() {
   const [invites, setInvites] = useState<GroupInvite[]>([])
   const [error, setError] = useState('')
   const [open, setOpen] = useState<IncomingLike | null>(null)
-  const [matchName, setMatchName] = useState<{ name: string; photo: string | null } | null>(null)
+  const [matchName, setMatchName] = useState<{ id: string; name: string; photo: string | null } | null>(null)
 
   const load = useCallback(async () => {
     const [likes, invites] = await Promise.all([supabase.rpc('get_incoming_likes'), supabase.rpc('get_group_invites')])
@@ -240,7 +241,7 @@ export default function Likes() {
     const like = open!
     setOpen(null)
     setLikes((l) => l?.filter((x) => x.swipe_id !== like.swipe_id) ?? null)
-    if (matched) setMatchName({ name: like.first_name, photo: like.photo_paths[0] ?? null })
+    if (matched) setMatchName({ id: like.user_id, name: like.first_name, photo: like.photo_paths[0] ?? null })
     refreshBadges()
   }
 
@@ -288,6 +289,7 @@ export default function Likes() {
       {likes?.length === 0 && invites.length === 0 && (
         <EmptyState
           icon={DandiyaIcon}
+          scene={<SticksScene />}
           title="No kollides yet"
           action={
             verified && (
@@ -316,7 +318,9 @@ export default function Likes() {
       )}
 
       {open && <LikeDetail like={open} onClose={() => setOpen(null)} onDone={onDone} />}
-      {matchName && <MatchDialog name={matchName.name} photoPath={matchName.photo} onClose={() => setMatchName(null)} />}
+      {matchName && (
+        <MatchDialog name={matchName.name} userId={matchName.id} photoPath={matchName.photo} onClose={() => setMatchName(null)} />
+      )}
     </>
   )
 }

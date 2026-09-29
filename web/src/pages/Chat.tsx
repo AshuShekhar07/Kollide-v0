@@ -1,9 +1,11 @@
-import { ArrowLeft, AtSign, Ban, Flag, Info, Lock, MoreVertical, PartyPopper, SendHorizontal, UsersRound } from 'lucide-react'
+import { ArrowLeft, AtSign, Ban, Flag, Info, Lock, MoreVertical, PartyPopper, SendHorizontal, Share2, UsersRound } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useShell } from '../components/AppShell'
 import Avatar from '../components/Avatar'
 import { BlockDialog, ReportDialog, Sheet } from '../components/SafetyDialogs'
+import ShareMatch from '../components/ShareMatch'
 import SocialLinks from '../components/SocialLinks'
 import { Button, ErrorText, FullScreenSpinner } from '../components/ui'
 import { festiveTile } from '../lib/festive'
@@ -61,7 +63,8 @@ export default function Chat() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [dialog, setDialog] = useState<'report' | 'block' | 'socials' | null>(null)
+  const [dialog, setDialog] = useState<'report' | 'block' | 'socials' | 'share' | null>(null)
+  const myPhoto = useShell()?.myPhoto ?? null
 
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -328,6 +331,7 @@ export default function Chat() {
                 <button type="button" className="fixed inset-0 z-20 cursor-default" aria-label="Close menu" onClick={() => setMenuOpen(false)} />
                 <ul className="absolute right-0 top-11 z-30 w-52 origin-top-right animate-pop overflow-hidden rounded-2xl border border-neutral-200 bg-surface py-1.5 text-sm shadow-xl">
                   {[
+                    { key: 'share', label: 'Share our match', icon: Share2, className: 'text-neutral-800' },
                     { key: 'socials', label: `${other.first_name}'s socials`, icon: AtSign, className: 'text-neutral-800' },
                     { key: 'report', label: 'Report', icon: Flag, className: 'text-red-700' },
                     { key: 'block', label: 'Block', icon: Ban, className: 'text-red-700' },
@@ -337,7 +341,7 @@ export default function Chat() {
                         type="button"
                         onClick={() => {
                           setMenuOpen(false)
-                          setDialog(item.key as 'socials' | 'report' | 'block')
+                          setDialog(item.key as 'share' | 'socials' | 'report' | 'block')
                         }}
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-left font-medium hover:bg-neutral-50 ${item.className}`}
                       >
@@ -533,6 +537,13 @@ export default function Chat() {
         )}
       </div>
 
+      {dialog === 'share' && other && (
+        <ShareMatch
+          them={{ id: other.user_id, name: other.first_name, photoPath: other.photo_path }}
+          myPhotoPath={myPhoto}
+          onClose={() => setDialog(null)}
+        />
+      )}
       {dialog === 'socials' && other && (
         <Sheet label={`${other.first_name}'s socials`} onClose={() => setDialog(null)}>
           <h2 className="mb-3 text-xl font-bold text-neutral-900">{other.first_name}'s socials</h2>

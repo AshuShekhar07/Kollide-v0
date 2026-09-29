@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ComponentType, ReactNode } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
+import Ghagra from './Ghagra'
 import Wordmark from './landing/Wordmark'
 
 type IconType = ComponentType<{ className?: string; strokeWidth?: number }>
@@ -7,7 +8,7 @@ type IconType = ComponentType<{ className?: string; strokeWidth?: number }>
 export function Spinner({ label = 'Loading…' }: { label?: string }) {
   return (
     <div className="flex items-center justify-center gap-3 py-10 text-sm font-medium text-neutral-500" role="status">
-      <span className="h-5 w-5 animate-spin rounded-full border-[2.5px] border-brand-500 border-r-marigold-400 border-t-transparent" />
+      <Ghagra className="h-8 w-8" />
       {label}
     </div>
   )
@@ -15,8 +16,9 @@ export function Spinner({ label = 'Loading…' }: { label?: string }) {
 
 export function FullScreenSpinner() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-2">
-      <Logo className="animate-pulse text-4xl" />
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4">
+      <Logo className="text-4xl" />
+      <Ghagra className="h-12 w-12" />
       <span className="sr-only" role="status">
         Loading…
       </span>
@@ -48,7 +50,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const buttonBase =
-  'inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 font-bold transition duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 disabled:hover:translate-y-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-200'
+  'glint inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 font-bold transition duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 disabled:hover:translate-y-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-200'
 
 // Same buttons as the landing page: ink pills that lift on hover, and haldi
 // for the big festive moments (joining, matching).
@@ -173,23 +175,30 @@ export function PageHeader({
 // line of explanation and, optionally, something to do about it.
 export function EmptyState({
   icon: Icon,
+  scene,
   title,
   children,
   action,
 }: {
   icon: IconType
+  // An illustration (see Scenes.tsx) to show instead of the icon.
+  scene?: ReactNode
   title: string
   children?: ReactNode
   action?: ReactNode
 }) {
   return (
     <div className="flex animate-rise flex-col items-center px-4 py-12 text-center">
-      <div className="relative mb-8 h-24 w-24">
-        <span className="bandhani-soft absolute inset-0 translate-x-3 rotate-[10deg] rounded-[28px] bg-marigold-400" aria-hidden />
-        <div className="bandhani-soft relative flex h-full w-full -rotate-6 items-center justify-center rounded-[28px] bg-maroon-700 text-cream shadow-xl shadow-maroon-950/20">
-          <Icon className="h-10 w-10" strokeWidth={1.8} />
+      {scene ? (
+        <div className="mb-5 text-neutral-500">{scene}</div>
+      ) : (
+        <div className="relative mb-8 h-24 w-24">
+          <span className="bandhani-soft absolute inset-0 translate-x-3 rotate-[10deg] rounded-[28px] bg-marigold-400" aria-hidden />
+          <div className="bandhani-soft relative flex h-full w-full -rotate-6 items-center justify-center rounded-[28px] bg-maroon-700 text-cream shadow-xl shadow-maroon-950/20">
+            <Icon className="h-10 w-10" strokeWidth={1.8} />
+          </div>
         </div>
-      </div>
+      )}
       <p className="font-display text-[1.75rem] font-extrabold leading-tight tracking-[-0.03em] text-neutral-900">{title}</p>
       {children && <p className="mt-2 max-w-sm text-sm leading-relaxed text-neutral-500">{children}</p>}
       {action && <div className="mt-6">{action}</div>}

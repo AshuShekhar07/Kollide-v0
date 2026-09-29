@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useShell } from '../../components/AppShell'
 import Avatar from '../../components/Avatar'
+import Celebrate from '../../components/Celebrate'
 import Toran from '../../components/landing/Toran'
 import { useSignedPhotos } from '../../components/ProfileCard'
 import ProfileStack from '../../components/ProfileStack'
@@ -262,6 +263,11 @@ export default function GroupDetail() {
   return (
     <>
       <BackLink to="/groups">Groups</BackLink>
+      <Celebrate
+        id={`group-full:${group.id}`}
+        when={inGroup && group.member_count >= group.max_members}
+        message="Your group is full. Everyone’s in, see you on the ground!"
+      />
 
       <div className="lg:mt-4 lg:grid lg:grid-cols-[1fr_22rem] lg:items-start lg:gap-10">
         <div>

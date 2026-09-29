@@ -3,11 +3,14 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useOutlet, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../lib/auth-context'
-import { navratriStatus } from '../lib/format'
+import { useFestival } from '../lib/festival'
 import { supabase } from '../lib/supabase'
 import BangaloreCheck from './BangaloreCheck'
 import { AnimatedDandiya, DandiyaIcon } from './Dandiya'
 import Avatar from './Avatar'
+import Celebrate from './Celebrate'
+import FabricWipe from './FabricWipe'
+import { FairyLights, FestivalChip, HeaderThread } from './FestivalBits'
 import InstallPrompt from './InstallPrompt'
 import PendingInviteBanner from './PendingInviteBanner'
 import { Logo } from './ui'
@@ -43,6 +46,15 @@ export default function AppShell() {
   const [clack, setClack] = useState(0)
   const lastLikes = useRef(0)
   const uid = profile?.id
+  const festival = useFestival()
+  // Fairy lights go up after dark, until the festival's over.
+  const lights = festival.isNight && festival.phase !== 'after'
+  // Petals for anyone verified in the last week who hasn't seen them yet.
+  const [openedAt] = useState(() => Date.now())
+  const newlyVerified =
+    profile?.verification_status === 'approved' &&
+    !!profile.verified_at &&
+    openedAt - new Date(profile.verified_at).getTime() < 7 * 86_400_000
 
   // The first photo is the profile picture. Re-read on navigation so a
   // reorder on /profile shows up straight away.
@@ -175,7 +187,7 @@ export default function AppShell() {
             </ul>
           </nav>
           <div className="flex items-center gap-3 justify-self-end">
-            <CountdownChip />
+            <FestivalChip festival={festival} long />
             <Link
               to="/profile"
               className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-4 ring-1 ring-neutral-200 transition hover:ring-neutral-400"
@@ -185,8 +197,9 @@ export default function AppShell() {
             </Link>
           </div>
         </div>
-        {/* A festive thread under the bar. */}
-        <div className="h-[3px] bg-gradient-to-r from-rani via-marigold-400 to-peacock" aria-hidden />
+        {/* A festive thread under the bar, and fairy lights hung from it at night. */}
+        <HeaderThread festival={festival} />
+        {lights && <FairyLights festival={festival} />}
       </header>
 
       <div className="flex min-h-dvh flex-col lg:min-h-[calc(100dvh-4.75rem)]">
@@ -196,8 +209,9 @@ export default function AppShell() {
             <Link to="/discover" aria-label="Kollide home">
               <Logo className="text-[1.6rem]" />
             </Link>
+            {lights && <FairyLights festival={festival} />}
             <div className="flex items-center gap-2">
-              <CountdownChip />
+              <FestivalChip festival={festival} />
               <Link to="/profile" aria-label="Your profile" className="rounded-full transition active:scale-95">
                 <Avatar
                   path={photo}
@@ -220,6 +234,13 @@ export default function AppShell() {
           </main>
         )}
       </div>
+
+      <FabricWipe section={sectionIndex(location.pathname)} />
+      <Celebrate
+        id={`verified:${uid}`}
+        when={newlyVerified}
+        message="You’re verified! Your diya is lit and your kollides are on their way."
+      />
 
       {/* Phone dock: floats over the page, the open tab grows to show its name. */}
       {!immersive && (
@@ -270,18 +291,6 @@ export default function AppShell() {
         </nav>
       )}
     </div>
-  )
-}
-
-// Days to go, or which night it is, as a small chip in the header.
-function CountdownChip() {
-  const [status] = useState(() => navratriStatus())
-  if (status.phase === 'after') return null
-  return (
-    <span className="flex items-center gap-1.5 rounded-full bg-maroon-700 px-3 py-1.5 text-xs font-bold text-cream">
-      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-marigold-400" aria-hidden />
-      {status.phase === 'before' ? `${status.days}d to Navratri` : `Night ${status.night} of 9`}
-    </span>
   )
 }
 

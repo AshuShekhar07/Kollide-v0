@@ -1,4 +1,4 @@
-import { ChevronRight, FileText, Lock, LogOut, Moon, ShieldCheck, Smartphone, Sun, Trash2 } from 'lucide-react'
+import { ChevronRight, FileText, Lock, LogOut, Moon, ShieldCheck, Smartphone, Sun, SunMoon, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Avatar from '../components/Avatar'
@@ -72,17 +72,18 @@ function BlockedList() {
 }
 
 const THEMES: { value: ThemePref; label: string; icon: typeof Sun }[] = [
+  { value: 'festival', label: 'Day & night', icon: SunMoon },
   { value: 'light', label: 'Light', icon: Sun },
   { value: 'dark', label: 'Dark', icon: Moon },
   { value: 'system', label: 'Match phone', icon: Smartphone },
 ]
 
-// Light is the default; the choice is remembered on this device.
+// "Day & night" is the default; the choice is remembered on this device.
 function Appearance() {
   const [pref, setPref] = useState<ThemePref>(getThemePref)
   return (
-    <Section title="Appearance" hint="Saved on this device.">
-      <div className="grid grid-cols-3 gap-2 rounded-[28px] border border-neutral-200/80 bg-surface p-2" role="radiogroup" aria-label="Theme">
+    <Section title="Appearance" hint="Day & night turns dark at 6pm, when garba starts, and back at 5am. Saved on this device.">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 rounded-[28px] border border-neutral-200/80 bg-surface p-2" role="radiogroup" aria-label="Theme">
         {THEMES.map((t) => {
           const active = pref === t.value
           return (

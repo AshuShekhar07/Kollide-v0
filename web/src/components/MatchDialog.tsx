@@ -1,11 +1,13 @@
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Share2 } from 'lucide-react'
 import { motion } from 'motion/react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth-context'
 import { useShell } from './AppShell'
 import { DandiyaClash } from './Dandiya'
 import Toran from './landing/Toran'
 import { useSignedPhotos } from './ProfileCard'
+import ShareMatch from './ShareMatch'
 import { Button } from './ui'
 
 // Confetti in festival colours, burst out from where the sticks clack.
@@ -46,16 +48,19 @@ function MatchPhoto({ path, name, side }: { path: string | null; name: string; s
 
 export default function MatchDialog({
   name,
+  userId,
   photoPath = null,
   onClose,
 }: {
   name: string
+  userId?: string
   photoPath?: string | null
   onClose: () => void
 }) {
   const navigate = useNavigate()
   const { profile } = useAuth()
   const myPhoto = useShell()?.myPhoto ?? null
+  const [sharing, setSharing] = useState(false)
 
   return (
     <motion.div
@@ -119,12 +124,22 @@ export default function MatchDialog({
             <Button variant="marigold" className="w-full py-4 text-base" onClick={() => navigate('/matches')}>
               <MessageCircle className="h-5 w-5" /> Say hi to {name}
             </Button>
-            <Button variant="ghost" className="w-full !text-cream hover:!bg-white/10" onClick={onClose}>
+            <Button
+              variant="ghost"
+              className="w-full !text-cream ring-1 ring-cream/30 hover:!bg-white/10"
+              onClick={() => setSharing(true)}
+            >
+              <Share2 className="h-4 w-4" /> Share the moment
+            </Button>
+            <Button variant="ghost" className="w-full !text-cream/80 hover:!bg-white/10" onClick={onClose}>
               Keep browsing
             </Button>
           </div>
         </motion.div>
       </div>
+      {sharing && (
+        <ShareMatch them={{ id: userId, name, photoPath }} myPhotoPath={myPhoto} onClose={() => setSharing(false)} />
+      )}
     </motion.div>
   )
 }

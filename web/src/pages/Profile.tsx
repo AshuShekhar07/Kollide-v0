@@ -1,9 +1,10 @@
 
-import { BadgeCheck, Check, ChevronRight, Eye, Hourglass, LogOut, Settings } from 'lucide-react'
+import { Check, ChevronRight, Eye, LogOut, Settings } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import AboutEditor from '../components/AboutEditor'
+import { Diya, Stitch } from '../components/Outfit'
 import Avatar from '../components/Avatar'
 import PhotoEditor from '../components/PhotoEditor'
 import ProfileStack from '../components/ProfileStack'
@@ -11,6 +12,7 @@ import { Sheet } from '../components/SafetyDialogs'
 import { Button, Card, Choice, ErrorText, Section, Spinner, Tag } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { friendlyError } from '../lib/errors'
+import { fabricFor, fabricStyle } from '../lib/fabric'
 import { GENDERS, PREFERENCE_LABELS, SEEKING_OPTIONS } from '../lib/profile-options'
 import { supabase } from '../lib/supabase'
 import type { Gender, Photo, Seeking } from '../lib/types'
@@ -118,54 +120,59 @@ export default function Profile() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      {/* Who you are, centred at the top. */}
+      {/* Who you are, centred at the top, framed in your fabric: the same one
+          your card wears for everyone else. */}
       <motion.div
-        className="bandhani-soft relative overflow-hidden rounded-[32px] bg-maroon-700 px-5 pb-6 pt-7 text-center text-cream shadow-xl shadow-maroon-950/15 sm:px-8 sm:pb-8 sm:pt-9"
+        className="relative overflow-hidden rounded-[32px] p-2.5 text-center text-cream shadow-xl shadow-maroon-950/15"
+        style={fabricStyle(fabricFor(profile.id))}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >
-        <motion.div
-          className="mx-auto w-fit"
-          initial={{ scale: 0.8, rotate: -10 }}
-          animate={{ scale: 1, rotate: -4 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
-        >
-          <Avatar
-            path={mainPath}
-            name={profile.first_name ?? ''}
-            className="h-24 w-24 !rounded-[1.8rem] text-4xl ring-4 ring-marigold-400 sm:h-28 sm:w-28"
-          />
-        </motion.div>
-        <h1 className="mt-4 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] sm:text-5xl">{profile.first_name}</h1>
-        <div className="mt-3 flex justify-center">
-          {verified ? (
-            <Tag tone="haldi">
-              <BadgeCheck className="h-3.5 w-3.5" /> Verified
-            </Tag>
-          ) : (
-            <Tag tone="glass">
-              <Hourglass className="h-3.5 w-3.5" /> Verification pending
-            </Tag>
-          )}
-        </div>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-          <Button variant="marigold" className="px-5 py-2.5 text-sm" disabled={!photos?.length} onClick={() => setPreviewing(true)}>
-            <Eye className="h-4 w-4" /> See how others see you
-          </Button>
-          <Link
-            to="/settings"
-            className="hidden items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-cream ring-1 ring-cream/30 transition hover:bg-white/10 lg:inline-flex"
+        <div className="relative rounded-[1.5rem] bg-maroon-900/90 px-5 pb-6 pt-7 sm:px-8 sm:pb-8 sm:pt-9">
+          <Stitch className="inset-2 rounded-[1.1rem]" color="rgb(246 195 59 / 0.45)" />
+          <motion.div
+            className="mx-auto w-fit"
+            initial={{ scale: 0.8, rotate: -10 }}
+            animate={{ scale: 1, rotate: -4 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
           >
-            <Settings className="h-4 w-4" /> Settings
-          </Link>
-          <button
-            type="button"
-            onClick={signOut}
-            className="hidden items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-cream/80 transition hover:bg-white/10 hover:text-cream lg:inline-flex"
-          >
-            <LogOut className="h-4 w-4" /> Sign out
-          </button>
+            <Avatar
+              path={mainPath}
+              name={profile.first_name ?? ''}
+              className="h-24 w-24 !rounded-[1.8rem] text-4xl ring-4 ring-marigold-400 sm:h-28 sm:w-28"
+            />
+          </motion.div>
+          <h1 className="mt-4 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] sm:text-5xl">{profile.first_name}</h1>
+          <div className="mt-3 flex justify-center">
+            {verified ? (
+              <Tag tone="haldi" className="!py-1 !pl-1.5 !pr-3">
+                <Diya className="h-5 w-5" /> Verified
+              </Tag>
+            ) : (
+              <Tag tone="glass" className="!py-1 !pl-1.5 !pr-3">
+                <Diya lit={false} className="h-5 w-5" /> Your diya lights up once you're verified
+              </Tag>
+            )}
+          </div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <Button variant="marigold" className="px-5 py-2.5 text-sm" disabled={!photos?.length} onClick={() => setPreviewing(true)}>
+              <Eye className="h-4 w-4" /> See how others see you
+            </Button>
+            <Link
+              to="/settings"
+              className="hidden items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-cream ring-1 ring-cream/30 transition hover:bg-white/10 lg:inline-flex"
+            >
+              <Settings className="h-4 w-4" /> Settings
+            </Link>
+            <button
+              type="button"
+              onClick={signOut}
+              className="hidden items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-cream/80 transition hover:bg-white/10 hover:text-cream lg:inline-flex"
+            >
+              <LogOut className="h-4 w-4" /> Sign out
+            </button>
+          </div>
         </div>
       </motion.div>
 

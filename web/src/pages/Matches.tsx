@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useShell } from '../components/AppShell'
 import { DandiyaIcon } from '../components/Dandiya'
 import Avatar from '../components/Avatar'
+import { LanternScene } from '../components/Scenes'
 import { LinkButton, EmptyState, ErrorText, PageHeader, Skeleton, Tag } from '../components/ui'
 import { festiveTile } from '../lib/festive'
 import { markNotificationsRead, type MatchItem } from '../lib/discovery'
@@ -170,6 +171,7 @@ export default function Matches() {
       {matches?.length === 0 && groups?.length === 0 && (
         <EmptyState
           icon={MessageCircle}
+          scene={<LanternScene />}
           title="No chats yet"
           action={
             <LinkButton to="/discover">

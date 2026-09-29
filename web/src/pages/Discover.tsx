@@ -1,14 +1,17 @@
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
-import { BadgeCheck, Hourglass, RotateCcw, Sparkles, X } from 'lucide-react'
+import { Hourglass, RotateCcw, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import AboutView from '../components/AboutView'
 import { AnimatedDandiya, DandiyaIcon } from '../components/Dandiya'
 import { useShell } from '../components/AppShell'
 import DiscoverTabs from '../components/DiscoverTabs'
+import { FestivalBanner } from '../components/FestivalBits'
 import MatchDialog from '../components/MatchDialog'
+import { Diya } from '../components/Outfit'
 import ProfileCard from '../components/ProfileCard'
 import ProfileStack from '../components/ProfileStack'
+import { RingScene } from '../components/Scenes'
 import { Button, EmptyState, ErrorText, Eyebrow, Skeleton, Tag } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { fetchLiveActivity, type Feed, type FeedProfile, type LiveActivity, type MatchResult } from '../lib/discovery'
@@ -77,10 +80,10 @@ function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir;
           userId={profile.id}
           size="thumb"
           peek
-          className="h-full touch-pan-y overflow-y-auto overscroll-contain rounded-[2rem] bg-surface p-2 shadow-xl shadow-maroon-950/15 ring-1 ring-neutral-200/80 [scrollbar-width:none]"
+          className="h-full touch-pan-y overflow-y-auto overscroll-contain shadow-xl shadow-maroon-950/15 [scrollbar-width:none]"
           heroClassName="h-[calc(100%-6.5rem)]"
           end={
-            <p className="px-4 pb-32 pt-3 text-center text-xs font-semibold text-neutral-500">
+            <p className="mx-auto mb-28 w-fit rounded-full bg-surface px-4 py-2 text-center text-xs font-semibold text-neutral-600 shadow-md">
               Swipe right to kollide with {profile.first_name}, left to pass.
             </p>
           }
@@ -88,7 +91,7 @@ function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir;
       )}
       {/* The buttons float over this fade, and the profile scrolls up under them. */}
       {!desktop && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 rounded-b-[2rem] bg-gradient-to-t from-surface via-surface/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 rounded-b-[2rem] bg-gradient-to-t from-maroon-950/55 via-maroon-950/20 to-transparent" />
       )}
       <motion.span
         style={{ opacity: likeOpacity }}
@@ -156,7 +159,7 @@ export default function Discover() {
   const [dir, setDir] = useState<Dir>(1)
   // Bumped on every kollide, so the button's dandiya clacks.
   const [kollideClack, setKollideClack] = useState(0)
-  const [matchName, setMatchName] = useState<{ name: string; photo: string | null } | null>(null)
+  const [matchName, setMatchName] = useState<{ id: string; name: string; photo: string | null } | null>(null)
 
   // Swipes are sent in the background; the next feed fetch waits for them so
   // the server never re-serves someone we just swiped.
@@ -220,7 +223,7 @@ export default function Discover() {
           ? supabase.rpc('like_profile', args).then(({ data, error }) => {
               if (error) return setError(friendlyError(error))
               if ((data as unknown as MatchResult).matched) {
-                setMatchName({ name: top.first_name, photo: top.photo_paths[0] ?? null })
+                setMatchName({ id: top.id, name: top.first_name, photo: top.photo_paths[0] ?? null })
                 refreshBadges()
               }
             })
@@ -249,6 +252,7 @@ export default function Discover() {
   return (
     <>
       <DiscoverTabs />
+      <FestivalBanner />
       {!verified && (
         <div className="mb-3 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
           <Hourglass className="mt-0.5 h-4 w-4 shrink-0" />
@@ -319,14 +323,15 @@ export default function Discover() {
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200/80 bg-surface">
                         {outOfViews ? (
-                          <EmptyState icon={Hourglass} title="That's everyone for today">
+                          <EmptyState icon={Hourglass} scene={<Diya className="h-24 w-24" />} title="That's everyone for today">
                             Unverified accounts see a limited number of new profiles a day. Once you're verified, there's no
                             limit.
                           </EmptyState>
                         ) : (
                           <EmptyState
                             icon={Sparkles}
-                            title="You've seen everyone for now"
+                            scene={<RingScene />}
+                            title="Everyone's dancing"
                             action={
                               activity && (
                                 <div className="flex flex-col items-center gap-2">
@@ -340,7 +345,7 @@ export default function Discover() {
                               )
                             }
                           >
-                            New people join every day. Check back soon.
+                            You've seen everyone for now. New people join every evening, so check back soon.
                           </EmptyState>
                         )}
                       </div>
@@ -385,8 +390,8 @@ export default function Discover() {
                       <h2 className="text-5xl font-extrabold leading-none tracking-[-0.04em] text-neutral-900">
                         {top.first_name}, {top.age}
                       </h2>
-                      <Tag tone="haldi">
-                        <BadgeCheck className="h-3.5 w-3.5" /> Verified
+                      <Tag tone="haldi" className="!py-1 !pl-1.5 !pr-3">
+                        <Diya className="h-5 w-5" /> Verified
                       </Tag>
                     </div>
                     <div className="mt-6 max-w-xl">
@@ -410,7 +415,9 @@ export default function Discover() {
         </>
       )}
 
-      {matchName && <MatchDialog name={matchName.name} photoPath={matchName.photo} onClose={() => setMatchName(null)} />}
+      {matchName && (
+        <MatchDialog name={matchName.name} userId={matchName.id} photoPath={matchName.photo} onClose={() => setMatchName(null)} />
+      )}
     </>
   )
 }
