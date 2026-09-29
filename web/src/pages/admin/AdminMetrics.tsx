@@ -21,6 +21,85 @@ type Metrics = {
     messages_24h: number
     videos_awaiting_cleanup: number
   }
+  // Absent on a database that hasn't got the ops-health migration yet.
+  health?: Health
+}
+
+type CronRun = { last_run: string | null; last_status: string | null; last_success: string | null }
+type Health = {
+  error?: boolean
+  vault_secrets?: { send_email_url: boolean; email_hook_secret: boolean }
+  outbox_pending_over_30min?: number
+  outbox_failed?: number
+  cron?: Record<string, CronRun>
+  videos_past_retention?: number
+}
+
+// How long each scheduled job may go without a success before it counts as
+// stuck: the hourly and 15-minute jobs get 2 hours, the daily one a day and a bit.
+const CRON_MAX_AGE_HOURS: Record<string, number> = {
+  'cleanup-videos': 2,
+  'retry-emails': 2,
+  'prune-profile-views': 26,
+}
+
+type Problem = { title: string; hint: string }
+
+function plural(n: number, one: string, many: string) {
+  return `${n} ${n === 1 ? one : many}`
+}
+
+function healthProblems(h: Health): Problem[] {
+  if (h.error) {
+    return [{ title: 'The health checks could not run', hint: 'The database could not read cron or Vault. Check the Supabase logs.' }]
+  }
+  const out: Problem[] = []
+
+  const missing = Object.entries(h.vault_secrets ?? {})
+    .filter(([, present]) => !present)
+    .map(([name]) => name)
+  if (missing.length) {
+    out.push({
+      title: `Vault secrets missing: ${missing.join(', ')}`,
+      hint: 'Emails and scheduled jobs are being skipped without an error. Add the secrets (steps in supabase/functions/README.md).',
+    })
+  }
+
+  const stuck = h.outbox_pending_over_30min ?? 0
+  if (stuck > 0) {
+    out.push({
+      title: `${plural(stuck, 'email has', 'emails have')} been waiting to send for over 30 minutes`,
+      hint: 'Approval and match emails are not going out. Check the Vault secrets and the send-email function.',
+    })
+  }
+  const failed = h.outbox_failed ?? 0
+  if (failed > 0) {
+    out.push({
+      title: `${plural(failed, 'email', 'emails')} failed after every attempt`,
+      hint: 'See last_error on the email_outbox rows.',
+    })
+  }
+
+  for (const [job, maxHours] of Object.entries(CRON_MAX_AGE_HOURS)) {
+    const run = h.cron?.[job]
+    if (!run?.last_success) {
+      out.push({ title: `${job} has no successful run recorded`, hint: 'Check cron.job_run_details in the SQL editor.' })
+    } else if (hoursSince(run.last_success) >= maxHours) {
+      out.push({
+        title: `${job} has not succeeded in the last ${maxHours} hours`,
+        hint: `Its last run ${run.last_status ?? 'has no status'}. Check cron.job_run_details in the SQL editor.`,
+      })
+    }
+  }
+
+  const overdue = h.videos_past_retention ?? 0
+  if (overdue > 0) {
+    out.push({
+      title: `${plural(overdue, 'verification video is', 'verification videos are')} still stored past the deletion date`,
+      hint: 'cleanup-videos is not removing them. Face videos must be deleted on schedule.',
+    })
+  }
+  return out
 }
 
 const FUNNEL_LABELS: Record<string, string> = {
@@ -65,6 +144,7 @@ export default function AdminMetrics() {
 
   const top = m?.funnel[0]?.users || 0
   const queueAge = m?.now.oldest_pending ? hoursSince(m.now.oldest_pending) : null
+  const problems = m?.health ? healthProblems(m.health) : null
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-16 pt-6">
@@ -87,6 +167,25 @@ export default function AdminMetrics() {
       {!m && !error && <Spinner />}
       {m && (
         <>
+          {problems && problems.length > 0 && (
+            <div role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p className="font-semibold">Background jobs need attention</p>
+              <ul className="mt-2 space-y-2">
+                {problems.map((p) => (
+                  <li key={p.title}>
+                    <span className="font-medium">{p.title}</span>
+                    <span className="block text-red-700">{p.hint}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {problems && problems.length === 0 && (
+            <p role="status" className="mt-6 rounded-2xl border border-green-100 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-800">
+              All background jobs healthy
+            </p>
+          )}
+
           <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Profiles" value={m.now.profiles} />
             <Stat label="Verified" value={m.now.approved} />
