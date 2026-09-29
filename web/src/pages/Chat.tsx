@@ -278,7 +278,7 @@ export default function Chat() {
   const meterTone = used >= 0.95 ? 'bg-red-500' : used >= 0.8 ? 'bg-marigold-500' : 'bg-neutral-900'
 
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-canvas md:max-w-2xl lg:max-w-4xl lg:border-x lg:border-neutral-200">
+    <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-canvas md:max-w-2xl lg:h-[calc(100dvh-4.75rem)] lg:max-w-4xl lg:border-x lg:border-neutral-200">
       <header className="z-20 flex items-center gap-2 border-b border-neutral-200/70 bg-surface/90 px-2 pb-2 pt-[max(env(safe-area-inset-top),0.5rem)] backdrop-blur-xl lg:px-4 lg:py-3">
         <Link
           to="/matches"

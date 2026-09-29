@@ -1,4 +1,6 @@
+
 import { BadgeCheck, Check, ChevronRight, Eye, Hourglass, LogOut, Settings } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import AboutEditor from '../components/AboutEditor'
@@ -115,44 +117,59 @@ export default function Profile() {
   )
 
   return (
-    <div className="lg:grid lg:grid-cols-[18rem_1fr] lg:items-start lg:gap-12">
-      {/* Identity (and, on desktop, the menu) sits in a sticky left column. */}
-      <div className="space-y-4 lg:sticky lg:top-10">
-        <div className="bandhani-soft relative overflow-hidden rounded-[32px] bg-maroon-700 p-5 text-cream shadow-xl shadow-maroon-950/15">
-          <div className="relative flex items-center gap-4 lg:flex-col lg:items-start">
-            <Avatar
-              path={mainPath}
-              name={profile.first_name ?? ''}
-              className="h-20 w-20 rotate-[-4deg] !rounded-[1.6rem] text-3xl ring-4 ring-marigold-400 lg:h-28 lg:w-28"
-            />
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[2.2rem] font-extrabold leading-none tracking-[-0.04em]">{profile.first_name}</h1>
-              <div className="mt-2">
-                {verified ? (
-                  <Tag tone="haldi">
-                    <BadgeCheck className="h-3.5 w-3.5" /> Verified
-                  </Tag>
-                ) : (
-                  <Tag tone="glass">
-                    <Hourglass className="h-3.5 w-3.5" /> Verification pending
-                  </Tag>
-                )}
-              </div>
-            </div>
-          </div>
-          <Button
-            variant="marigold"
-            className="relative mt-5 w-full py-2.5 text-sm"
-            disabled={!photos?.length}
-            onClick={() => setPreviewing(true)}
-          >
+    <div className="mx-auto w-full max-w-3xl">
+      {/* Who you are, centred at the top. */}
+      <motion.div
+        className="bandhani-soft relative overflow-hidden rounded-[32px] bg-maroon-700 px-5 pb-6 pt-7 text-center text-cream shadow-xl shadow-maroon-950/15 sm:px-8 sm:pb-8 sm:pt-9"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <motion.div
+          className="mx-auto w-fit"
+          initial={{ scale: 0.8, rotate: -10 }}
+          animate={{ scale: 1, rotate: -4 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
+        >
+          <Avatar
+            path={mainPath}
+            name={profile.first_name ?? ''}
+            className="h-24 w-24 !rounded-[1.8rem] text-4xl ring-4 ring-marigold-400 sm:h-28 sm:w-28"
+          />
+        </motion.div>
+        <h1 className="mt-4 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] sm:text-5xl">{profile.first_name}</h1>
+        <div className="mt-3 flex justify-center">
+          {verified ? (
+            <Tag tone="haldi">
+              <BadgeCheck className="h-3.5 w-3.5" /> Verified
+            </Tag>
+          ) : (
+            <Tag tone="glass">
+              <Hourglass className="h-3.5 w-3.5" /> Verification pending
+            </Tag>
+          )}
+        </div>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <Button variant="marigold" className="px-5 py-2.5 text-sm" disabled={!photos?.length} onClick={() => setPreviewing(true)}>
             <Eye className="h-4 w-4" /> See how others see you
           </Button>
+          <Link
+            to="/settings"
+            className="hidden items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-cream ring-1 ring-cream/30 transition hover:bg-white/10 lg:inline-flex"
+          >
+            <Settings className="h-4 w-4" /> Settings
+          </Link>
+          <button
+            type="button"
+            onClick={signOut}
+            className="hidden items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-cream/80 transition hover:bg-white/10 hover:text-cream lg:inline-flex"
+          >
+            <LogOut className="h-4 w-4" /> Sign out
+          </button>
         </div>
-        <div className="hidden lg:block">{menu}</div>
-      </div>
+      </motion.div>
 
-      <div className="lg:[&>section:first-child]:mt-0">
+      <div>
         <Section
           title="Your photos"
           hint={

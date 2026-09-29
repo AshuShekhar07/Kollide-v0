@@ -1,15 +1,14 @@
-import { ChevronRight, Compass, MessageCircle, UserRound } from 'lucide-react'
-import { motion } from 'motion/react'
-import { useCallback, useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom'
+import { Compass, MessageCircle, UserRound } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useLocation, useOutlet, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../lib/auth-context'
 import { navratriStatus } from '../lib/format'
 import { supabase } from '../lib/supabase'
 import BangaloreCheck from './BangaloreCheck'
-import { DandiyaIcon } from './Dandiya'
+import { AnimatedDandiya, DandiyaIcon } from './Dandiya'
 import Avatar from './Avatar'
 import InstallPrompt from './InstallPrompt'
-import Toran from './landing/Toran'
 import PendingInviteBanner from './PendingInviteBanner'
 import { Logo } from './ui'
 
@@ -32,13 +31,17 @@ const TABS = [
   { to: '/profile', label: 'Profile', icon: UserRound, badge: null, also: '/settings' },
 ] as const
 
-// Sidebar (desktop) or header and bottom tab bar (phones), plus badge
-// counts, for the main app screens.
+// Top bar (desktop) or header and floating dock (phones), plus badge counts
+// and page transitions, for the main app screens.
 export default function AppShell() {
   const { profile } = useAuth()
   const location = useLocation()
   const [badges, setBadges] = useState({ likes: 0, matches: 0 })
   const [photo, setPhoto] = useState<string | null>(null)
+  // Bumped to make the Kollides dandiya clack: on hover or tap, and when a
+  // new kollide arrives.
+  const [clack, setClack] = useState(0)
+  const lastLikes = useRef(0)
   const uid = profile?.id
 
   // The first photo is the profile picture. Re-read on navigation so a
@@ -58,7 +61,10 @@ export default function AppShell() {
   const refreshBadges = useCallback(async () => {
     const { data } = await supabase.rpc('get_badge_counts')
     const counts = data?.[0]
-    if (counts) setBadges({ likes: counts.likes, matches: counts.matches })
+    if (!counts) return
+    if (counts.likes > lastLikes.current) setClack((n) => n + 1)
+    lastLikes.current = counts.likes
+    setBadges({ likes: counts.likes, matches: counts.matches })
   }, [])
 
   useEffect(() => {
@@ -121,61 +127,69 @@ export default function AppShell() {
 
   return (
     <div className="min-h-dvh bg-canvas">
-      {/* Desktop sidebar: the landing page's maroon hero, toran and all. */}
-      <aside className="bandhani-soft fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-hidden bg-maroon-700 pb-5 text-cream lg:flex">
-        <Toran count={10} className="-mx-1 shrink-0 text-cream" />
-        <Link to="/discover" aria-label="Kollide home" className="mt-2 self-start px-7">
-          <Logo tone="white" className="text-[2rem]" />
-        </Link>
-        <nav className="mt-10 px-4" aria-label="Main">
-          <ul className="space-y-1">
-            {TABS.map((tab) => {
-              const count = tab.badge ? badges[tab.badge] : 0
-              const active = isActive(tab)
-              const Icon = tab.icon
-              return (
-                <li key={tab.to}>
-                  <NavLink
-                    to={tab.to}
-                    aria-label={count > 0 ? `${tab.label}, ${count} new` : tab.label}
-                    className={`relative flex items-center gap-3 rounded-full px-4 py-3 text-[15px] font-bold transition ${
-                      active ? 'text-maroon-950' : 'text-cream/75 hover:bg-white/10 hover:text-cream'
-                    }`}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="side-pill"
-                        className="absolute inset-0 rounded-full bg-marigold-400 shadow-lg shadow-maroon-950/30"
-                        transition={{ type: 'spring', stiffness: 500, damping: 38 }}
-                      />
-                    )}
-                    <Icon className="relative h-5 w-5" strokeWidth={active ? 2.4 : 2} />
-                    <span className="relative flex-1">{tab.label}</span>
-                    {count > 0 && (
-                      <span className="relative min-w-[22px] rounded-full bg-rani px-1.5 text-center text-xs font-bold leading-[22px] text-white ring-2 ring-maroon-700">
-                        {count > 9 ? '9+' : count}
-                      </span>
-                    )}
-                  </NavLink>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-        <div className="mt-auto space-y-3 px-4">
-          <Countdown />
-          <Link
-            to="/profile"
-            className="flex items-center gap-3 rounded-full bg-white/10 p-1.5 pr-4 ring-1 ring-white/10 transition hover:bg-white/15"
-          >
-            <Avatar path={photo} name={profile?.first_name ?? ''} className="h-10 w-10 text-sm ring-2 ring-marigold-400" />
-            <span className="min-w-0 flex-1 truncate text-sm font-bold">{profile?.first_name}</span>
-            <ChevronRight className="h-4 w-4 shrink-0 opacity-60" />
+      {/* Desktop top bar: logo, the four sections centred, and you on the right. */}
+      <header className="sticky top-0 z-40 hidden bg-canvas/80 backdrop-blur-xl lg:block">
+        <div className="mx-auto grid h-[4.5rem] max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-8">
+          <Link to="/discover" aria-label="Kollide home" className="justify-self-start">
+            <Logo className="text-[1.9rem]" />
           </Link>
+          <nav aria-label="Main">
+            <ul className="flex items-center gap-1 rounded-full bg-neutral-100/90 p-1 ring-1 ring-neutral-200/70">
+              {TABS.map((tab) => {
+                const count = tab.badge ? badges[tab.badge] : 0
+                const active = isActive(tab)
+                const Icon = tab.icon
+                return (
+                  <li key={tab.to}>
+                    <NavLink
+                      to={tab.to}
+                      aria-label={count > 0 ? `${tab.label}, ${count} new` : tab.label}
+                      onPointerEnter={tab.to === '/likes' ? () => setClack((n) => n + 1) : undefined}
+                      onClick={tab.to === '/likes' ? () => setClack((n) => n + 1) : undefined}
+                      className={`relative flex items-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-bold transition-colors ${
+                        active ? 'text-cream' : 'text-neutral-600 hover:text-neutral-900'
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="top-pill"
+                          className="absolute inset-0 rounded-full bg-maroon-700 shadow-md shadow-maroon-950/25"
+                          transition={{ type: 'spring', stiffness: 480, damping: 36 }}
+                        />
+                      )}
+                      {tab.to === '/likes' ? (
+                        <AnimatedDandiya className="relative h-5 w-5" strokeWidth={active ? 2.4 : 2} play={clack} />
+                      ) : (
+                        <Icon className="relative h-5 w-5" strokeWidth={active ? 2.4 : 2} />
+                      )}
+                      <span className="relative">{tab.label}</span>
+                      {count > 0 && (
+                        <span className="relative -mr-1 min-w-[20px] animate-pop rounded-full bg-rani px-1.5 text-center text-[11px] font-bold leading-5 text-white">
+                          {count > 9 ? '9+' : count}
+                        </span>
+                      )}
+                    </NavLink>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
+          <div className="flex items-center gap-3 justify-self-end">
+            <CountdownChip />
+            <Link
+              to="/profile"
+              className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-4 ring-1 ring-neutral-200 transition hover:ring-neutral-400"
+            >
+              <Avatar path={photo} name={profile?.first_name ?? ''} className="h-9 w-9 text-sm ring-2 ring-marigold-400" />
+              <span className="max-w-[8rem] truncate text-sm font-bold text-neutral-900">{profile?.first_name}</span>
+            </Link>
+          </div>
         </div>
-      </aside>
+        {/* A festive thread under the bar. */}
+        <div className="h-[3px] bg-gradient-to-r from-rani via-marigold-400 to-peacock" aria-hidden />
+      </header>
 
-      <div className="flex min-h-dvh flex-col lg:pl-64">
+      <div className="flex min-h-dvh flex-col lg:min-h-[calc(100dvh-4.75rem)]">
         {/* Phone header */}
         {!immersive && (
           <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-canvas/85 px-4 pb-2.5 pt-[max(env(safe-area-inset-top),0.75rem)] backdrop-blur-lg lg:hidden">
@@ -196,13 +210,13 @@ export default function AppShell() {
         )}
 
         {immersive ? (
-          <Outlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />
+          <AnimatedOutlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />
         ) : (
-          <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-3 md:max-w-2xl lg:max-w-5xl lg:px-10 lg:pb-16 lg:pt-12">
+          <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-3 md:max-w-2xl lg:max-w-6xl lg:px-8 lg:pb-16 lg:pt-10">
             <BangaloreCheck />
             <InstallPrompt />
             <PendingInviteBanner />
-            <Outlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />
+            <AnimatedOutlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />
           </main>
         )}
       </div>
@@ -223,6 +237,7 @@ export default function AppShell() {
                   <NavLink
                     to={tab.to}
                     aria-label={count > 0 ? `${tab.label}, ${count} new` : tab.label}
+                    onClick={tab.to === '/likes' ? () => setClack((n) => n + 1) : undefined}
                     className={`relative flex h-12 items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition active:scale-95 ${
                       active ? 'text-maroon-950' : 'text-cream/65'
                     }`}
@@ -235,7 +250,11 @@ export default function AppShell() {
                       />
                     )}
                     <span className="relative">
-                      <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 2} />
+                      {tab.to === '/likes' ? (
+                        <AnimatedDandiya className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 2} play={clack} />
+                      ) : (
+                        <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 2} />
+                      )}
                       {count > 0 && !active && (
                         <span className="absolute -right-2.5 -top-1.5 min-w-[18px] animate-pop rounded-full bg-rani px-1 text-center text-[10px] font-bold leading-[16px] text-white ring-2 ring-maroon-950">
                           {count > 9 ? '9+' : count}
@@ -254,30 +273,7 @@ export default function AppShell() {
   )
 }
 
-// Days to go, or which night it is, in the sidebar.
-function Countdown() {
-  const [status] = useState(() => navratriStatus())
-  return (
-    <div className="rounded-3xl bg-maroon-950/35 p-4 ring-1 ring-white/10">
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-marigold-400">Navratri · Oct 11–19</p>
-      <p className="mt-1.5 font-display text-2xl font-extrabold leading-tight tracking-[-0.03em]">
-        {status.phase === 'before' ? (
-          <>
-            <span className="text-marigold-400">{status.days}</span> day{status.days === 1 ? '' : 's'} to go
-          </>
-        ) : status.phase === 'during' ? (
-          <>
-            Night <span className="text-marigold-400">{status.night}</span> of 9
-          </>
-        ) : (
-          'See you next year'
-        )}
-      </p>
-    </div>
-  )
-}
-
-// The same, squeezed into the phone header.
+// Days to go, or which night it is, as a small chip in the header.
 function CountdownChip() {
   const [status] = useState(() => navratriStatus())
   if (status.phase === 'after') return null
@@ -286,5 +282,54 @@ function CountdownChip() {
       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-marigold-400" aria-hidden />
       {status.phase === 'before' ? `${status.days}d to Navratri` : `Night ${status.night} of 9`}
     </span>
+  )
+}
+
+// Which section a path belongs to, left to right, for the slide direction.
+function sectionIndex(path: string) {
+  const i = TABS.findIndex((t) => path.startsWith(t.to) || ('also' in t && path.startsWith(t.also)))
+  return i === -1 && path.startsWith('/chat/') ? 2 : i
+}
+
+const EASE = [0.22, 1, 0.36, 1] as const
+
+// The current page, sliding in from the side of the section you moved to
+// (or rising, within a section) and out the other way.
+function AnimatedOutlet({ context }: { context: ShellContext }) {
+  const location = useLocation()
+  const outlet = useOutlet(context)
+  const reduced = useReducedMotion()
+  const index = sectionIndex(location.pathname)
+  // Remember the last page and the direction we moved (updated during render,
+  // React's pattern for state derived from a changing prop).
+  const [last, setLast] = useState({ path: location.pathname, index, dir: 0 })
+  let dir = last.dir
+  if (last.path !== location.pathname) {
+    dir = index === last.index ? 0 : index > last.index ? 1 : -1
+    setLast({ path: location.pathname, index, dir })
+  }
+
+  if (reduced) return outlet
+  return (
+    // No initial={false} here: it would be inherited by every motion component
+    // inside the first page and silently skip their entrance animations.
+    <AnimatePresence mode="wait" custom={dir} onExitComplete={() => window.scrollTo(0, 0)}>
+      <motion.div
+        key={location.pathname}
+        className="flex flex-1 flex-col"
+        custom={dir}
+        variants={{
+          enter: (d: number) => ({ opacity: 0, x: d * 36, y: d ? 0 : 14 }),
+          center: { opacity: 1, x: 0, y: 0 },
+          exit: (d: number) => ({ opacity: 0, x: d * -36, y: d ? 0 : -8 }),
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.26, ease: EASE }}
+      >
+        {outlet}
+      </motion.div>
+    </AnimatePresence>
   )
 }

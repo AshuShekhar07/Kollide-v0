@@ -150,7 +150,7 @@ export default function Matches() {
   ].sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
 
   return (
-    <>
+    <div className="mx-auto w-full max-w-3xl">
       <PageHeader eyebrow="Chats" title="Your people" subtitle="Your socials are shared only with the people here." />
 
       <ErrorText>{error}</ErrorText>
@@ -189,6 +189,6 @@ export default function Matches() {
           </ul>
         </section>
       )}
-    </>
+    </div>
   )
 }

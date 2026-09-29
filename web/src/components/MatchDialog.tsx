@@ -79,23 +79,39 @@ export default function MatchDialog({
               className={`absolute left-1/2 top-4 rounded-full ${c.color} ${c.size}`}
               initial={{ x: 0, y: 0, opacity: 0, scale: 0, rotate: 0 }}
               animate={{ x: c.x, y: c.y, opacity: [0, 1, 0], scale: 1, rotate: c.rotate }}
-              transition={{ duration: 1.3, delay: 0.73, ease: 'easeOut' }}
+              transition={{ duration: 1.4, delay: 1.35, ease: 'easeOut' }}
             />
           ))}
           <MatchPhoto path={myPhoto} name={profile?.first_name ?? 'You'} side={-1} />
           <MatchPhoto path={photoPath} name={name} side={1} />
         </div>
 
+        <div className="mt-8 w-full max-w-sm">
+          <motion.p
+            className="text-xs font-bold uppercase tracking-[0.25em] text-marigold-400"
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            You kollided
+          </motion.p>
+          {/* Lands with the clack. */}
+          <motion.h2
+            id="match-title"
+            className="mt-3 text-5xl font-extrabold leading-[0.95] tracking-[-0.04em] sm:text-6xl"
+            initial={{ scale: 0.4, opacity: 0, rotate: -6 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 14, delay: 1.35 }}
+          >
+            It's a match!
+          </motion.h2>
+        </div>
         <motion.div
-          className="mt-8 w-full max-w-sm"
+          className="w-full max-w-sm"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 1.6 }}
         >
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-marigold-400">Paths collided</p>
-          <h2 id="match-title" className="mt-3 text-5xl font-extrabold leading-[0.95] tracking-[-0.04em] sm:text-6xl">
-            You kollided!
-          </h2>
           <p className="mx-auto mt-4 max-w-xs text-cream/80">
             You and {name} both want to kollide. Say hi and plan your Garba night.
           </p>

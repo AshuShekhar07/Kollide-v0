@@ -166,7 +166,7 @@ export default function Settings() {
   const [deleting, setDeleting] = useState(false)
 
   return (
-    <div className="lg:max-w-2xl">
+    <div className="mx-auto w-full lg:max-w-2xl">
       <BackLink to="/profile">Profile</BackLink>
       <h1 className="mt-3 text-[2.4rem] font-extrabold leading-[0.95] tracking-[-0.04em] text-neutral-900 lg:text-6xl">Settings</h1>
 
