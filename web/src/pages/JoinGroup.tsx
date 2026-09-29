@@ -2,6 +2,7 @@ import { BadgeCheck, Hourglass, Link2Off, PartyPopper, ShieldCheck, UserPlus, Us
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Capacity, DateChip } from '../components/GroupBits'
+import Toran from '../components/landing/Toran'
 import { Button, EmptyState, ErrorText, FullScreenSpinner, LinkButton, Logo, Tag } from '../components/ui'
 import { homePathFor, useAuth } from '../lib/auth-context'
 import { friendlyError } from '../lib/errors'
@@ -188,7 +189,7 @@ export default function JoinGroup() {
     action = (
       <>
         <Steps current={2} />
-        <Button className="mt-5 w-full" loading={busy} onClick={askToJoin}>
+        <Button variant="marigold" className="mt-5 w-full py-4 text-base" loading={busy} onClick={askToJoin}>
           <UserPlus className="h-5 w-5" /> Ask to join
         </Button>
       </>
@@ -197,18 +198,19 @@ export default function JoinGroup() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md">
-      <div className="relative overflow-hidden bg-plum-900 px-4 pb-20 pt-[max(env(safe-area-inset-top),1.5rem)] text-white">
+      <div className="bandhani-soft relative overflow-hidden bg-maroon-700 px-4 pb-20 pt-[env(safe-area-inset-top)] text-cream">
+        <Toran count={16} className="-mx-4 mb-3 text-cream" />
         <div className="relative">
           <Link to={session ? '/start' : '/'} aria-label="Kollide home">
             <Logo tone="white" className="text-2xl" />
           </Link>
-          <p className="mt-8 flex items-center gap-2 text-sm font-semibold text-marigold-300">
+          <p className="mt-8 flex items-center gap-2 text-sm font-bold text-marigold-400">
             <PartyPopper className="h-4 w-4" /> {who} invited you
           </p>
           <div className="mt-3 flex items-start gap-3">
             <DateChip date={invite.event_date} tone="glass" />
             <div className="min-w-0 flex-1">
-              <h1 className="text-3xl font-bold leading-tight">{invite.title}</h1>
+              <h1 className="text-[2.2rem] font-extrabold leading-[1] tracking-[-0.04em]">{invite.title}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {invite.activity_name && <Tag tone="glass">{invite.activity_name}</Tag>}
                 {eventDate(invite.event_date) && <span className="text-sm text-white/80">{eventDate(invite.event_date)}</span>}
@@ -226,7 +228,7 @@ export default function JoinGroup() {
       </div>
 
       <div className="relative -mt-12 px-4 pb-12">
-        <div className="animate-rise rounded-3xl border border-neutral-200/80 bg-surface p-5 ">
+        <div className="animate-rise rounded-[28px] border border-neutral-200/80 bg-surface p-5 shadow-xl shadow-maroon-950/10">
           {action}
           {error && (
             <div className="mt-3">

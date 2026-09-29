@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, Flag, Heart, PartyPopper, UsersRound, X } from 'lucide-react'
+import { ArrowLeft, CalendarDays, ChevronRight, Flag, Heart, PartyPopper, UsersRound, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -7,31 +7,46 @@ import { useShell } from '../components/AppShell'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard, { useSignedPhotos } from '../components/ProfileCard'
 import { ReportDialog } from '../components/SafetyDialogs'
-import { Button, LinkButton, EmptyState, ErrorText, PageHeader, Skeleton, Tag } from '../components/ui'
+import ProfileStack from '../components/ProfileStack'
+import { Button, LinkButton, EmptyState, ErrorText, Eyebrow, PageHeader, Skeleton } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { markNotificationsRead, type IncomingLike, type MatchResult } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
 import { timeAgoLong } from '../lib/format'
 import { eventDate, spotsLeft, type GroupInvite } from '../lib/groups'
 import { supabase } from '../lib/supabase'
+import { useIsDesktop } from '../lib/useIsDesktop'
 
-function LikeTile({ like, onOpen }: { like: IncomingLike; onOpen: () => void }) {
+// One like as a wide row: their photo, name and age, and when they liked you.
+function LikeRow({ like, onOpen }: { like: IncomingLike; onOpen: () => void }) {
   const [url] = useSignedPhotos(like.photo_paths.slice(0, 1), 'thumb')
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="group relative block aspect-[3/4] w-full overflow-hidden rounded-3xl bg-brand-100 text-left  transition active:scale-[0.97]"
+      aria-label={`See ${like.first_name}'s profile`}
+      className="group flex w-full items-center gap-4 rounded-[28px] border border-neutral-200/80 bg-surface p-2.5 pr-4 text-left shadow-sm shadow-maroon-950/5 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-maroon-950/10 active:scale-[0.99]"
     >
-      {url && <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
-      <span className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-500 shadow">
-        <Heart className="h-4 w-4 fill-current" />
-      </span>
-      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10 text-white">
-        <span className="block font-display text-lg font-bold leading-tight">
-          {like.first_name}, {like.age}
+      <span className="relative shrink-0">
+        <span className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center overflow-hidden rounded-[1.4rem] bg-brand-100 font-display text-2xl font-bold text-white/90">
+          {like.first_name.slice(0, 1)}
+          {url && (
+            <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          )}
         </span>
-        <span className="text-[11px] text-white/70">Liked you · {timeAgoLong(like.liked_at)}</span>
+        <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-rani text-white ring-[3px] ring-surface">
+          <Heart className="h-3.5 w-3.5 fill-current" />
+        </span>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-display text-xl font-extrabold leading-tight tracking-[-0.02em] text-neutral-900">
+          {like.first_name}
+          <span className="font-bold text-neutral-500">, {like.age}</span>
+        </span>
+        <span className="mt-1 block truncate text-sm text-neutral-500">Liked you · {timeAgoLong(like.liked_at)}</span>
+      </span>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 transition group-hover:bg-rani group-hover:text-white">
+        <ChevronRight className="h-5 w-5" />
       </span>
     </button>
   )
@@ -46,6 +61,7 @@ function LikeDetail({
   onClose: () => void
   onDone: (matched: boolean) => void
 }) {
+  const desktop = useIsDesktop()
   const [photo, setPhoto] = useState(0)
   const [busy, setBusy] = useState<'accept' | 'decline' | null>(null)
   const [error, setError] = useState('')
@@ -88,25 +104,32 @@ function LikeDetail({
             <Flag className="h-4 w-4" /> Report
           </button>
         </div>
-        <button type="button" className="block w-full" aria-label="Next photo" onClick={() => setPhoto((p) => p + 1)}>
-          <ProfileCard profile={like} photoIndex={photo} className="aspect-[3/4] w-full" hideBio size="full" />
-        </button>
-        <div className="mt-5 lg:mt-0">
-          <h2 className="mb-4 hidden text-4xl font-extrabold text-neutral-900 lg:block">
-            {like.first_name}, {like.age}
-          </h2>
-          <AboutView userId={like.user_id} bio={like.bio} />
-        </div>
+        {desktop ? (
+          <>
+            <button type="button" className="sticky top-10 block w-full self-start" aria-label="Next photo" onClick={() => setPhoto((p) => p + 1)}>
+              <ProfileCard profile={like} photoIndex={photo} className="aspect-[3/4] w-full" hideBio size="full" />
+            </button>
+            <div>
+              <Eyebrow>Liked you · {timeAgoLong(like.liked_at)}</Eyebrow>
+              <h2 className="mb-6 mt-2 text-5xl font-extrabold leading-none tracking-[-0.04em] text-neutral-900">
+                {like.first_name}, {like.age}
+              </h2>
+              <AboutView userId={like.user_id} bio={like.bio} />
+            </div>
+          </>
+        ) : (
+          <ProfileStack profile={like} userId={like.user_id} />
+        )}
       </div>
 
-      <div className="pb-safe fixed inset-x-0 bottom-0 border-t border-neutral-200/70 bg-surface/90 backdrop-blur-xl">
+      <div className="pb-safe fixed inset-x-0 bottom-0 border-t border-neutral-200/70 bg-canvas/90 backdrop-blur-xl">
         <div className="mx-auto max-w-md px-4 pt-3 lg:max-w-5xl lg:px-10">
           <ErrorText>{error}</ErrorText>
           <div className="mt-2 flex gap-3 lg:ml-auto lg:max-w-md">
             <Button variant="secondary" onClick={() => respond(false)} loading={busy === 'decline'} disabled={!!busy}>
               <X className="h-4 w-4" /> Decline
             </Button>
-            <Button className="flex-1" onClick={() => respond(true)} loading={busy === 'accept'} disabled={!!busy}>
+            <Button variant="rani" className="flex-1" onClick={() => respond(true)} loading={busy === 'accept'} disabled={!!busy}>
               <Heart className="h-4 w-4 fill-current" /> Accept and match
             </Button>
           </div>
@@ -142,13 +165,13 @@ function InviteCard({ invite, onDone }: { invite: GroupInvite; onDone: () => voi
   }
 
   return (
-    <li className="relative animate-rise overflow-hidden rounded-3xl bg-plum-900 p-4 text-white ">
+    <li className="bandhani-soft relative animate-rise overflow-hidden rounded-[28px] bg-maroon-700 p-5 text-cream shadow-lg shadow-maroon-950/15">
       <div className="relative">
         <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-marigold-300">
           <PartyPopper className="h-3.5 w-3.5" />
           {invite.admin_name ? `${invite.admin_name} invited you` : "You're invited"}
         </p>
-        <Link to={`/groups/${invite.group_id}`} className="mt-1.5 block font-display text-xl font-bold underline-offset-2 hover:underline">
+        <Link to={`/groups/${invite.group_id}`} className="mt-2 block font-display text-2xl font-extrabold tracking-[-0.03em] underline-offset-2 hover:underline">
           {invite.title}
         </Link>
         {when && (
@@ -226,20 +249,27 @@ export default function Likes() {
         eyebrow="Likes"
         title="Likes you"
         subtitle="Accept to match, chat and share socials."
-        action={likes && likes.length > 0 && <Tag tone="brand">{likes.length}</Tag>}
+        action={
+          likes &&
+          likes.length > 0 && (
+            <span className="rounded-full bg-rani px-3 py-1 text-sm font-bold text-white shadow-md shadow-rani/25">
+              {likes.length} new
+            </span>
+          )
+        }
       />
 
       <ErrorText>{error}</ErrorText>
       {!likes && !error && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5" aria-label="Loading">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="aspect-[3/4] !rounded-3xl" />
+        <div className="grid gap-3 lg:grid-cols-2" aria-label="Loading">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-[5.75rem] !rounded-[28px]" />
           ))}
         </div>
       )}
       {invites.length > 0 && (
         <section className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-neutral-900">Group invites</h2>
+          <h2 className="mb-3 text-xl font-extrabold text-neutral-900">Group invites</h2>
           <ul className="grid gap-3 lg:grid-cols-2 lg:gap-5">
             {invites.map((inv) => (
               <InviteCard
@@ -273,11 +303,11 @@ export default function Likes() {
       )}
       {likes && likes.length > 0 && (
         <section>
-          {invites.length > 0 && <h2 className="mb-3 text-lg font-bold text-neutral-900">People</h2>}
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+          {invites.length > 0 && <h2 className="mb-3 text-xl font-extrabold text-neutral-900">People</h2>}
+          <ul className="grid gap-3 lg:grid-cols-2">
             {likes.map((like, i) => (
               <li key={like.swipe_id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
-                <LikeTile like={like} onOpen={() => setOpen(like)} />
+                <LikeRow like={like} onOpen={() => setOpen(like)} />
               </li>
             ))}
           </ul>

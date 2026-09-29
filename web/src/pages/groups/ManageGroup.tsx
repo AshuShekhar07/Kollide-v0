@@ -33,7 +33,6 @@ function PersonRow({ person, children }: { person: InterestedPerson; children: R
               </Tag>
             )}
           </p>
-          <p className="font-mono text-xs text-neutral-500">{person.public_code}</p>
           <div className="mt-1">
             <AboutView userId={person.user_id} bio={person.bio} compact />
           </div>
@@ -172,7 +171,6 @@ export default function ManageGroup() {
                 <MemberAvatar path={m.photo_path} name={m.first_name} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold text-neutral-900">{m.first_name}</span>
-                  <span className="block font-mono text-xs text-neutral-500">{m.public_code}</span>
                 </span>
                 <Button variant="ghost" className={`${smallBtn} !text-red-700 hover:!bg-red-50`} disabled={!!busy} onClick={() => setRemoving(m)}>
                   Remove

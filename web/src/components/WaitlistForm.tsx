@@ -51,14 +51,14 @@ export default function WaitlistForm({ id = 'waitlist-email', tone = 'dark' }: {
           placeholder="you@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={`min-w-0 flex-1 rounded-full bg-white px-5 py-3.5 text-plum-950 shadow-lg shadow-black/10 ${
+          className={`min-w-0 flex-1 rounded-full bg-white px-5 py-3.5 text-maroon-950 shadow-lg shadow-black/10 ${
             tone === 'light' ? 'ring-1 ring-[#2A0E1B]/15' : ''
           } placeholder:text-[#8a7d72] focus:outline-none focus:ring-4 focus:ring-marigold-400/60`}
         />
         <button
           type="submit"
           disabled={state === 'submitting'}
-          className="rounded-full bg-marigold-400 px-6 py-3.5 font-bold text-plum-900 shadow-lg shadow-marigold-500/30 transition hover:brightness-105 active:scale-[0.97] disabled:opacity-60"
+          className="rounded-full bg-marigold-400 px-6 py-3.5 font-bold text-maroon-950 shadow-lg shadow-marigold-500/30 transition hover:brightness-105 active:scale-[0.97] disabled:opacity-60"
         >
           {state === 'submitting' ? 'Joining…' : 'Join the waitlist'}
         </button>

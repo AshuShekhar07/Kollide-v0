@@ -127,8 +127,8 @@ select throws_ok($$select * from public.get_messages(pg_temp.v('gc'))$$, '42501'
                  'requester can''t read the group chat');
 select is(public.get_group(pg_temp.v('g')) -> 'conversation_id', 'null'::jsonb,
           'requester doesn''t get the chat id');
-select is(public.get_group(pg_temp.v('g')) #> '{members,0,photo_path}', 'null'::jsonb,
-          'non-members see names and codes, not photos');
+select isnt(public.get_group(pg_temp.v('g')) #>> '{members,0,photo_path}', null,
+            'non-members see member photos, so they can judge a group before joining');
 select is(public.get_group(pg_temp.v('g')) #>> '{members,0,public_code}',
           pg_temp.public_code(3), 'members show public codes');
 select throws_ok($$select public.get_contact(pg_temp.uid(3))$$, '42501', null,

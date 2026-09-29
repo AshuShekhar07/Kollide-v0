@@ -4,7 +4,6 @@ import { peekPhotoUrl, signedUrlsFor, type PhotoSize } from '../lib/photos'
 
 export type CardProfile = {
   first_name: string
-  public_code: string
   age: number
   bio: string | null
   photo_paths: string[]
@@ -58,7 +57,7 @@ export default function ProfileCard({
   const [loaded, setLoaded] = useState<string | null>(null)
 
   return (
-    <div className={`relative select-none overflow-hidden rounded-[2rem] bg-neutral-200 shadow-xl shadow-black/15 ${className}`}>
+    <div className={`relative select-none overflow-hidden rounded-[2rem] bg-neutral-200 shadow-xl shadow-maroon-950/20 ${className}`}>
       {url ? (
         <img
           key={url}
@@ -88,13 +87,12 @@ export default function ProfileCard({
 
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-5 pb-5 pt-20 text-white">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-display text-[1.75rem] font-bold leading-tight">
+          <span className="font-display text-[2rem] font-extrabold leading-tight tracking-[-0.03em]">
             {profile.first_name}
-            <span className="font-semibold text-white/85">, {profile.age}</span>
+            <span className="font-bold text-white/85">, {profile.age}</span>
           </span>
-          <BadgeCheck className="h-6 w-6 fill-sky-500 text-white" strokeWidth={2} aria-label="Verified" />
+          <BadgeCheck className="h-6 w-6 fill-marigold-400 text-maroon-950" strokeWidth={2.2} aria-label="Verified" />
         </p>
-        <p className="mt-0.5 font-mono text-[11px] tracking-wider text-white/65">{profile.public_code}</p>
         {profile.bio && !hideBio && <p className="mt-2 line-clamp-2 text-sm leading-snug text-white/90">{profile.bio}</p>}
         {footer}
       </div>

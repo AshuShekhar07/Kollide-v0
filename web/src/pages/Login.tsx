@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { MailCheck, MapPin } from 'lucide-react'
+import Toran from '../components/landing/Toran'
 import SplitScreen from '../components/SplitScreen'
 import { Button, ErrorText, Field, FullScreenSpinner, inputClass, Logo } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
@@ -92,13 +93,14 @@ export default function Login() {
       }
     >
       <main className="flex min-h-dvh flex-col lg:justify-center">
-        <div className="relative overflow-hidden bg-plum-900 px-4 pb-16 pt-[max(env(safe-area-inset-top),1.5rem)] text-white lg:hidden">
+        <div className="bandhani-soft relative overflow-hidden bg-maroon-700 px-4 pb-16 pt-[env(safe-area-inset-top)] text-cream lg:hidden">
+          <Toran count={16} className="-mx-4 mb-4 text-cream" />
           <div className="relative mx-auto max-w-sm">
             <Link to="/" aria-label="Kollide home">
               <Logo tone="white" className="text-3xl" />
             </Link>
-            <h1 className="mt-8 text-3xl font-extrabold leading-tight">{heading}</h1>
-            <p className="mt-2 text-white/80">Find your Garba friends or group.</p>
+            <h1 className="mt-8 text-[2.6rem] font-extrabold leading-[0.95] tracking-[-0.04em]">{heading}</h1>
+            <p className="mt-3 text-cream/80">Find your Garba friends or group.</p>
             <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/20">
               <MapPin className="h-3.5 w-3.5" /> Bangalore only, for now
             </p>
@@ -107,10 +109,10 @@ export default function Login() {
 
         <div className="relative mx-auto -mt-8 w-full max-w-sm flex-1 px-4 pb-10 lg:mt-0 lg:max-w-md lg:flex-none lg:py-12">
           <div className="mb-8 hidden lg:block">
-            <h1 className="text-4xl font-extrabold leading-tight text-neutral-900">{heading}</h1>
+            <h1 className="text-5xl font-extrabold leading-[0.95] tracking-[-0.04em] text-neutral-900">{heading}</h1>
             <p className="mt-2 text-neutral-500">Find your Garba friends or group. Bangalore only, for now.</p>
           </div>
-          <div className="animate-rise space-y-4 rounded-[28px] border border-neutral-200 bg-surface p-5 shadow-xl shadow-black/5 lg:p-7 lg:shadow-none">
+          <div className="animate-rise space-y-4 rounded-[28px] border border-neutral-200/80 bg-surface p-5 shadow-xl shadow-maroon-950/10 lg:p-7">
             <Button variant="secondary" className="w-full" onClick={signInWithGoogle} loading={busy === 'google'}>
               <GoogleIcon /> Continue with Google
             </Button>

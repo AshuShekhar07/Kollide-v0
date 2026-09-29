@@ -1,16 +1,19 @@
-import { Compass, Heart, MessageCircle, UserRound } from 'lucide-react'
+import { ChevronRight, Compass, Heart, MessageCircle, UserRound } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../lib/auth-context'
+import { navratriStatus } from '../lib/format'
 import { supabase } from '../lib/supabase'
 import BangaloreCheck from './BangaloreCheck'
 import Avatar from './Avatar'
 import InstallPrompt from './InstallPrompt'
+import Toran from './landing/Toran'
 import PendingInviteBanner from './PendingInviteBanner'
 import { Logo } from './ui'
 
-type ShellContext = { refreshBadges: () => Promise<void> }
+// myPhoto: the storage path of the signed-in user's first photo.
+type ShellContext = { refreshBadges: () => Promise<void>; myPhoto: string | null }
 
 export function useShell() {
   return useOutletContext<ShellContext>()
@@ -94,12 +97,13 @@ export default function AppShell() {
 
   return (
     <div className="min-h-dvh bg-canvas">
-      {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-neutral-200 bg-surface px-4 py-6 lg:flex">
-        <Link to="/discover" aria-label="Kollide home" className="px-3">
-          <Logo className="text-[1.9rem]" />
+      {/* Desktop sidebar: the landing page's maroon hero, toran and all. */}
+      <aside className="bandhani-soft fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-hidden bg-maroon-700 pb-5 text-cream lg:flex">
+        <Toran count={10} className="-mx-1 shrink-0 text-cream" />
+        <Link to="/discover" aria-label="Kollide home" className="mt-2 self-start px-7">
+          <Logo tone="white" className="text-[2rem]" />
         </Link>
-        <nav className="mt-10" aria-label="Main">
+        <nav className="mt-10 px-4" aria-label="Main">
           <ul className="space-y-1">
             {TABS.map((tab) => {
               const count = tab.badge ? badges[tab.badge] : 0
@@ -110,21 +114,21 @@ export default function AppShell() {
                   <NavLink
                     to={tab.to}
                     aria-label={count > 0 ? `${tab.label}, ${count} new` : tab.label}
-                    className={`relative flex items-center gap-3 rounded-full px-4 py-3 text-[15px] font-semibold transition ${
-                      active ? 'text-on-ink' : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+                    className={`relative flex items-center gap-3 rounded-full px-4 py-3 text-[15px] font-bold transition ${
+                      active ? 'text-maroon-950' : 'text-cream/75 hover:bg-white/10 hover:text-cream'
                     }`}
                   >
                     {active && (
                       <motion.span
                         layoutId="side-pill"
-                        className="absolute inset-0 rounded-full bg-ink"
+                        className="absolute inset-0 rounded-full bg-marigold-400 shadow-lg shadow-maroon-950/30"
                         transition={{ type: 'spring', stiffness: 500, damping: 38 }}
                       />
                     )}
-                    <Icon className="relative h-5 w-5" strokeWidth={active ? 2.3 : 1.9} />
+                    <Icon className="relative h-5 w-5" strokeWidth={active ? 2.4 : 2} />
                     <span className="relative flex-1">{tab.label}</span>
                     {count > 0 && (
-                      <span className="relative min-w-[22px] rounded-full bg-brand-500 px-1.5 text-center text-xs font-bold leading-[22px] text-white">
+                      <span className="relative min-w-[22px] rounded-full bg-rani px-1.5 text-center text-xs font-bold leading-[22px] text-white ring-2 ring-maroon-700">
                         {count > 9 ? '9+' : count}
                       </span>
                     )}
@@ -134,17 +138,15 @@ export default function AppShell() {
             })}
           </ul>
         </nav>
-        <div className="mt-auto space-y-3">
-          <p className="px-4 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-500">Navratri · Oct 11–19</p>
+        <div className="mt-auto space-y-3 px-4">
+          <Countdown />
           <Link
             to="/profile"
-            className="flex items-center gap-3 rounded-2xl border border-neutral-200 p-2.5 transition hover:border-neutral-900"
+            className="flex items-center gap-3 rounded-full bg-white/10 p-1.5 pr-4 ring-1 ring-white/10 transition hover:bg-white/15"
           >
-            <Avatar path={photo} name={profile?.first_name ?? ''} className="h-10 w-10 text-sm" />
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold text-neutral-900">{profile?.first_name}</span>
-              <span className="block font-mono text-xs text-neutral-500">{profile?.public_code}</span>
-            </span>
+            <Avatar path={photo} name={profile?.first_name ?? ''} className="h-10 w-10 text-sm ring-2 ring-marigold-400" />
+            <span className="min-w-0 flex-1 truncate text-sm font-bold">{profile?.first_name}</span>
+            <ChevronRight className="h-4 w-4 shrink-0 opacity-60" />
           </Link>
         </div>
       </aside>
@@ -152,68 +154,71 @@ export default function AppShell() {
       <div className="flex min-h-dvh flex-col lg:pl-64">
         {/* Phone header */}
         {!immersive && (
-          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200/70 bg-canvas/85 px-4 pb-2.5 pt-[max(env(safe-area-inset-top),0.75rem)] backdrop-blur-lg lg:hidden">
+          <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-canvas/85 px-4 pb-2.5 pt-[max(env(safe-area-inset-top),0.75rem)] backdrop-blur-lg lg:hidden">
             <Link to="/discover" aria-label="Kollide home">
               <Logo className="text-[1.6rem]" />
             </Link>
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 rounded-full border border-neutral-200 bg-surface py-1 pl-1 pr-3 transition active:scale-95"
-            >
-              <Avatar path={photo} name={profile?.first_name ?? ''} className="h-7 w-7 text-xs" />
-              <span className="font-mono text-xs font-medium text-neutral-600">{profile?.public_code}</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <CountdownChip />
+              <Link to="/profile" aria-label="Your profile" className="rounded-full transition active:scale-95">
+                <Avatar
+                  path={photo}
+                  name={profile?.first_name ?? ''}
+                  className="h-9 w-9 text-sm ring-2 ring-marigold-400 ring-offset-2 ring-offset-canvas"
+                />
+              </Link>
+            </div>
           </header>
         )}
 
         {immersive ? (
-          <Outlet context={{ refreshBadges } satisfies ShellContext} />
+          <Outlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />
         ) : (
-          <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-4 md:max-w-2xl lg:max-w-5xl lg:px-10 lg:pb-16 lg:pt-10">
+          <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-3 md:max-w-2xl lg:max-w-5xl lg:px-10 lg:pb-16 lg:pt-12">
             <BangaloreCheck />
             <InstallPrompt />
             <PendingInviteBanner />
-            <Outlet context={{ refreshBadges } satisfies ShellContext} />
+            <Outlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />
           </main>
         )}
       </div>
 
-      {/* Phone tab bar */}
+      {/* Phone dock: floats over the page, the open tab grows to show its name. */}
       {!immersive && (
-        <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200/70 bg-surface/90 backdrop-blur-xl lg:hidden">
-          <ul className="mx-auto flex max-w-md px-2 pt-1.5">
+        <nav
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] lg:hidden"
+          aria-label="Main"
+        >
+          <ul className="pointer-events-auto mx-auto flex max-w-md items-center gap-1 rounded-full bg-maroon-950/95 p-1.5 shadow-2xl shadow-maroon-950/40 ring-1 ring-white/10 backdrop-blur-xl">
             {TABS.map((tab) => {
               const count = tab.badge ? badges[tab.badge] : 0
               const active = isActive(tab)
               const Icon = tab.icon
               return (
-                <li key={tab.to} className="flex-1">
+                <li key={tab.to} className={`transition-[flex-grow] duration-300 ${active ? 'flex-[1.7]' : 'flex-1'}`}>
                   <NavLink
                     to={tab.to}
                     aria-label={count > 0 ? `${tab.label}, ${count} new` : tab.label}
-                    className={`flex flex-col items-center gap-0.5 pb-1 text-[11px] font-semibold transition ${
-                      active ? 'text-neutral-900' : 'text-neutral-500'
+                    className={`relative flex h-12 items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition active:scale-95 ${
+                      active ? 'text-maroon-950' : 'text-cream/65'
                     }`}
                   >
-                    <span className="relative flex h-8 w-14 items-center justify-center">
-                      {active && (
-                        <motion.span
-                          layoutId="tab-pill"
-                          className="absolute inset-0 rounded-full bg-ink"
-                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                        />
-                      )}
-                      <Icon
-                        className={`relative h-[22px] w-[22px] ${active ? 'text-on-ink' : ''}`}
-                        strokeWidth={active ? 2.3 : 1.9}
+                    {active && (
+                      <motion.span
+                        layoutId="tab-pill"
+                        className="absolute inset-0 rounded-full bg-marigold-400"
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                       />
-                      {count > 0 && (
-                        <span className="absolute right-1.5 top-0 min-w-[18px] animate-pop rounded-full border-2 border-surface bg-brand-500 px-1 text-center text-[10px] font-bold leading-[14px] text-white">
+                    )}
+                    <span className="relative">
+                      <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 2} />
+                      {count > 0 && !active && (
+                        <span className="absolute -right-2.5 -top-1.5 min-w-[18px] animate-pop rounded-full bg-rani px-1 text-center text-[10px] font-bold leading-[16px] text-white ring-2 ring-maroon-950">
                           {count > 9 ? '9+' : count}
                         </span>
                       )}
                     </span>
-                    {tab.label}
+                    {active && <span className="relative animate-rise truncate">{tab.label}</span>}
                   </NavLink>
                 </li>
               )
@@ -222,5 +227,40 @@ export default function AppShell() {
         </nav>
       )}
     </div>
+  )
+}
+
+// Days to go, or which night it is, in the sidebar.
+function Countdown() {
+  const [status] = useState(() => navratriStatus())
+  return (
+    <div className="rounded-3xl bg-maroon-950/35 p-4 ring-1 ring-white/10">
+      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-marigold-400">Navratri · Oct 11–19</p>
+      <p className="mt-1.5 font-display text-2xl font-extrabold leading-tight tracking-[-0.03em]">
+        {status.phase === 'before' ? (
+          <>
+            <span className="text-marigold-400">{status.days}</span> day{status.days === 1 ? '' : 's'} to go
+          </>
+        ) : status.phase === 'during' ? (
+          <>
+            Night <span className="text-marigold-400">{status.night}</span> of 9
+          </>
+        ) : (
+          'See you next year'
+        )}
+      </p>
+    </div>
+  )
+}
+
+// The same, squeezed into the phone header.
+function CountdownChip() {
+  const [status] = useState(() => navratriStatus())
+  if (status.phase === 'after') return null
+  return (
+    <span className="flex items-center gap-1.5 rounded-full bg-maroon-700 px-3 py-1.5 text-xs font-bold text-cream">
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-marigold-400" aria-hidden />
+      {status.phase === 'before' ? `${status.days}d to Navratri` : `Night ${status.night} of 9`}
+    </span>
   )
 }

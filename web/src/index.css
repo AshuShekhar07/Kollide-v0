@@ -1,60 +1,77 @@
 @import 'tailwindcss';
 
+/* `dark:` follows the theme chosen in Settings, not the phone's setting. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 /*
- * Colours are CSS variables so the whole app follows the phone's dark mode
- * without `dark:` variants: the neutral, brand and status scales below are
- * swapped for dark values in the media query at the end. `white`/`black`
+ * Colours are CSS variables so the whole app can switch to dark mode without
+ * `dark:` variants: the neutral, brand and status scales below are swapped
+ * for dark values when <html data-theme="dark"> (lib/theme.ts sets it from
+ * the choice in Settings; light is the default). `white`/`black`
  * never change (text on photos and brand buttons); `surface` (cards, sheets)
  * and `canvas` (page background) do.
  */
 @theme {
-  /* Kollide's look (matches the landing page): white pages, near-black ink,
-     marigold orange accents and deep navy for dark surfaces. */
-  --color-canvas: #ffffff;
-  --color-surface: #ffffff;
+  /* Kollide's look, matching the landing page: a warm cream page, deep
+     maroon-black ink, rani pink accents, haldi and marigold highlights, and
+     maroon for big festive surfaces. */
+  --color-canvas: #fff4e4;
+  --color-surface: #fffaf3;
   /* Selected pills and chips sitting on a neutral-100 track. */
-  --color-raised: #ffffff;
-  /* Primary buttons and active states: near-black on light, white on dark. */
-  --color-ink: #111111;
-  --color-on-ink: #ffffff;
+  --color-raised: #fffaf3;
+  /* Primary buttons and active states: maroon-black on light, cream on dark. */
+  --color-ink: #2a0e1b;
+  --color-on-ink: #fff4e4;
 
-  --color-neutral-50: #f8f8f8;
-  --color-neutral-100: #f2f2f3;
-  --color-neutral-200: #e6e6e8;
-  --color-neutral-300: #d2d2d6;
-  --color-neutral-400: #9d9da5;
-  --color-neutral-500: #6e6e76;
-  --color-neutral-600: #515158;
-  --color-neutral-700: #3b3b41;
-  --color-neutral-800: #242428;
-  --color-neutral-900: #111111;
+  /* Warm greys, tinted toward the ink so nothing reads cold on cream. */
+  --color-neutral-50: #fbeedc;
+  --color-neutral-100: #f6e6d0;
+  --color-neutral-200: #ecd8c0;
+  --color-neutral-300: #dcc3aa;
+  --color-neutral-400: #aa8b88;
+  --color-neutral-500: #7d5e66;
+  --color-neutral-600: #634450;
+  --color-neutral-700: #4b2d3a;
+  --color-neutral-800: #3a1c2a;
+  --color-neutral-900: #2a0e1b;
 
-  /* Accent: the wordmark's orange. */
-  --color-brand-50: #fdf3ec;
-  --color-brand-100: #fbe4d3;
-  --color-brand-200: #f6c7a3;
-  --color-brand-300: #ee9f68;
-  --color-brand-500: #e0661a;
-  --color-brand-600: #c9560f;
-  --color-brand-700: #a8450c;
-  --color-brand-800: #83360b;
-  --color-brand-900: #5c260a;
+  /* Accent: rani pink, the landing page's eyebrow and flag colour. */
+  --color-brand-50: #fdebf2;
+  --color-brand-100: #fad4e3;
+  --color-brand-200: #f4a8c5;
+  --color-brand-300: #ea7ba6;
+  --color-brand-500: #d4246b;
+  --color-brand-600: #b81c5c;
+  --color-brand-700: #9a164c;
+  --color-brand-800: #7a0f3b;
+  --color-brand-900: #5a0b2c;
 
-  /* Deep navy that stays deep in dark mode: backgrounds under white text. */
-  --color-plum-500: #2f3677;
-  --color-plum-600: #232960;
-  --color-plum-700: #1a1f4a;
-  --color-plum-800: #13173a;
-  --color-plum-900: #0d0f22;
-  --color-plum-950: #080916;
+  /* Maroon that stays deep in dark mode: backgrounds under cream text.
+     700 is the landing page's maroon, 950 its ink. */
+  --color-maroon-500: #b3234c;
+  --color-maroon-600: #9a1740;
+  --color-maroon-700: #7a0f2e;
+  --color-maroon-800: #5c0b23;
+  --color-maroon-900: #45081a;
+  --color-maroon-950: #2a0e1b;
 
-  --color-marigold-50: #fff8e6;
-  --color-marigold-100: #fdedc0;
-  --color-marigold-300: #f8d65e;
-  --color-marigold-400: #f4c51c;
-  --color-marigold-500: #e8a810;
-  --color-marigold-600: #c98a00;
-  --color-marigold-800: #7d5400;
+  /* Haldi (400) and marigold (500). */
+  --color-marigold-50: #fff6dd;
+  --color-marigold-100: #fdeab5;
+  --color-marigold-300: #f9d56f;
+  --color-marigold-400: #f6c33b;
+  --color-marigold-500: #f29f05;
+  --color-marigold-600: #c98200;
+  --color-marigold-800: #7a4e00;
+
+  /* The rest of the chaniya-choli set, fixed in both schemes. */
+  --color-cream: #fff4e4;
+  /* The wordmark's blue. */
+  --color-navy: #26306b;
+  --color-rani: #d4246b;
+  --color-peacock: #0b7a7a;
+  --color-leaf: #3e7c2b;
+  --color-saffron: #e0661a;
 
   --font-sans: 'Plus Jakarta Sans', system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -98,56 +115,59 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --color-canvas: #0b0c1a;
-    --color-surface: #13152a;
-    --color-raised: #2a2d4a;
-    --color-ink: #ffffff;
-    --color-on-ink: #0d0f22;
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  /* A garba ground after dark: maroon-black, lit warm. */
+  --color-canvas: #16090f;
+  --color-surface: #211019;
+  --color-raised: #3a1f2b;
+  --color-ink: #fff4e4;
+  --color-on-ink: #2a0e1b;
 
-    --color-neutral-50: #171a31;
-    --color-neutral-100: #1d2039;
-    --color-neutral-200: #2a2d4a;
-    --color-neutral-300: #3c405f;
-    --color-neutral-400: #6f7392;
-    --color-neutral-500: #9a9db6;
-    --color-neutral-600: #b8bace;
-    --color-neutral-700: #d3d4e2;
-    --color-neutral-800: #e8e9f1;
-    --color-neutral-900: #f7f7fb;
+  --color-neutral-50: #28141e;
+  --color-neutral-100: #311a25;
+  --color-neutral-200: #432533;
+  --color-neutral-300: #5a3444;
+  --color-neutral-400: #8c6a77;
+  --color-neutral-500: #b397a0;
+  --color-neutral-600: #cdb6bc;
+  --color-neutral-700: #e2d0d2;
+  --color-neutral-800: #f2e5e2;
+  --color-neutral-900: #fff4e4;
 
-    --color-brand-50: #2e1a10;
-    --color-brand-100: #3d2212;
-    --color-brand-200: #5c3317;
-    --color-brand-300: #8f4d1e;
-    --color-brand-500: #f07a1e;
-    --color-brand-600: #e0661a;
-    --color-brand-700: #f7a061;
-    --color-brand-800: #f9bf91;
-    --color-brand-900: #fcdcc2;
+  --color-brand-50: #3a0f20;
+  --color-brand-100: #4d1429;
+  --color-brand-200: #6e1c3b;
+  --color-brand-300: #a02a57;
+  --color-brand-500: #ec4d8a;
+  --color-brand-600: #f06a9c;
+  --color-brand-700: #f58db4;
+  --color-brand-800: #f9b3cd;
+  --color-brand-900: #fcd6e4;
 
-    --color-marigold-50: #2e2410;
-    --color-marigold-100: #3d2f10;
-    --color-marigold-800: #f8d65e;
+  --color-marigold-50: #2e2410;
+  --color-marigold-100: #3d2f10;
+  --color-marigold-800: #f9d56f;
 
-    --color-red-50: #3a1519;
-    --color-red-100: #4a1a1f;
-    --color-red-200: #6b2229;
-    --color-red-700: #fca5a5;
-    --color-red-800: #fecaca;
-    --color-green-50: #11281a;
-    --color-green-100: #14331f;
-    --color-green-700: #86efac;
-    --color-green-800: #a7f3c0;
-    --color-amber-50: #33240b;
-    --color-amber-100: #402d0d;
-    --color-amber-200: #5c4212;
-    --color-amber-800: #fcd34d;
-    --color-amber-900: #fde68a;
-    --color-amber-950: #fef3c7;
-  }
+  --color-red-50: #3a1519;
+  --color-red-100: #4a1a1f;
+  --color-red-200: #6b2229;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+  --color-green-50: #11281a;
+  --color-green-100: #14331f;
+  --color-green-700: #86efac;
+  --color-green-800: #a7f3c0;
+  --color-amber-50: #33240b;
+  --color-amber-100: #402d0d;
+  --color-amber-200: #5c4212;
+  --color-amber-800: #fcd34d;
+  --color-amber-900: #fde68a;
+  --color-amber-950: #fef3c7;
+}
+
+:root {
+  color-scheme: light;
 }
 
 html,
@@ -166,7 +186,8 @@ h2,
 h3,
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 /* Bandhani: rows of tie-dye dots, for festive surfaces. Colour comes from

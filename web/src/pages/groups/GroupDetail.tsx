@@ -3,18 +3,87 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useShell } from '../../components/AppShell'
 import Avatar from '../../components/Avatar'
+import Toran from '../../components/landing/Toran'
+import { useSignedPhotos } from '../../components/ProfileCard'
+import ProfileStack from '../../components/ProfileStack'
 import { BlockDialog, ReportDialog, Sheet } from '../../components/SafetyDialogs'
 import { BackLink } from '../../components/BackLink'
 import { Capacity, DateChip } from '../../components/GroupBits'
 import InviteLinkCard from '../../components/InviteLinkCard'
-import { Button, LinkButton, ErrorText, Skeleton, Tag } from '../../components/ui'
+import { Button, LinkButton, ErrorText, Skeleton } from '../../components/ui'
 import { useAuth } from '../../lib/auth-context'
 import { friendlyError } from '../../lib/errors'
-import { eventDate, spotsLeft, type GroupDetail as Group, type GroupMember } from '../../lib/groups'
+import { eventDate, fetchMemberProfile, spotsLeft, type GroupDetail as Group, type GroupMember, type MemberProfile } from '../../lib/groups'
 import { supabase } from '../../lib/supabase'
 
 export function MemberAvatar({ path, name, size = 'h-11 w-11' }: { path: string | null; name: string; size?: string }) {
   return <Avatar path={path} name={name} className={size} />
+}
+
+function MemberProfileSheet({ groupId, member, onClose }: { groupId: string; member: GroupMember; onClose: () => void }) {
+  const [person, setPerson] = useState<MemberProfile | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    fetchMemberProfile(groupId, member.user_id)
+      .then((d) => !cancelled && setPerson(d))
+      .catch((e) => !cancelled && setError(friendlyError(e)))
+    return () => {
+      cancelled = true
+    }
+  }, [groupId, member.user_id])
+
+  return (
+    <Sheet label={member.first_name} onClose={onClose}>
+      {error ? (
+        <ErrorText>{error}</ErrorText>
+      ) : !person ? (
+        <Skeleton className="aspect-[3/4] w-full !rounded-[2rem]" />
+      ) : (
+        <ProfileStack profile={person} userId={person.user_id} answers={person.answers} />
+      )}
+      <Button variant="secondary" className="mt-3 w-full" onClick={onClose}>
+        Close
+      </Button>
+    </Sheet>
+  )
+}
+
+// A member as a portrait tile, so you can see who you'd be going with.
+function MemberTile({ member, me, onOpen }: { member: GroupMember; me: boolean; onOpen?: () => void }) {
+  const [url] = useSignedPhotos(member.photo_path ? [member.photo_path] : [], 'thumb')
+  const body = (
+    <>
+      <span className="absolute inset-0 flex items-center justify-center font-display text-4xl font-bold text-white/80">
+        {member.first_name.slice(0, 1)}
+      </span>
+      {url && (
+        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+      )}
+      {member.role === 'admin' && (
+        <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-marigold-400 px-2 py-0.5 text-[10px] font-bold text-maroon-950 shadow">
+          <Crown className="h-3 w-3" /> Admin
+        </span>
+      )}
+      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2.5 pb-2 pt-8 text-left font-display text-[15px] font-extrabold leading-tight text-white">
+        <span className="block truncate">{me ? 'You' : member.first_name}</span>
+      </span>
+    </>
+  )
+  const cls = 'group relative block aspect-[3/4] w-full overflow-hidden rounded-[1.4rem] bg-brand-100'
+  return me ? (
+    <span className={cls}>{body}</span>
+  ) : (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`See ${member.first_name}'s profile`}
+      className={`${cls} shadow-md shadow-maroon-950/10 transition hover:-translate-y-0.5 active:scale-[0.97]`}
+    >
+      {body}
+    </button>
+  )
 }
 
 function LeaveDialog({ group, onClose, onLeft }: { group: Group; onClose: () => void; onLeft: () => void }) {
@@ -63,7 +132,9 @@ export default function GroupDetail() {
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
-  const [dialog, setDialog] = useState<{ kind: 'leave' } | { kind: 'member' | 'report' | 'block'; member: GroupMember } | null>(null)
+  const [dialog, setDialog] = useState<
+    { kind: 'leave' } | { kind: 'member' | 'report' | 'block' | 'profile'; member: GroupMember } | null
+  >(null)
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.rpc('get_group', { p_group_id: id })
@@ -175,7 +246,8 @@ export default function GroupDetail() {
   } else {
     action = (
       <Button
-        className="w-full"
+        variant="marigold"
+        className="w-full py-4 text-base"
         loading={busy === 'join'}
         onClick={() => act('join', supabase.rpc('request_join', { p_group_id: group.id }))}
       >
@@ -193,24 +265,25 @@ export default function GroupDetail() {
 
       <div className="lg:mt-4 lg:grid lg:grid-cols-[1fr_22rem] lg:items-start lg:gap-10">
         <div>
-          <div className="relative mt-3 overflow-hidden rounded-[28px] bg-plum-900 p-5 text-white lg:mt-0 lg:p-8">
+          <div className="bandhani-soft relative mt-3 overflow-hidden rounded-[32px] bg-maroon-700 px-5 pb-6 text-cream shadow-xl shadow-maroon-950/15 lg:mt-0 lg:px-8 lg:pb-8">
+            <Toran count={18} className="-mx-5 mb-3 text-cream lg:-mx-8" />
             <div className="relative">
               <div className="flex items-start gap-3">
                 <DateChip date={group.event_date} tone="glass" />
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-2xl font-extrabold leading-tight lg:text-4xl">{group.title}</h1>
+                  <h1 className="text-[1.9rem] font-extrabold leading-[1] tracking-[-0.04em] lg:text-5xl">{group.title}</h1>
                   {group.venue && (
-                    <p className="mt-1 flex items-center gap-1 text-sm text-white/80">
+                    <p className="mt-2 flex items-center gap-1 text-sm text-cream/80">
                       <MapPin className="h-4 w-4 shrink-0" /> {group.venue}
                     </p>
                   )}
-                  {eventDate(group.event_date) && <p className="mt-0.5 text-sm text-white/70">{eventDate(group.event_date)}</p>}
+                  {eventDate(group.event_date) && <p className="mt-0.5 text-sm text-cream/70">{eventDate(group.event_date)}</p>}
                 </div>
               </div>
-              {group.description && <p className="mt-4 whitespace-pre-wrap text-[15px] leading-relaxed text-white/90">{group.description}</p>}
-              <div className="mt-4">
+              {group.description && <p className="mt-5 whitespace-pre-wrap text-[15px] leading-relaxed text-cream/90">{group.description}</p>}
+              <div className="mt-5">
                 <Capacity count={group.member_count} max={group.max_members} tone="glass" />
-                <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-white/80">
+                <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-cream/80">
                   <UsersRound className="h-3.5 w-3.5" />
                   {group.member_count}/{group.max_members} people · {closed ? 'Closed' : spotsLeft(group)}
                 </p>
@@ -226,35 +299,26 @@ export default function GroupDetail() {
           )}
         </div>
         <div>
-          <h2 className="mt-7 text-lg font-bold text-neutral-900 lg:mt-0">Who's going</h2>
-          {!inGroup && (
-            <p className="mt-0.5 text-xs text-neutral-500">Photos and socials are shared once you're in the group.</p>
-          )}
-          <ul className="mt-2.5 divide-y divide-neutral-100 overflow-hidden rounded-[28px] border border-neutral-200 bg-surface">
+          <h2 className="mt-8 text-xl font-extrabold text-neutral-900 lg:mt-0">Who's going</h2>
+          <p className="mt-0.5 text-xs text-neutral-500">
+            {inGroup
+              ? 'Tap anyone to see their profile.'
+              : "Tap anyone to see their profile. Socials are shared once you're in the group."}
+          </p>
+          <ul className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-2 lg:gap-3">
             {group.members.map((m) => {
               const me = m.user_id === profile?.id
               return (
-                <li key={m.user_id} className="flex items-center gap-3 px-3 py-2.5">
-                  <MemberAvatar path={m.photo_path} name={m.first_name} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="truncate font-semibold text-neutral-900">{me ? 'You' : m.first_name}</span>
-                      {m.role === 'admin' && (
-                        <Tag tone="marigold">
-                          <Crown className="h-3 w-3" /> Admin
-                        </Tag>
-                      )}
-                    </span>
-                    <span className="block font-mono text-xs text-neutral-500">{m.public_code}</span>
-                  </span>
+                <li key={m.user_id} className="relative animate-rise">
+                  <MemberTile member={m} me={me} onOpen={() => setDialog({ kind: 'profile', member: m })} />
                   {inGroup && !me && (
                     <button
                       type="button"
                       onClick={() => setDialog({ kind: 'member', member: m })}
-                      className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+                      className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50"
                       aria-label={`Options for ${m.first_name}`}
                     >
-                      <MoreHorizontal className="h-5 w-5" />
+                      <MoreHorizontal className="h-4 w-4" />
                     </button>
                   )}
                 </li>
@@ -283,6 +347,9 @@ export default function GroupDetail() {
             navigate('/groups', { replace: true })
           }}
         />
+      )}
+      {dialog?.kind === 'profile' && (
+        <MemberProfileSheet groupId={group.id} member={dialog.member} onClose={() => setDialog(null)} />
       )}
       {dialog?.kind === 'member' && (
         <Sheet label={dialog.member.first_name} onClose={() => setDialog(null)}>

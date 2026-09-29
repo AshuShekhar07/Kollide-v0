@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
-import { BadgeCheck, Heart, Hourglass, Info, RotateCcw, Sparkles, X } from 'lucide-react'
+import { BadgeCheck, Heart, Hourglass, RotateCcw, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import AboutView from '../components/AboutView'
@@ -7,7 +7,7 @@ import { useShell } from '../components/AppShell'
 import DiscoverTabs from '../components/DiscoverTabs'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard from '../components/ProfileCard'
-import { Sheet } from '../components/SafetyDialogs'
+import ProfileStack from '../components/ProfileStack'
 import { Button, EmptyState, ErrorText, Eyebrow, Skeleton, Tag } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import { fetchLiveActivity, type Feed, type FeedProfile, type LiveActivity, type MatchResult } from '../lib/discovery'
@@ -15,6 +15,7 @@ import { friendlyError } from '../lib/errors'
 import { signedThumbUrls } from '../lib/photos'
 import { SEEKING_OPTIONS } from '../lib/profile-options'
 import { supabase } from '../lib/supabase'
+import { useIsDesktop } from '../lib/useIsDesktop'
 
 const BATCH = 20
 const SWIPE_PX = 110
@@ -26,7 +27,11 @@ const exitVariants = {
   exit: (d: Dir) => ({ x: d * 600, rotate: d * 20, opacity: 0, transition: { duration: 0.3 } }),
 }
 
+// Phones: the card is the whole profile, scrolled up and down, and swiped
+// left or right. Desktop: a photo card (click for the next photo), with the
+// profile in the column beside it.
 function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir; onDecide: (d: Dir) => void }) {
+  const desktop = useIsDesktop()
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-240, 240], [-12, 12])
   const likeOpacity = useTransform(x, [30, SWIPE_PX], [0, 1])
@@ -39,7 +44,8 @@ function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir;
     else if (info.offset.x < -SWIPE_PX || info.velocity.x < -SWIPE_VELOCITY) onDecide(-1)
   }
 
-  // Tap the left/right half to step through photos (taps don't fire after a drag).
+  // Desktop: click the left/right half to step through photos (taps don't
+  // fire after a drag).
   function onTap(_: unknown, info: { point: { x: number } }) {
     const rect = ref.current?.getBoundingClientRect()
     if (!rect) return
@@ -53,24 +59,45 @@ function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir;
       className="absolute inset-0 cursor-grab touch-pan-y active:cursor-grabbing"
       style={{ x, rotate }}
       drag="x"
+      dragDirectionLock
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.9}
       onDragEnd={onDragEnd}
-      onTap={onTap}
+      onTap={desktop ? onTap : undefined}
       custom={dir}
       variants={exitVariants}
       exit="exit"
     >
-      <ProfileCard profile={profile} photoIndex={photo} className="h-full w-full" />
+      {desktop ? (
+        <ProfileCard profile={profile} photoIndex={photo} className="h-full w-full" hideBio />
+      ) : (
+        <ProfileStack
+          profile={profile}
+          userId={profile.id}
+          size="thumb"
+          peek
+          className="h-full touch-pan-y overflow-y-auto overscroll-contain rounded-[2rem] bg-surface p-2 shadow-xl shadow-maroon-950/15 ring-1 ring-neutral-200/80 [scrollbar-width:none]"
+          heroClassName="h-[calc(100%-6.5rem)]"
+          end={
+            <p className="px-4 pb-28 pt-2 text-center text-xs font-semibold text-neutral-500">
+              Swipe right to like {profile.first_name}, left to pass.
+            </p>
+          }
+        />
+      )}
+      {/* The buttons float over this fade, and the profile scrolls up under them. */}
+      {!desktop && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 rounded-b-[2rem] bg-gradient-to-t from-surface via-surface/85 to-transparent" />
+      )}
       <motion.span
         style={{ opacity: likeOpacity }}
-        className="absolute left-5 top-10 flex -rotate-12 items-center gap-1.5 rounded-2xl border-[3px] border-green-400 bg-green-500/20 px-3 py-1 font-display text-2xl font-extrabold text-green-300 backdrop-blur-sm"
+        className="pointer-events-none absolute left-5 top-10 flex -rotate-12 items-center gap-1.5 rounded-2xl border-[3px] border-marigold-400 bg-rani/80 px-3 py-1 font-display text-2xl font-extrabold text-white shadow-lg backdrop-blur-sm"
       >
         <Heart className="h-6 w-6 fill-current" /> LIKE
       </motion.span>
       <motion.span
         style={{ opacity: passOpacity }}
-        className="absolute right-5 top-10 flex rotate-12 items-center gap-1.5 rounded-2xl border-[3px] border-red-400 bg-red-500/20 px-3 py-1 font-display text-2xl font-extrabold text-red-300 backdrop-blur-sm"
+        className="pointer-events-none absolute right-5 top-10 flex rotate-12 items-center gap-1.5 rounded-2xl border-[3px] border-white bg-maroon-950/70 px-3 py-1 font-display text-2xl font-extrabold text-white shadow-lg backdrop-blur-sm"
       >
         <X className="h-6 w-6" strokeWidth={3} /> PASS
       </motion.span>
@@ -127,7 +154,6 @@ export default function Discover() {
   const [error, setError] = useState('')
   const [dir, setDir] = useState<Dir>(1)
   const [matchName, setMatchName] = useState<{ name: string; photo: string | null } | null>(null)
-  const [aboutOpen, setAboutOpen] = useState(false)
 
   // Swipes are sent in the background; the next feed fetch waits for them so
   // the server never re-serves someone we just swiped.
@@ -202,13 +228,13 @@ export default function Discover() {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (matchName || aboutOpen || (e.target as HTMLElement)?.closest('input, textarea')) return
+      if (matchName || (e.target as HTMLElement)?.closest('input, textarea')) return
       if (e.key === 'ArrowLeft') decide(-1)
       if (e.key === 'ArrowRight') decide(1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [decide, matchName, aboutOpen])
+  }, [decide, matchName])
 
   const top = queue[0]
   const next = queue[1]
@@ -233,13 +259,20 @@ export default function Discover() {
         <AddLiveActivity onAdded={loadActivity} />
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-end justify-between gap-3">
+            {/* Phones keep this to one line so the card gets the room. */}
             <div className="min-w-0">
-              <h1 className="truncate text-2xl font-extrabold text-neutral-900 lg:text-4xl">{activity?.name ?? 'Discover'}</h1>
-              <Link to="/profile" className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-neutral-500">
-                Looking for {seeking}
-                <span className="font-semibold text-brand-700">· Change</span>
+              <Link
+                to="/profile"
+                className="inline-flex max-w-full items-center gap-1 text-xs font-semibold text-neutral-500 lg:text-[11px] lg:font-bold lg:uppercase lg:tracking-[0.2em] lg:text-brand-500"
+              >
+                <span className="font-bold text-brand-500 lg:hidden">{activity?.name ?? 'Discover'} ·</span>
+                <span className="truncate">Looking for {seeking}</span>
+                <span className="shrink-0 font-bold text-neutral-900 lg:text-neutral-400">· Change</span>
               </Link>
+              <h1 className="mt-1 hidden truncate font-extrabold leading-none tracking-[-0.04em] text-neutral-900 lg:block lg:text-5xl">
+                {activity?.name ?? 'Discover'}
+              </h1>
             </div>
             {!verified && viewsLeft !== null && (
               <Tag tone="amber" className="shrink-0">
@@ -248,17 +281,17 @@ export default function Discover() {
             )}
           </div>
 
-          {/* Phones: the card fills the space between the header and the buttons, so
-              they stay above the tab bar. Desktop: card on the left, profile on the right. */}
-          <div className="mt-3 flex flex-1 flex-col lg:mt-6 lg:grid lg:flex-none lg:grid-cols-[minmax(0,26rem)_1fr] lg:items-start lg:gap-12">
+          {/* Phones: the card runs down to just above the tab bar, with the buttons
+              floating over its bottom edge. Desktop: card on the left, profile on the right. */}
+          <div className="-mb-6 mt-3 flex flex-1 flex-col lg:mb-0 lg:mt-6 lg:grid lg:flex-none lg:grid-cols-[minmax(0,26rem)_1fr] lg:items-start lg:gap-12">
             <div className="flex flex-1 flex-col">
-              <div className="relative mt-3 max-h-[36rem] min-h-80 w-full flex-1 lg:mt-0 lg:h-[min(40rem,calc(100dvh-22rem))] lg:min-h-[26rem] lg:max-h-none lg:flex-none">
+              <div className="relative mt-1 min-h-96 w-full flex-1 lg:mt-0 lg:h-[min(40rem,calc(100dvh-25rem))] lg:min-h-[26rem] lg:max-h-none lg:flex-none">
                 {next && (
                   <ProfileCard
                     key={next.id}
                     profile={next}
                     photoIndex={0}
-                    className="absolute inset-0 h-full w-full translate-y-2 scale-[0.94] opacity-70"
+                    className="absolute inset-0 h-full w-full translate-y-3 rotate-2 scale-[0.93] opacity-60"
                   />
                 )}
                 <AnimatePresence custom={dir}>
@@ -275,7 +308,7 @@ export default function Discover() {
                       </div>
                     </div>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200 bg-surface">
+                    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto rounded-[2rem] border border-neutral-200/80 bg-surface">
                       {outOfViews ? (
                         <EmptyState icon={Hourglass} title="That's everyone for today">
                           Unverified accounts see a limited number of new profiles a day. Once you're verified, there's no
@@ -304,45 +337,43 @@ export default function Discover() {
                     </div>
                   ))}
               </div>
-              <div className="mt-2">
-                <ErrorText>{error}</ErrorText>
-              </div>
-              <div className="mt-3 flex items-center justify-center gap-5">
-                <ActionButton label="Pass" onClick={() => decide(-1)} disabled={!top} className="h-16 w-16 border border-neutral-200 bg-surface text-red-500">
-                  <X className="h-8 w-8" strokeWidth={2.6} />
-                </ActionButton>
+              <div className="pointer-events-none relative z-20 -mt-[5.5rem] flex items-center justify-center gap-6 pb-4 lg:mt-5 lg:pb-0 [&>*]:pointer-events-auto">
                 <ActionButton
-                  label={top ? `About ${top.first_name}` : 'About'}
-                  onClick={() => setAboutOpen(true)}
+                  label="Pass"
+                  onClick={() => decide(-1)}
                   disabled={!top}
-                  className="h-12 w-12 border border-neutral-200 bg-surface text-neutral-900 lg:hidden"
+                  className="h-16 w-16 bg-surface text-neutral-900 shadow-maroon-950/20 ring-1 ring-neutral-200"
                 >
-                  <Info className="h-5 w-5" strokeWidth={2.4} />
+                  <X className="h-8 w-8" strokeWidth={2.6} />
                 </ActionButton>
                 <ActionButton
                   label="Like"
                   onClick={() => decide(1)}
                   disabled={!top}
-                  className="h-16 w-16 bg-brand-500 text-white shadow-brand-500/30"
+                  className="h-[4.5rem] w-[4.5rem] bg-rani text-white shadow-rani/35 ring-4 ring-marigold-400/60"
                 >
-                  <Heart className="h-8 w-8 fill-current" />
+                  <Heart className="h-9 w-9 fill-current" />
                 </ActionButton>
               </div>
+              {error && (
+                <div className="mt-2">
+                  <ErrorText>{error}</ErrorText>
+                </div>
+              )}
             </div>
 
             <aside className="hidden lg:block" aria-label={top ? `About ${top.first_name}` : undefined}>
               {top ? (
                 <div key={top.id} className="animate-rise">
                   <Eyebrow>Up next</Eyebrow>
-                  <div className="mt-2 flex items-center gap-3">
-                    <h2 className="text-4xl font-extrabold text-neutral-900">
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <h2 className="text-5xl font-extrabold leading-none tracking-[-0.04em] text-neutral-900">
                       {top.first_name}, {top.age}
                     </h2>
-                    <Tag tone="green">
+                    <Tag tone="haldi">
                       <BadgeCheck className="h-3.5 w-3.5" /> Verified
                     </Tag>
                   </div>
-                  <p className="mt-1 font-mono text-xs text-neutral-500">{top.public_code}</p>
                   <div className="mt-6 max-w-xl">
                     <AboutView userId={top.id} bio={top.bio} />
                   </div>
@@ -353,7 +384,7 @@ export default function Discover() {
                   </p>
                 </div>
               ) : (
-                <div className="rounded-[28px] border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
+                <div className="rounded-[28px] border-2 border-dashed border-neutral-200 p-8 text-sm leading-relaxed text-neutral-500">
                   Profiles show up here with everything they've shared: what they're into, the nights they're going,
                   and a bit about them.
                 </div>
@@ -363,40 +394,6 @@ export default function Discover() {
         </>
       )}
 
-      {aboutOpen && top && (
-        <Sheet label={`About ${top.first_name}`} onClose={() => setAboutOpen(false)}>
-          <div className="mb-4 flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-neutral-900">
-              {top.first_name}, {top.age}
-            </h2>
-            <Tag tone="brand">
-              <BadgeCheck className="h-3.5 w-3.5" /> Verified
-            </Tag>
-          </div>
-          <AboutView userId={top.id} bio={top.bio} />
-          <div className="mt-5 flex gap-3">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={() => {
-                setAboutOpen(false)
-                decide(-1)
-              }}
-            >
-              <X className="h-4 w-4" /> Pass
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={() => {
-                setAboutOpen(false)
-                decide(1)
-              }}
-            >
-              <Heart className="h-4 w-4 fill-current" /> Like
-            </Button>
-          </div>
-        </Sheet>
-      )}
       {matchName && <MatchDialog name={matchName.name} photoPath={matchName.photo} onClose={() => setMatchName(null)} />}
     </>
   )

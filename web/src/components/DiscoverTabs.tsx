@@ -11,7 +11,7 @@ const TABS = [
 export default function DiscoverTabs() {
   const { pathname } = useLocation()
   return (
-    <nav className="mb-4 grid grid-cols-2 rounded-full bg-neutral-100 p-1 text-sm font-semibold lg:w-80" aria-label="Discover">
+    <nav className="mx-auto mb-4 grid w-full max-w-sm grid-cols-2 rounded-full bg-neutral-100 p-1 text-sm font-semibold" aria-label="Discover">
       {TABS.map((t) => {
         const active = t.to === '/discover' ? pathname === '/discover' : pathname.startsWith(t.to)
         const Icon = t.icon

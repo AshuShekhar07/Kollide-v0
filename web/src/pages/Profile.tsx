@@ -2,10 +2,9 @@ import { BadgeCheck, Check, ChevronRight, Eye, Hourglass, LogOut, Settings } fro
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import AboutEditor from '../components/AboutEditor'
-import AboutView from '../components/AboutView'
 import Avatar from '../components/Avatar'
 import PhotoEditor from '../components/PhotoEditor'
-import ProfileCard from '../components/ProfileCard'
+import ProfileStack from '../components/ProfileStack'
 import { Sheet } from '../components/SafetyDialogs'
 import { Button, Card, Choice, ErrorText, Section, Spinner, Tag } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
@@ -38,7 +37,7 @@ function MenuRow({
   const body = (
     <>
       <span
-        className={`flex h-9 w-9 items-center justify-center rounded-xl ${danger ? 'bg-red-50' : 'bg-neutral-100'}`}
+        className={`flex h-9 w-9 items-center justify-center rounded-2xl ${danger ? 'bg-red-50' : 'bg-marigold-100 text-marigold-800'}`}
       >
         <Icon className="h-[18px] w-[18px]" />
       </span>
@@ -70,7 +69,6 @@ export default function Profile() {
   const [error, setError] = useState('')
   const [photos, setPhotos] = useState<Photo[] | null>(null)
   const [previewing, setPreviewing] = useState(false)
-  const [previewPhoto, setPreviewPhoto] = useState(0)
   const uid = profile?.id
 
   const loadPhotos = useCallback(async () => {
@@ -120,19 +118,22 @@ export default function Profile() {
     <div className="lg:grid lg:grid-cols-[18rem_1fr] lg:items-start lg:gap-12">
       {/* Identity (and, on desktop, the menu) sits in a sticky left column. */}
       <div className="space-y-4 lg:sticky lg:top-10">
-        <Card className="relative overflow-hidden p-5">
+        <div className="bandhani-soft relative overflow-hidden rounded-[32px] bg-maroon-700 p-5 text-cream shadow-xl shadow-maroon-950/15">
           <div className="relative flex items-center gap-4 lg:flex-col lg:items-start">
-            <Avatar path={mainPath} name={profile.first_name ?? ''} className="h-20 w-20 text-3xl lg:h-28 lg:w-28" ring={verified} />
+            <Avatar
+              path={mainPath}
+              name={profile.first_name ?? ''}
+              className="h-20 w-20 rotate-[-4deg] !rounded-[1.6rem] text-3xl ring-4 ring-marigold-400 lg:h-28 lg:w-28"
+            />
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-3xl font-extrabold text-neutral-900">{profile.first_name}</h1>
-              <p className="font-mono text-xs text-neutral-500">{profile.public_code}</p>
-              <div className="mt-1.5">
+              <h1 className="truncate text-[2.2rem] font-extrabold leading-none tracking-[-0.04em]">{profile.first_name}</h1>
+              <div className="mt-2">
                 {verified ? (
-                  <Tag tone="green">
+                  <Tag tone="haldi">
                     <BadgeCheck className="h-3.5 w-3.5" /> Verified
                   </Tag>
                 ) : (
-                  <Tag tone="amber">
+                  <Tag tone="glass">
                     <Hourglass className="h-3.5 w-3.5" /> Verification pending
                   </Tag>
                 )}
@@ -140,17 +141,14 @@ export default function Profile() {
             </div>
           </div>
           <Button
-            variant="secondary"
-            className="relative mt-4 w-full py-2.5 text-sm"
+            variant="marigold"
+            className="relative mt-5 w-full py-2.5 text-sm"
             disabled={!photos?.length}
-            onClick={() => {
-              setPreviewPhoto(0)
-              setPreviewing(true)
-            }}
+            onClick={() => setPreviewing(true)}
           >
             <Eye className="h-4 w-4" /> See how others see you
           </Button>
-        </Card>
+        </div>
         <div className="hidden lg:block">{menu}</div>
       </div>
 
@@ -159,7 +157,7 @@ export default function Profile() {
           title="Your photos"
           hint={
             <>
-              2–6 photos of you; the first is your main one.
+              2–6 photos of you; the first is your main one. Drag to reorder them.
               {verified && ' New photos are checked by our team against your verification video.'}
             </>
           }
@@ -231,33 +229,19 @@ export default function Profile() {
 
       {previewing && photos && (
         <Sheet label="Your profile preview" onClose={() => setPreviewing(false)}>
-          <p className="mb-3 text-center text-xs font-bold uppercase tracking-wider text-neutral-500">
+          <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-brand-500">
             How others see you
           </p>
-          <button
-            type="button"
-            className="block w-full"
-            aria-label="Next photo"
-            onClick={() => setPreviewPhoto((p) => p + 1)}
-          >
-            <ProfileCard
-              profile={{
-                first_name: profile.first_name ?? '',
-                public_code: profile.public_code,
-                age: ageFrom(profile.dob),
-                bio: profile.bio,
-                photo_paths: photos.map((p) => p.storage_path),
-              }}
-              photoIndex={previewPhoto}
-              className="aspect-[3/4] w-full"
-              hideBio
-              size="full"
-            />
-          </button>
-          <div className="mt-4">
-            <AboutView userId={profile.id} bio={profile.bio} />
-          </div>
-          <Button variant="secondary" className="mt-5 w-full" onClick={() => setPreviewing(false)}>
+          <ProfileStack
+            profile={{
+              first_name: profile.first_name ?? '',
+              age: ageFrom(profile.dob),
+              bio: profile.bio,
+              photo_paths: photos.map((p) => p.storage_path),
+            }}
+            userId={profile.id}
+          />
+          <Button variant="secondary" className="mt-3 w-full" onClick={() => setPreviewing(false)}>
             Close
           </Button>
         </Sheet>

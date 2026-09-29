@@ -134,7 +134,7 @@ export default function Onboarding() {
               <li key={label} className={`flex items-center gap-3 ${i === current ? 'font-semibold text-white' : 'text-white/55'}`}>
                 <span
                   className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
-                    i < current ? 'bg-marigold-400 text-plum-900' : i === current ? 'bg-white text-plum-900' : 'ring-1 ring-white/30'
+                    i < current ? 'bg-marigold-400 text-maroon-950' : i === current ? 'bg-white text-maroon-950' : 'ring-1 ring-white/30'
                   }`}
                 >
                   {i + 1}

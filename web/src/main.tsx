@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './lib/auth'
+import { initTheme } from './lib/theme'
+
+initTheme()
 
 // Only for installability; it caches nothing (public/sw.js).
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

@@ -6,6 +6,7 @@ import Avatar from '../components/Avatar'
 import { BlockDialog, ReportDialog, Sheet } from '../components/SafetyDialogs'
 import SocialLinks from '../components/SocialLinks'
 import { Button, ErrorText, FullScreenSpinner } from '../components/ui'
+import { festiveTile } from '../lib/festive'
 import { useAuth } from '../lib/auth-context'
 import { MAX_MESSAGE_LENGTH, PRIVACY_COPY, type ChatMessage, type Conversation } from '../lib/chat'
 import { friendlyError } from '../lib/errors'
@@ -222,7 +223,7 @@ export default function Chat() {
         </Link>
         {group ? (
           <Link to={`/groups/${group.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-1 pr-2 hover:bg-neutral-100">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-900 font-display font-bold text-white">
+            <span className={`bandhani-soft flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.9rem] font-display font-extrabold ${festiveTile(group.id)}`}>
               {group.title.slice(0, 1).toUpperCase()}
             </span>
             <span className="min-w-0 flex-1">
@@ -240,7 +241,6 @@ export default function Chat() {
             <Avatar path={other.photo_path} name={other.first_name} className="h-10 w-10" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-neutral-900">{other.first_name}</p>
-              <p className="font-mono text-[11px] text-neutral-500">{other.public_code}</p>
             </div>
           </div>
         ) : (
@@ -315,11 +315,11 @@ export default function Chat() {
             {other ? (
               <Avatar path={other.photo_path} name={other.first_name} className="h-20 w-20 text-2xl" ring />
             ) : (
-              <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-plum-900 text-white">
+              <span className="bandhani-soft flex h-20 w-20 -rotate-6 items-center justify-center rounded-[1.6rem] bg-maroon-700 text-cream shadow-xl shadow-maroon-950/20">
                 <UsersRound className="h-9 w-9" />
               </span>
             )}
-            <p className="mt-4 font-display text-lg font-bold text-neutral-900">
+            <p className="mt-5 font-display text-2xl font-extrabold tracking-[-0.03em] text-neutral-900">
               Say hi{group ? ' to the group' : other ? ` to ${other.first_name}` : ''} 👋
             </p>
             <p className="mt-1 text-sm text-neutral-500">Plan where you'll meet for Garba. Tap one to start:</p>
@@ -332,7 +332,7 @@ export default function Chat() {
                     setDraft(t)
                     inputRef.current?.focus()
                   }}
-                  className="rounded-2xl border border-neutral-200 bg-surface px-4 py-2.5 text-left text-sm font-medium text-neutral-800 transition hover:border-neutral-900 active:scale-[0.98]"
+                  className="rounded-2xl border border-neutral-200 bg-surface px-4 py-3 text-left text-sm font-semibold text-neutral-800 transition hover:-translate-y-0.5 hover:border-brand-500 active:scale-[0.98]"
                 >
                   {t}
                 </button>
@@ -358,7 +358,7 @@ export default function Chat() {
                   </span>
                 )}
                 {showName && (
-                  <span className="mb-1 ml-3 text-xs font-semibold text-brand-700">
+                  <span className="mb-1 ml-3 text-xs font-bold text-brand-600">
                     {(m.sender_id && group.names[m.sender_id]) || 'Former member'}
                   </span>
                 )}
@@ -442,14 +442,14 @@ export default function Chat() {
                 maxLength={MAX_MESSAGE_LENGTH}
                 rows={1}
                 placeholder="Message"
-                className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-neutral-200"
+                className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:border-brand-500 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-100"
               />
               <motion.button
                 type="submit"
                 whileTap={{ scale: 0.85 }}
                 disabled={!draft.trim() || sending}
                 aria-label="Send"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-on-ink shadow-md shadow-black/10 transition disabled:opacity-40"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rani text-white shadow-lg shadow-rani/30 transition disabled:opacity-40"
               >
                 {sending ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

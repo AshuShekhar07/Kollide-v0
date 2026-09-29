@@ -1,4 +1,4 @@
-import { ChevronRight, FileText, Lock, LogOut, ShieldCheck, Trash2 } from 'lucide-react'
+import { ChevronRight, FileText, Lock, LogOut, Moon, ShieldCheck, Smartphone, Sun, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Avatar from '../components/Avatar'
@@ -9,6 +9,7 @@ import { useAuth } from '../lib/auth-context'
 import type { Database } from '../lib/database.types'
 import { friendlyError, functionError } from '../lib/errors'
 import { supabase } from '../lib/supabase'
+import { getThemePref, setThemePref, type ThemePref } from '../lib/theme'
 
 type Blocked = Database['public']['Functions']['get_blocked_users']['Returns'][number]
 
@@ -52,7 +53,6 @@ function BlockedList() {
               <Avatar path={null} name={p.first_name ?? 'K'} className="h-10 w-10" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold text-neutral-900">{p.first_name ?? 'Kollide user'}</span>
-                <span className="block font-mono text-xs text-neutral-500">{p.public_code}</span>
               </span>
               <Button
                 variant="secondary"
@@ -67,6 +67,44 @@ function BlockedList() {
           ))}
         </ul>
       )}
+    </Section>
+  )
+}
+
+const THEMES: { value: ThemePref; label: string; icon: typeof Sun }[] = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'Match phone', icon: Smartphone },
+]
+
+// Light is the default; the choice is remembered on this device.
+function Appearance() {
+  const [pref, setPref] = useState<ThemePref>(getThemePref)
+  return (
+    <Section title="Appearance" hint="Saved on this device.">
+      <div className="grid grid-cols-3 gap-2 rounded-[28px] border border-neutral-200/80 bg-surface p-2" role="radiogroup" aria-label="Theme">
+        {THEMES.map((t) => {
+          const active = pref === t.value
+          return (
+            <button
+              key={t.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => {
+                setPref(t.value)
+                setThemePref(t.value)
+              }}
+              className={`flex flex-col items-center gap-1.5 rounded-[22px] px-2 py-3.5 text-sm font-bold transition active:scale-[0.97] ${
+                active ? 'bg-marigold-400 text-maroon-950 shadow-md shadow-marigold-500/25' : 'text-neutral-600 hover:bg-neutral-100'
+              }`}
+            >
+              <t.icon className="h-5 w-5" strokeWidth={2.2} />
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
     </Section>
   )
 }
@@ -130,7 +168,9 @@ export default function Settings() {
   return (
     <div className="lg:max-w-2xl">
       <BackLink to="/profile">Profile</BackLink>
-      <h1 className="mt-3 text-3xl font-extrabold text-neutral-900 lg:text-4xl">Settings</h1>
+      <h1 className="mt-3 text-[2.4rem] font-extrabold leading-[0.95] tracking-[-0.04em] text-neutral-900 lg:text-6xl">Settings</h1>
+
+      <Appearance />
 
       <BlockedList />
 

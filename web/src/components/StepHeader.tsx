@@ -5,10 +5,10 @@ import type { ReactNode } from 'react'
 export default function StepHeader({ icon: Icon, title, children }: { icon: LucideIcon; title: ReactNode; children?: ReactNode }) {
   return (
     <div>
-      <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-plum-900 text-white">
+      <span className="bandhani-soft mb-5 flex h-14 w-14 -rotate-6 items-center justify-center rounded-[1.1rem] bg-maroon-700 text-cream shadow-lg shadow-maroon-950/20">
         <Icon className="h-6 w-6" />
       </span>
-      <h1 className="text-3xl font-extrabold leading-tight text-neutral-900">{title}</h1>
+      <h1 className="text-[2.2rem] font-extrabold leading-[1] tracking-[-0.04em] text-neutral-900">{title}</h1>
       {children && <div className="mt-2 leading-relaxed text-neutral-600">{children}</div>}
     </div>
   )

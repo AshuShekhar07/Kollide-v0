@@ -8,9 +8,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Kollide" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#fff8f1" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#140d11" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fff4e4" />
     <meta name="color-scheme" content="light dark" />
+    <!-- Apply the theme chosen in Settings before the first paint (see src/lib/theme.ts). -->
+    <script>
+      (function () {
+        var pref = 'light'
+        try { pref = localStorage.getItem('kollide:theme') || 'light' } catch (e) {}
+        var dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#16090f')
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

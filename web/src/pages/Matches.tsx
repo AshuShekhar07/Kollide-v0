@@ -1,9 +1,10 @@
-import { ChevronRight, MessageCircle, UsersRound } from 'lucide-react'
+import { ChevronRight, Heart, MessageCircle, UsersRound } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useShell } from '../components/AppShell'
 import Avatar from '../components/Avatar'
 import { LinkButton, EmptyState, ErrorText, PageHeader, Skeleton, Tag } from '../components/ui'
+import { festiveTile } from '../lib/festive'
 import { markNotificationsRead, type MatchItem } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
 import { timeAgo } from '../lib/format'
@@ -14,13 +15,18 @@ import { supabase } from '../lib/supabase'
 function NewMatches({ matches }: { matches: MatchItem[] }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-3 text-lg font-bold text-neutral-900">New matches</h2>
-      <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+      <h2 className="mb-3 text-xl font-extrabold text-neutral-900">New matches</h2>
+      <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 pt-1 [scrollbar-width:none]">
         {matches.map((m) => (
           <li key={m.match_id} className="animate-rise">
-            <Link to={`/chat/${m.conversation_id}`} className="flex w-[4.5rem] flex-col items-center gap-1.5 active:scale-95">
-              <Avatar path={m.photo_path} name={m.first_name} className="h-16 w-16 text-xl" ring />
-              <span className="w-full truncate text-center text-xs font-semibold text-neutral-800">{m.first_name}</span>
+            <Link to={`/chat/${m.conversation_id}`} className="group flex w-[5rem] flex-col items-center gap-2 active:scale-95">
+              <span className="relative">
+                <Avatar path={m.photo_path} name={m.first_name} className="h-[4.5rem] w-[4.5rem] text-xl transition group-hover:scale-105" ring />
+                <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-rani text-white ring-2 ring-canvas">
+                  <Heart className="h-3 w-3 fill-current" />
+                </span>
+              </span>
+              <span className="w-full truncate text-center text-xs font-bold text-neutral-800">{m.first_name}</span>
             </Link>
           </li>
         ))}
@@ -48,11 +54,11 @@ function Row({
 }) {
   return (
     <li className="animate-rise">
-      <Link to={to} className="flex items-center gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-neutral-100 active:scale-[0.99]">
+      <Link to={to} className="flex items-center gap-3 rounded-3xl px-2 py-2.5 transition hover:bg-neutral-100 active:scale-[0.99]">
         {avatar}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="truncate font-semibold text-neutral-900">{title}</span>
+            <span className="truncate font-bold text-neutral-900">{title}</span>
             {tag}
           </span>
           <span className={`block truncate text-sm ${highlight ? 'font-semibold text-neutral-900' : 'text-neutral-500'}`}>{subtitle}</span>
@@ -60,7 +66,7 @@ function Row({
         <span className="flex shrink-0 flex-col items-end gap-1.5">
           {time && <span className="text-[11px] text-neutral-400">{time}</span>}
           {highlight ? (
-            <span className="h-2.5 w-2.5 rounded-full bg-brand-500" aria-label="Needs attention" />
+            <span className="h-3 w-3 rounded-full bg-rani ring-4 ring-brand-100" aria-label="Needs attention" />
           ) : (
             <ChevronRight className="h-4 w-4 text-neutral-300" />
           )}
@@ -100,9 +106,11 @@ function GroupRow({ group }: { group: MyGroup }) {
     <Row
       to={review ? `/groups/${group.group_id}/manage` : `/chat/${group.conversation_id}`}
       avatar={
-        <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-plum-900 font-display text-xl font-bold text-white">
+        <span
+          className={`bandhani-soft relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.1rem] font-display text-xl font-extrabold ${festiveTile(group.group_id)}`}
+        >
           {group.title.slice(0, 1).toUpperCase()}
-          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-canvas bg-brand-500 text-white">
+          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-canvas bg-ink text-on-ink">
             <UsersRound className="h-3 w-3" strokeWidth={2.6} />
           </span>
         </span>
@@ -174,8 +182,8 @@ export default function Matches() {
       {fresh.length > 0 && <NewMatches matches={fresh} />}
       {threads.length > 0 && (
         <section>
-          <h2 className="mb-2 text-lg font-bold text-neutral-900">Messages</h2>
-          <ul className="-mx-2 lg:mx-0 lg:divide-y lg:divide-neutral-100 lg:rounded-[28px] lg:border lg:border-neutral-200 lg:p-2">
+          <h2 className="mb-2 text-xl font-extrabold text-neutral-900">Messages</h2>
+          <ul className="-mx-2 lg:mx-0 lg:rounded-[32px] lg:border lg:border-neutral-200/80 lg:bg-surface lg:p-2">
             {threads.map((t) => t.el)}
           </ul>
         </section>

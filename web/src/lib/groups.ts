@@ -1,4 +1,6 @@
+import type { ShownAnswer } from './about'
 import type { Database } from './database.types'
+import { supabase } from './supabase'
 
 type Functions = Database['public']['Functions']
 type Enums = Database['public']['Enums']
@@ -58,4 +60,24 @@ export function dateParts(iso: string | null) {
     day: String(d),
     weekday: date.toLocaleDateString('en-IN', { weekday: 'short' }),
   }
+}
+
+// One group member's profile, for deciding whether a group is for you before
+// you ask to join. get_group_member_profile returns jsonb; this is its shape.
+export type MemberProfile = {
+  user_id: string
+  first_name: string
+  age: number
+  bio: string | null
+  photo_paths: string[]
+  answers: ShownAnswer[]
+}
+
+export async function fetchMemberProfile(groupId: string, userId: string): Promise<MemberProfile> {
+  const { data, error } = await supabase.rpc('get_group_member_profile', {
+    p_group_id: groupId,
+    p_user_id: userId,
+  })
+  if (error) throw error
+  return data as unknown as MemberProfile
 }

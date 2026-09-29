@@ -635,6 +635,9 @@ isOneToOne: false
 "get_group_invite_link":
 { Args: { "p_group_id": string }; Returns: string
                            },
+"get_group_member_profile":
+{ Args: { "p_group_id": string,"p_user_id": string }; Returns: Json
+                           },
 "get_group_invites":
 { Args: Record<PropertyKey, never>; Returns: {
               "admin_name": string,"description": string,"event_date": string,"group_id": string,"invited_at": string,"max_members": number,"member_count": number,"title": string,"venue": string
