@@ -20,6 +20,10 @@ export function useShell() {
   return useOutletContext<ShellContext>()
 }
 
+// How often badges refresh while the tab is visible: 45 s plus up to 10 s.
+const BADGE_POLL_MS = 45_000
+const BADGE_POLL_JITTER_MS = 10_000
+
 const TABS = [
   // Groups is part of Discover (People / Groups switch).
   { to: '/discover', label: 'Discover', icon: Compass, badge: null, also: '/groups' },
@@ -52,26 +56,17 @@ export default function AppShell() {
   }, [uid, location.pathname])
 
   const refreshBadges = useCallback(async () => {
-    const [likes, invites, matches, groups] = await Promise.all([
-      supabase.rpc('get_incoming_likes'),
-      supabase.rpc('get_group_invites'),
-      supabase.rpc('get_matches'),
-      supabase.rpc('get_my_groups'),
-    ])
-    setBadges({
-      likes: (likes.data?.length ?? 0) + (invites.data?.length ?? 0),
-      matches:
-        (matches.data?.filter((m) => m.is_new || m.unread).length ?? 0) +
-        (groups.data?.filter((g) => g.is_new || g.unread || g.pending_requests > 0).length ?? 0),
-    })
+    const { data } = await supabase.rpc('get_badge_counts')
+    const counts = data?.[0]
+    if (counts) setBadges({ likes: counts.likes, matches: counts.matches })
   }, [])
 
   useEffect(() => {
     refreshBadges()
   }, [refreshBadges, location.pathname])
 
-  // New likes and matches arrive as notification rows, new chat messages as
-  // message rows (RLS limits both to our own).
+  // New likes and matches arrive as notification rows (filtered to our own).
+  // Unread chats have no live feed here, so the poll below picks them up.
   useEffect(() => {
     if (!uid) return
     const channel = supabase
@@ -81,10 +76,38 @@ export default function AppShell() {
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
         () => refreshBadges(),
       )
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => refreshBadges())
       .subscribe()
     return () => {
       supabase.removeChannel(channel)
+    }
+  }, [uid, refreshBadges])
+
+  // Also refresh on a timer while the tab is showing, so badges still move if
+  // the socket can't connect. Jitter keeps tabs from all asking at once.
+  useEffect(() => {
+    if (!uid) return
+    let timer: number | undefined
+    const stop = () => window.clearTimeout(timer)
+    const schedule = () => {
+      stop()
+      timer = window.setTimeout(() => {
+        refreshBadges()
+        schedule()
+      }, BADGE_POLL_MS + Math.random() * BADGE_POLL_JITTER_MS)
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshBadges()
+        schedule()
+      } else {
+        stop()
+      }
+    }
+    if (document.visibilityState === 'visible') schedule()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [uid, refreshBadges])
 

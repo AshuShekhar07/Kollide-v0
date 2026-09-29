@@ -13,6 +13,10 @@ import { friendlyError } from '../lib/errors'
 import { supabase } from '../lib/supabase'
 
 const PAGE = 50
+// Fallback when Realtime isn't connected: how long to wait for it before
+// polling, and how often to poll.
+const CHAT_SUBSCRIBE_TIMEOUT_MS = 10_000
+const CHAT_POLL_MS = 5_000
 
 // Ascending by time, no duplicates (a sent message can arrive both from the
 // RPC result and from Realtime).
@@ -61,8 +65,9 @@ export default function Chat() {
 
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  // Latest header, for the Realtime handlers.
+  // Latest header and messages, for the Realtime and polling handlers.
   const convRef = useRef<Conversation | null>(null)
+  const messagesRef = useRef<ChatMessage[]>([])
   // How to fix up the scroll position after the next render of `messages`.
   const scrollMode = useRef<{ kind: 'bottom' } | { kind: 'keep'; fromBottom: number } | null>({ kind: 'bottom' })
 
@@ -93,25 +98,64 @@ export default function Chat() {
     }
   }, [id, loadConversation, markRead])
 
+  // Messages that arrive live or by polling; ones already on screen (our own
+  // send, or the same message from both paths) are skipped.
+  const receive = useCallback(
+    (incoming: ChatMessage[]) => {
+      const fresh = incoming.filter((m) => !messagesRef.current.some((x) => x.id === m.id))
+      if (fresh.length === 0) return
+      const el = listRef.current
+      const nearBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 120
+      if (nearBottom || fresh.some((m) => m.sender_id === uid)) scrollMode.current = { kind: 'bottom' }
+      setMessages((cur) => merge(cur, fresh))
+      if (fresh.some((m) => m.sender_id !== uid)) markRead()
+      // Someone new in the group (e.g. rejoined); fetch their name.
+      const names = convRef.current?.group?.names
+      if (names && fresh.some((m) => m.sender_id && !names[m.sender_id])) loadConversation()
+    },
+    [uid, markRead, loadConversation],
+  )
+
   // New messages and count/frozen changes. RLS limits both to members, and
-  // hides messages from anyone the reader has blocked.
+  // hides messages from anyone the reader has blocked. If the socket can't
+  // connect, drops, or errors, poll until it is back: Realtime is only the
+  // fast path.
   useEffect(() => {
+    let stopped = false
+    let down = false
+    let polling = false
+    let pollTimer: number | undefined
+    let connectTimer: number | undefined
+
+    const poll = async () => {
+      if (polling) return
+      polling = true
+      const [latest] = await Promise.all([
+        supabase.rpc('get_messages', { p_conversation_id: id, p_limit: PAGE }),
+        loadConversation(),
+      ])
+      polling = false
+      if (stopped || latest.error) return
+      receive([...latest.data].reverse())
+    }
+    const startPolling = () => {
+      if (stopped || pollTimer !== undefined) return
+      down = true
+      poll()
+      pollTimer = window.setInterval(poll, CHAT_POLL_MS)
+    }
+    const stopPolling = () => {
+      window.clearInterval(pollTimer)
+      pollTimer = undefined
+    }
+
+    connectTimer = window.setTimeout(startPolling, CHAT_SUBSCRIBE_TIMEOUT_MS)
     const channel = supabase
       .channel(`chat:${id}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` },
-        (payload) => {
-          const m = payload.new as ChatMessage
-          const el = listRef.current
-          const nearBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 120
-          if (nearBottom || m.sender_id === uid) scrollMode.current = { kind: 'bottom' }
-          setMessages((cur) => merge(cur, [m]))
-          if (m.sender_id !== uid) markRead()
-          // Someone new in the group (e.g. rejoined); fetch their name.
-          const names = convRef.current?.group?.names
-          if (names && m.sender_id && !names[m.sender_id]) loadConversation()
-        },
+        (payload) => receive([payload.new as ChatMessage]),
       )
       .on(
         'postgres_changes',
@@ -125,15 +169,37 @@ export default function Chat() {
           if (next.is_frozen || (cur && next.message_cap !== cur.message_cap)) loadConversation()
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (stopped) return
+        if (status === 'SUBSCRIBED') {
+          window.clearTimeout(connectTimer)
+          // Back after a gap: stop polling and fetch what was missed once.
+          if (down) {
+            down = false
+            stopPolling()
+            poll()
+          }
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          window.clearTimeout(connectTimer)
+          startPolling()
+        }
+      })
     return () => {
+      // Before removeChannel, which itself reports CLOSED.
+      stopped = true
+      window.clearTimeout(connectTimer)
+      stopPolling()
       supabase.removeChannel(channel)
     }
-  }, [id, uid, markRead, loadConversation])
+  }, [id, receive, loadConversation])
 
   useEffect(() => {
     convRef.current = conv
   }, [conv])
+
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
 
   useLayoutEffect(() => {
     const el = listRef.current
