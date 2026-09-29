@@ -4,7 +4,6 @@ import { ArrowDown, ArrowUpRight, BadgeCheck } from 'lucide-react'
 import { motion, MotionConfig, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import Approach from '../components/landing/Approach'
 import Details from '../components/landing/Details'
 import { G } from '../components/landing/garba'
 import HoverSwap from '../components/landing/HoverSwap'
@@ -13,6 +12,7 @@ import HowItWorks from '../components/landing/HowItWorks'
 import LogoIntro from '../components/landing/LogoIntro'
 import NineNights from '../components/landing/NineNights'
 import { FadeUp, RevealText } from '../components/landing/Reveal'
+import SamePath from '../components/landing/SamePath'
 import Toran from '../components/landing/Toran'
 import WhatsNext from '../components/landing/WhatsNext'
 import Wordmark from '../components/landing/Wordmark'
@@ -358,7 +358,7 @@ export default function Landing() {
 
         <HeroCurtain ready={ready} onHow={() => scrollToId('how-it-works', 0)}>
           <main>
-            <Approach onHow={() => scrollToId('how-it-works', 0)} />
+            <SamePath onHow={() => scrollToId('how-it-works', 0)} />
 
             <NineNights />
 
