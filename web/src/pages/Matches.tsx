@@ -1,7 +1,8 @@
-import { ChevronRight, Heart, MessageCircle, UsersRound } from 'lucide-react'
+import { ChevronRight, MessageCircle, UsersRound } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useShell } from '../components/AppShell'
+import { DandiyaIcon } from '../components/Dandiya'
 import Avatar from '../components/Avatar'
 import { LinkButton, EmptyState, ErrorText, PageHeader, Skeleton, Tag } from '../components/ui'
 import { festiveTile } from '../lib/festive'
@@ -15,7 +16,7 @@ import { supabase } from '../lib/supabase'
 function NewMatches({ matches }: { matches: MatchItem[] }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-3 text-xl font-extrabold text-neutral-900">New matches</h2>
+      <h2 className="mb-3 text-xl font-extrabold text-neutral-900">Just kollided</h2>
       <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 pt-1 [scrollbar-width:none]">
         {matches.map((m) => (
           <li key={m.match_id} className="animate-rise">
@@ -23,7 +24,7 @@ function NewMatches({ matches }: { matches: MatchItem[] }) {
               <span className="relative">
                 <Avatar path={m.photo_path} name={m.first_name} className="h-[4.5rem] w-[4.5rem] text-xl transition group-hover:scale-105" ring />
                 <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-rani text-white ring-2 ring-canvas">
-                  <Heart className="h-3 w-3 fill-current" />
+                  <DandiyaIcon className="h-3 w-3" strokeWidth={2.8} />
                 </span>
               </span>
               <span className="w-full truncate text-center text-xs font-bold text-neutral-800">{m.first_name}</span>
@@ -176,7 +177,7 @@ export default function Matches() {
             </LinkButton>
           }
         >
-          When you and someone like each other, or you join a group, you can chat here.
+          When you and someone kollide, or you join a group, you can chat here.
         </EmptyState>
       )}
       {fresh.length > 0 && <NewMatches matches={fresh} />}

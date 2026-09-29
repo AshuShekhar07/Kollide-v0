@@ -220,7 +220,7 @@ export function BlockDialog({
       <h2 className="text-lg font-bold text-neutral-900">Block {target.name}?</h2>
       <p className="mt-2 text-sm text-neutral-600">
         {inGroup
-          ? "You won't see each other in Discover or Likes, and their messages in this group are hidden from you. They won't be told."
+          ? "You won't see each other in Discover or Kollides, and their messages in this group are hidden from you. They won't be told."
           : "You won't see each other anywhere on Kollide, and this chat will close. They won't be told."}
       </p>
       <p className="mt-2 text-sm text-neutral-600">

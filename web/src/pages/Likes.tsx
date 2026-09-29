@@ -1,9 +1,10 @@
-import { ArrowLeft, CalendarDays, ChevronRight, Flag, Heart, PartyPopper, UsersRound, X } from 'lucide-react'
+import { ArrowLeft, CalendarDays, ChevronRight, Flag, PartyPopper, UsersRound, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AboutView from '../components/AboutView'
 import { useShell } from '../components/AppShell'
+import { DandiyaIcon } from '../components/Dandiya'
 import MatchDialog from '../components/MatchDialog'
 import ProfileCard, { useSignedPhotos } from '../components/ProfileCard'
 import { ReportDialog } from '../components/SafetyDialogs'
@@ -35,7 +36,7 @@ function LikeRow({ like, onOpen }: { like: IncomingLike; onOpen: () => void }) {
           )}
         </span>
         <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-rani text-white ring-[3px] ring-surface">
-          <Heart className="h-3.5 w-3.5 fill-current" />
+          <DandiyaIcon className="h-3.5 w-3.5" strokeWidth={2.6} />
         </span>
       </span>
       <span className="min-w-0 flex-1">
@@ -43,7 +44,7 @@ function LikeRow({ like, onOpen }: { like: IncomingLike; onOpen: () => void }) {
           {like.first_name}
           <span className="font-bold text-neutral-500">, {like.age}</span>
         </span>
-        <span className="mt-1 block truncate text-sm text-neutral-500">Liked you · {timeAgoLong(like.liked_at)}</span>
+        <span className="mt-1 block truncate text-sm text-neutral-500">Wants to kollide · {timeAgoLong(like.liked_at)}</span>
       </span>
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 transition group-hover:bg-rani group-hover:text-white">
         <ChevronRight className="h-5 w-5" />
@@ -91,7 +92,7 @@ function LikeDetail({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Back to likes"
+            aria-label="Back to kollides"
             className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-surface text-neutral-800 shadow-sm active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -110,7 +111,7 @@ function LikeDetail({
               <ProfileCard profile={like} photoIndex={photo} className="aspect-[3/4] w-full" hideBio size="full" />
             </button>
             <div>
-              <Eyebrow>Liked you · {timeAgoLong(like.liked_at)}</Eyebrow>
+              <Eyebrow>Wants to kollide · {timeAgoLong(like.liked_at)}</Eyebrow>
               <h2 className="mb-6 mt-2 text-5xl font-extrabold leading-none tracking-[-0.04em] text-neutral-900">
                 {like.first_name}, {like.age}
               </h2>
@@ -130,7 +131,7 @@ function LikeDetail({
               <X className="h-4 w-4" /> Decline
             </Button>
             <Button variant="rani" className="flex-1" onClick={() => respond(true)} loading={busy === 'accept'} disabled={!!busy}>
-              <Heart className="h-4 w-4 fill-current" /> Accept and match
+              <DandiyaIcon className="h-4 w-4" strokeWidth={2.6} /> Kollide back
             </Button>
           </div>
           <p className="mt-2 text-center text-xs text-neutral-500 lg:text-right">Declining is private. {like.first_name} won't be told.</p>
@@ -246,9 +247,9 @@ export default function Likes() {
   return (
     <>
       <PageHeader
-        eyebrow="Likes"
-        title="Likes you"
-        subtitle="Accept to match, chat and share socials."
+        eyebrow="Kollides"
+        title="Want to kollide"
+        subtitle="Kollide back to chat, share socials and plan your night."
         action={
           likes &&
           likes.length > 0 && (
@@ -286,8 +287,8 @@ export default function Likes() {
       )}
       {likes?.length === 0 && invites.length === 0 && (
         <EmptyState
-          icon={Heart}
-          title="No likes yet"
+          icon={DandiyaIcon}
+          title="No kollides yet"
           action={
             verified && (
               <LinkButton to="/discover">
@@ -297,8 +298,8 @@ export default function Likes() {
           }
         >
           {verified
-            ? 'When someone likes you, they show up here. Liking people helps them find you too.'
-            : 'Once you’re verified, your profile is shown to others and their likes show up here.'}
+            ? 'When someone wants to kollide with you, they show up here. Kolliding with people helps them find you too.'
+            : 'Once you’re verified, your profile is shown to others and their kollides show up here.'}
         </EmptyState>
       )}
       {likes && likes.length > 0 && (

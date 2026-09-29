@@ -1,4 +1,4 @@
-import { ChevronRight, Compass, Heart, MessageCircle, UserRound } from 'lucide-react'
+import { ChevronRight, Compass, MessageCircle, UserRound } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom'
@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth-context'
 import { navratriStatus } from '../lib/format'
 import { supabase } from '../lib/supabase'
 import BangaloreCheck from './BangaloreCheck'
+import { DandiyaIcon } from './Dandiya'
 import Avatar from './Avatar'
 import InstallPrompt from './InstallPrompt'
 import Toran from './landing/Toran'
@@ -22,7 +23,7 @@ export function useShell() {
 const TABS = [
   // Groups is part of Discover (People / Groups switch).
   { to: '/discover', label: 'Discover', icon: Compass, badge: null, also: '/groups' },
-  { to: '/likes', label: 'Likes', icon: Heart, badge: 'likes' },
+  { to: '/likes', label: 'Kollides', icon: DandiyaIcon, badge: 'likes' },
   { to: '/matches', label: 'Chats', icon: MessageCircle, badge: 'matches' },
   { to: '/profile', label: 'Profile', icon: UserRound, badge: null, also: '/settings' },
 ] as const

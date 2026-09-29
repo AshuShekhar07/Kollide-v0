@@ -3,15 +3,18 @@ import { Link } from 'react-router-dom'
 import { Logo } from '../components/ui'
 import { PRIVACY_COPY } from '../lib/chat'
 
-// Operator details still to be filled in before launch (PLAN.md §8). They
-// render highlighted so they can't be missed.
-const OPERATOR = '[OPERATOR NAME]'
-const CONTACT_EMAIL = '[CONTACT EMAIL]'
-const GRIEVANCE_OFFICER = '[GRIEVANCE OFFICER NAME]'
+// Kollide isn't a company: three college friends run it, share the support
+// inbox, and are jointly its Grievance Officers.
+const TEAM = 'Prince Kunal, Ashu Shekhar and Melove Gupta'
+const CONTACT_EMAIL = 'kollide.support@gmail.com'
 const EFFECTIVE = 'October 4, 2026'
 
-function Blank({ children }: { children: string }) {
-  return <mark className="rounded bg-amber-200 px-1 font-semibold text-amber-950">{children}</mark>
+function Email() {
+  return (
+    <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-brand-700 underline">
+      {CONTACT_EMAIL}
+    </a>
+  )
 }
 
 function LegalPage({ title, children }: { title: string; children: ReactNode }) {
@@ -41,7 +44,7 @@ function LegalPage({ title, children }: { title: string; children: ReactNode }) 
 function Contact() {
   return (
     <>
-      <Blank>{GRIEVANCE_OFFICER}</Blank>, Grievance Officer, <Blank>{OPERATOR}</Blank>, at <Blank>{CONTACT_EMAIL}</Blank>
+      our Grievance Officers, {TEAM}, at <Email />
     </>
   )
 }
@@ -51,10 +54,22 @@ export function Privacy() {
     <LegalPage title="Privacy Policy">
       <p>
         Kollide helps verified people find a friend or a group to go to events with, starting with Garba and Dandiya in
-        Bangalore. Kollide is run by <Blank>{OPERATOR}</Blank> ("we"). This policy explains what we collect, why, who
-        can see it, how long we keep it, and how to delete it. By creating an account you consent to this processing,
-        as you confirm with the checkbox at signup.
+        Bangalore. This policy explains what we collect, why, who can see it, how long we keep it, and how to delete
+        it. By creating an account you consent to this processing, as you confirm with the checkbox at signup.
       </p>
+
+      <section>
+        <h2>Who we are</h2>
+        <p>
+          Kollide is built and run by three college friends: {TEAM} ("we", "us"). It isn't a registered company or
+          business. It started as a weekend project that we run ourselves, and it's free to use. The three of us
+          together decide how your data is used, so we're jointly responsible for it (the "data fiduciary" under India's
+          Digital Personal Data Protection Act, 2023).
+        </p>
+        <p className="mt-2">
+          For questions, help, or anything about your data, email <Email />. All three of us read that inbox.
+        </p>
+      </section>
 
       <section>
         <h2>What we collect</h2>
@@ -73,8 +88,8 @@ export function Privacy() {
             check that you're a real person who matches your photos.
           </li>
           <li>
-            <strong>Activity on Kollide:</strong> likes and passes, matches, groups you create, join or are invited
-            to, chat messages, blocks and reports.
+            <strong>Activity on Kollide:</strong> who you kollide with or pass on, the people you've kollided with,
+            groups you create, join or are invited to, chat messages, blocks and reports.
           </li>
           <li>
             <strong>Usage events:</strong> simple records such as "signed up" or "created a group", used to count how
@@ -97,7 +112,7 @@ export function Privacy() {
           <li>To create your account and let you sign in.</li>
           <li>To verify that every member is a real adult who matches their photos.</li>
           <li>To show your profile to other members and suggest people and groups going to the same events.</li>
-          <li>To run chats, and to share your socials with the people you match or group with.</li>
+          <li>To run chats, and to share your socials with the people you kollide or group with.</li>
           <li>To keep members safe: review reports, stop banned people from coming back, and prevent fake accounts.</li>
           <li>To send account emails, such as your verification result. We don't send marketing email.</li>
           <li>To understand, in aggregate, how Kollide is used, so we can improve it.</li>
@@ -108,23 +123,25 @@ export function Privacy() {
         <h2>Who can see what</h2>
         <ul>
           <li>
-            <strong>Other members</strong> see your first name, public code, age, intro, answers and photos. Unverified members
-            can only see a limited number of profiles a day. Only verified members appear to others.
+            <strong>Other members</strong> see your first name, age, intro, answers and photos. Unverified members can
+            only see a limited number of profiles a day. Only verified members appear to others.
           </li>
           <li>
-            <strong>Your socials</strong> are shown only to people you match with and to members of groups you're
-            approved into. Your email address and phone number are never shown to other members.
+            <strong>Your socials</strong> are shown only to people you've kollided with and to members of groups
+            you're approved into. Your email address and phone number are never shown to other members.
           </li>
           <li>
-            <strong>People outside a group</strong> see its members' first names and public codes only, not photos.
+            <strong>Groups:</strong> if you're in a group, verified members can open your profile from it (the same
+            first name, age, intro, answers and photos as above). Your socials stay hidden from anyone who isn't in
+            the group with you.
           </li>
           <li>
-            <strong>Our review team</strong> watches verification videos and reviews reports. This access is limited
-            to a small team, and every time someone opens a video or a report, it is logged.
+            <strong>The three of us</strong> watch verification videos and review reports. No one else has this
+            access, and every time one of us opens a video or a report, it is logged.
           </li>
           <li>
             <strong>Service providers</strong> who host and run Kollide for us: Supabase (database, file storage and
-            sign-in), Cloudflare (website hosting) and Google (sending email). They process data only on our
+            sign-in), Cloudflare (website hosting) and Google (Google sign-in, and the Gmail account we send email from). They process data only on our
             instructions. Their servers may be outside India.
           </li>
           <li>We don't sell your data, and we don't share it with advertisers.</li>
@@ -135,8 +152,8 @@ export function Privacy() {
       <section>
         <h2>Chats</h2>
         <p>
-          Messages are text only and are stored encrypted at rest by our database provider. {PRIVACY_COPY} Our team
-          doesn't read chats that haven't been reported.
+          Messages are text only and are stored encrypted at rest by our database provider. {PRIVACY_COPY} We don't
+          read chats that haven't been reported.
         </p>
       </section>
 
@@ -150,7 +167,7 @@ export function Privacy() {
             away.
           </li>
           <li>
-            <strong>Your profile, photos, likes, matches, groups and chats</strong> are kept while your account is open
+            <strong>Your profile, photos, kollides, groups and chats</strong> are kept while your account is open
             and deleted when you delete it.
           </li>
           <li>
@@ -178,10 +195,10 @@ export function Privacy() {
         <h2>Deleting your account</h2>
         <p>
           Go to <strong>Profile → Settings → Delete account</strong> and type DELETE to confirm. This deletes your
-          profile, photos, likes, matches, group memberships and chats right away and can't be undone. If you run a
+          profile, photos, kollides, group memberships and chats right away and can't be undone. If you run a
           group, the longest-standing member takes over. Reports, ban-list entries and a reviewed verification video
           (until its scheduled deletion) are kept as described above. You can also ask us to delete your account by
-          emailing <Blank>{CONTACT_EMAIL}</Blank>.
+          emailing <Email />.
         </p>
       </section>
 
@@ -191,8 +208,9 @@ export function Privacy() {
           Under India's Digital Personal Data Protection Act, 2023, you can ask to access a summary of your data, to
           correct or update it, and to erase it. You can withdraw your consent at any time by deleting your account.
           You can also nominate someone to exercise these rights for you if you're unable to. To make a request or a
-          complaint, contact <Contact />. We aim to respond within 7 days. If you're not satisfied with our response,
-          you can complain to the Data Protection Board of India.
+          complaint, contact <Contact />. We acknowledge every complaint within 24 hours and resolve it within 15
+          days, usually much sooner. If you're not satisfied with our response, you can complain to the Data
+          Protection Board of India.
         </p>
       </section>
 
@@ -205,7 +223,7 @@ export function Privacy() {
         <h2>Changes</h2>
         <p>
           If we change this policy in a meaningful way, we'll tell you in the app or by email before the change takes
-          effect.
+          effect. If we ever stop running Kollide, we'll tell you first and delete your data as described above.
         </p>
       </section>
     </LegalPage>
@@ -216,8 +234,9 @@ export function Terms() {
   return (
     <LegalPage title="Terms of Service">
       <p>
-        These terms are an agreement between you and <Blank>{OPERATOR}</Blank>, which runs Kollide. By creating an
-        account you agree to them and to our{' '}
+        These terms are an agreement between you and {TEAM} ("we", "us"), the three college friends who build and
+        run Kollide. Kollide isn't a registered company or business; it's an independent project we run ourselves.
+        By creating an account you agree to these terms and to our{' '}
         <Link to="/privacy" className="font-semibold text-brand-700 underline">
           Privacy Policy
         </Link>
@@ -238,9 +257,13 @@ export function Terms() {
       <section>
         <h2>What Kollide is</h2>
         <p>
-          Kollide helps people find a friend or a group to go to events with. It is not a dating service. We verify
-          that members are real people who match their photos, but we can't guarantee how anyone will behave, and we
-          don't run background checks.
+          Kollide helps people find a dandiya partner, a friend or a group to go to events with. It is not a dating
+          service. It's free: there are no payments, subscriptions or ads. We verify that members are real people who
+          match their photos, but we can't guarantee how anyone will behave, and we don't run background checks.
+        </p>
+        <p className="mt-2">
+          Because Kollide is a small project run by three people in their spare time, features may change, and we
+          may pause or stop running it. If we stop, we'll give notice in the app or by email where we can.
         </p>
       </section>
 
@@ -255,6 +278,42 @@ export function Terms() {
           <li>Take "no" for an answer. If someone declines, leaves a group or stops replying, let it go.</li>
           <li>Don't use Kollide for anything illegal.</li>
         </ul>
+      </section>
+
+      <section>
+        <h2>Content that isn't allowed</h2>
+        <p>
+          As required by India's Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules,
+          2021, you must not post, share or send anything on Kollide that:
+        </p>
+        <ul className="mt-2">
+          <li>belongs to someone else and that you don't have the right to share;</li>
+          <li>
+            is obscene, pornographic or paedophilic; invades anyone's privacy, including bodily privacy; insults or
+            harasses anyone on the basis of gender; is racially or ethnically objectionable; relates to or encourages
+            money laundering or gambling; or promotes enmity between groups on grounds of religion or caste with intent
+            to incite violence;
+          </li>
+          <li>is harmful to children;</li>
+          <li>infringes any patent, trademark, copyright or other intellectual property;</li>
+          <li>
+            deceives or misleads people about where a message came from, or knowingly spreads information that is
+            false or misleading;
+          </li>
+          <li>impersonates another person;</li>
+          <li>
+            threatens the unity, integrity, defence, security or sovereignty of India, its friendly relations with
+            other countries, or public order; incites any cognisable offence; prevents the investigation of any
+            offence; or insults any other nation;
+          </li>
+          <li>contains viruses or any code designed to disrupt, damage or limit any computer system;</li>
+          <li>promotes online gambling or betting, or advertises it;</li>
+          <li>breaks any law currently in force.</li>
+        </ul>
+        <p className="mt-2">
+          If you do, we may remove the content, suspend or close your account, and, where the law requires, report it
+          to the authorities.
+        </p>
       </section>
 
       <section>
@@ -290,15 +349,21 @@ export function Terms() {
         <p>
           We review reports and may warn, suspend or ban accounts that break these terms, at our discretion. A ban
           covers your email, phone number and social handles, so you can't sign up again with them. When a
-          conversation is reported, our safety team reviews it, as explained in the Privacy Policy.
+          conversation is reported, we review it, as explained in the Privacy Policy.
+        </p>
+        <p className="mt-2">
+          We cooperate with law enforcement. When we receive a valid legal order or request from a government agency,
+          we may share the information it covers, including account details, reports and reported conversations.
         </p>
       </section>
 
       <section>
         <h2>Your content</h2>
         <p>
-          You own the photos, intro, answers and messages you post. You give us permission to store and show them to other
-          members as needed to run Kollide. You're responsible for what you post and confirm you have the right to
+          You own the photos, intro, answers and messages you post. You give us a free, non-exclusive permission to
+          store, process and show them to other members, only as needed to run Kollide. This permission ends when you
+          delete the content or your account, except for anything we keep as described in the Privacy Policy (for
+          example, reported conversations). You're responsible for what you post and confirm you have the right to
           post it.
         </p>
       </section>
@@ -312,21 +377,86 @@ export function Terms() {
       </section>
 
       <section>
+        <h2>No warranties</h2>
+        <p>
+          Kollide is provided "as is" and "as available". To the extent the law allows, we make no promises of any
+          kind about it: not that it will always be available, secure or error-free, not that the information members
+          give about themselves is true, and not that you'll find anyone to go with. Verification only checks that a
+          member is a real person who matches their photos.
+        </p>
+      </section>
+
+      <section>
         <h2>Limits of our responsibility</h2>
         <p>
-          Kollide is provided as it is, and we can't promise it will always be available or error-free. You're
-          responsible for your own decisions about meeting people. To the extent the law allows, we aren't liable for
-          the conduct of other members, online or offline, or for indirect losses. Nothing here limits rights you have
-          under Indian consumer law.
+          You're responsible for your own decisions about whom to talk to and meet, and for your own safety when you
+          do. To the extent the law allows:
         </p>
+        <ul className="mt-2">
+          <li>we aren't liable for what other members say or do, online or offline, including at events;</li>
+          <li>
+            we aren't liable for indirect or consequential losses, such as lost opportunities, lost data or emotional
+            distress, or for losses caused by events outside our reasonable control;
+          </li>
+          <li>
+            because Kollide is free, our total liability to you for all claims relating to Kollide is limited to
+            ₹1,000.
+          </li>
+        </ul>
+        <p className="mt-2">
+          None of this limits any liability that can't legally be limited, such as for fraud, or any rights you have
+          under Indian law that can't be waived.
+        </p>
+      </section>
+
+      <section>
+        <h2>Indemnity</h2>
+        <p>
+          If you break these terms or the law, or misuse Kollide, and someone makes a claim against us because of it,
+          you agree to cover the reasonable losses and costs (including legal fees) that we incur as a result.
+        </p>
+      </section>
+
+      <section>
+        <h2>Complaints and grievances</h2>
+        <p>
+          To complain about content, a member, or how we've handled your account or data, contact <Contact />. We
+          acknowledge every complaint within 24 hours and resolve it within 15 days. If you report content that shows
+          you, or someone you represent, in a sexual act or conduct, or with nudity (whole or partial), or that
+          impersonates you, including artificially altered images, we'll act to remove or disable access to it within
+          24 hours of your report.
+        </p>
+        <p className="mt-2">For help, questions or feedback, email <Email />. All three of us read that inbox.</p>
       </section>
 
       <section>
         <h2>Law and disputes</h2>
         <p>
-          These terms are governed by the laws of India, and the courts of Bengaluru, Karnataka have jurisdiction. For
-          complaints, contact <Contact />.
+          These terms are governed by the laws of India, and the courts of Bengaluru, Karnataka have jurisdiction.
+          Before going to court, please contact us first so we can try to sort it out.
         </p>
+      </section>
+
+      <section>
+        <h2>General</h2>
+        <ul>
+          <li>
+            <strong>Whole agreement:</strong> these terms and the Privacy Policy are the whole agreement between you
+            and us about Kollide.
+          </li>
+          <li>
+            <strong>Severability:</strong> if a court finds any part of these terms unenforceable, that part is
+            limited as little as needed, and the rest still applies.
+          </li>
+          <li>
+            <strong>No waiver:</strong> if we don't enforce a term straight away, we can still enforce it later.
+          </li>
+          <li>
+            <strong>Transfer:</strong> we may transfer these terms, and the running of Kollide, to a company or LLP
+            that we set up to run it. We'll tell you if we do, and your rights under these terms and the Privacy
+            Policy won't be reduced. You can't transfer your account or these terms to anyone else.
+          </li>
+        </ul>
       </section>
 
       <section>

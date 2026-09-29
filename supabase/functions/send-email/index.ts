@@ -67,7 +67,7 @@ function render(row: Outbox): { subject: string; html: string } {
   <li>Photos: ${esc(p.photo_count)}</li>
   ${socials}
 </ul>
-<p>Your email, phone and social handles stay private. They're only shown to someone after you match with them or join the same group.</p>
+<p>Your email, phone and social handles stay private. They're only shown to someone after you both kollide or join the same group.</p>
 <p>Next step: record your short verification video so our team can verify you, usually within 24 hours.</p>
 ${button(`${siteUrl()}/onboarding`, 'Continue to Kollide')}
 <p style="color:#666;font-size:13px">If you didn't create this account, reply to this email and we'll remove it.</p>`,
@@ -79,7 +79,7 @@ ${button(`${siteUrl()}/onboarding`, 'Continue to Kollide')}
         subject: "You're verified on Kollide",
         html: layout(
           `You're in, ${name}!`,
-          `<p>Your profile is verified. Any likes you sent while waiting are being delivered now, and you'll appear to others for Garba.</p>
+          `<p>Your profile is verified. Any kollides you sent while waiting are being delivered now, and you'll appear to others for Garba.</p>
 ${button(`${siteUrl()}/discover`, 'Start discovering')}`,
         ),
       }

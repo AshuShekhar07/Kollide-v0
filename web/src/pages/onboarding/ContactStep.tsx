@@ -43,8 +43,8 @@ export default function ContactStep({ data, reload, onNext, onBack }: StepProps)
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <StepHeader icon={Lock} title="How can matches reach you?">
-        These stay private. They're only shown to someone after you match with them or join the same group.
+      <StepHeader icon={Lock} title="How can people reach you?">
+        These stay private. They're only shown to someone after you both kollide or join the same group.
       </StepHeader>
 
       <Field label="Phone number">

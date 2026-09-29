@@ -132,7 +132,7 @@ function DeleteAccount({ onClose }: { onClose: () => void }) {
     <Sheet label="Delete account" onClose={onClose}>
       <h2 className="text-lg font-bold text-neutral-900">Delete your account?</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-600">
-        <li>Your profile, photos, likes, matches and chats are deleted. This can't be undone.</li>
+        <li>Your profile, photos, kollides, chats and groups are deleted. This can't be undone.</li>
         <li>If you run a group, the longest-standing member takes over.</li>
         <li>
           Reports you made or that were made about you are kept for safety, as our{' '}

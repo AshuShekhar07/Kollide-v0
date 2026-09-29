@@ -1,8 +1,9 @@
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
-import { BadgeCheck, Heart, Hourglass, RotateCcw, Sparkles, X } from 'lucide-react'
+import { BadgeCheck, Hourglass, RotateCcw, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import AboutView from '../components/AboutView'
+import { DandiyaIcon } from '../components/Dandiya'
 import { useShell } from '../components/AppShell'
 import DiscoverTabs from '../components/DiscoverTabs'
 import MatchDialog from '../components/MatchDialog'
@@ -21,7 +22,7 @@ const BATCH = 20
 const SWIPE_PX = 110
 const SWIPE_VELOCITY = 600
 
-type Dir = -1 | 1 // pass | like
+type Dir = -1 | 1 // pass | kollide
 
 const exitVariants = {
   exit: (d: Dir) => ({ x: d * 600, rotate: d * 20, opacity: 0, transition: { duration: 0.3 } }),
@@ -79,21 +80,21 @@ function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir;
           className="h-full touch-pan-y overflow-y-auto overscroll-contain rounded-[2rem] bg-surface p-2 shadow-xl shadow-maroon-950/15 ring-1 ring-neutral-200/80 [scrollbar-width:none]"
           heroClassName="h-[calc(100%-6.5rem)]"
           end={
-            <p className="px-4 pb-28 pt-2 text-center text-xs font-semibold text-neutral-500">
-              Swipe right to like {profile.first_name}, left to pass.
+            <p className="px-4 pb-32 pt-3 text-center text-xs font-semibold text-neutral-500">
+              Swipe right to kollide with {profile.first_name}, left to pass.
             </p>
           }
         />
       )}
       {/* The buttons float over this fade, and the profile scrolls up under them. */}
       {!desktop && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 rounded-b-[2rem] bg-gradient-to-t from-surface via-surface/85 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 rounded-b-[2rem] bg-gradient-to-t from-surface via-surface/80 to-transparent" />
       )}
       <motion.span
         style={{ opacity: likeOpacity }}
         className="pointer-events-none absolute left-5 top-10 flex -rotate-12 items-center gap-1.5 rounded-2xl border-[3px] border-marigold-400 bg-rani/80 px-3 py-1 font-display text-2xl font-extrabold text-white shadow-lg backdrop-blur-sm"
       >
-        <Heart className="h-6 w-6 fill-current" /> LIKE
+        <DandiyaIcon className="h-6 w-6" strokeWidth={2.6} /> KOLLIDE
       </motion.span>
       <motion.span
         style={{ opacity: passOpacity }}
@@ -249,7 +250,7 @@ export default function Discover() {
         <div className="mb-3 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
           <Hourglass className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            <span className="font-semibold">Verification pending.</span> Your likes are delivered once you're verified,
+            <span className="font-semibold">Verification pending.</span> Your kollides are delivered once you're verified,
             usually within 24 hours.
           </p>
         </div>
@@ -337,7 +338,13 @@ export default function Discover() {
                     </div>
                   ))}
               </div>
-              <div className="pointer-events-none relative z-20 -mt-[5.5rem] flex items-center justify-center gap-6 pb-4 lg:mt-5 lg:pb-0 [&>*]:pointer-events-auto">
+              {/* Phones: only float the buttons over a profile, never over the loading
+                  or "seen everyone" card (they'd cover its buttons). */}
+              <div
+                className={`pointer-events-none relative z-20 -mt-[5.5rem] items-center justify-center gap-6 pb-4 lg:mt-5 lg:flex lg:pb-0 [&>*]:pointer-events-auto ${
+                  top ? 'flex' : 'hidden'
+                }`}
+              >
                 <ActionButton
                   label="Pass"
                   onClick={() => decide(-1)}
@@ -347,12 +354,12 @@ export default function Discover() {
                   <X className="h-8 w-8" strokeWidth={2.6} />
                 </ActionButton>
                 <ActionButton
-                  label="Like"
+                  label="Kollide"
                   onClick={() => decide(1)}
                   disabled={!top}
                   className="h-[4.5rem] w-[4.5rem] bg-rani text-white shadow-rani/35 ring-4 ring-marigold-400/60"
                 >
-                  <Heart className="h-9 w-9 fill-current" />
+                  <DandiyaIcon className="h-9 w-9" strokeWidth={2.4} />
                 </ActionButton>
               </div>
               {error && (
@@ -379,7 +386,7 @@ export default function Discover() {
                   </div>
                   <p className="mt-8 flex items-center gap-2 text-xs text-neutral-500">
                     <kbd className="rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">←</kbd> pass
-                    <kbd className="ml-2 rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">→</kbd> like
+                    <kbd className="ml-2 rounded-md border border-neutral-200 px-1.5 py-0.5 font-mono">→</kbd> kollide
                     <span className="ml-2">· click the photo to see more</span>
                   </p>
                 </div>
