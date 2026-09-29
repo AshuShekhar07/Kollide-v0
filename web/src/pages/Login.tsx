@@ -323,7 +323,7 @@ export default function Login() {
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
         <motion.div
-          className="relative w-full max-w-[26rem] rounded-[32px] p-6 shadow-2xl shadow-black/50 sm:p-8"
+          className="relative w-full max-w-[26rem] rounded-[32px] p-6 shadow-2xl shadow-black/50 sm:max-w-[36rem] sm:p-10 lg:px-12"
           style={{ backgroundColor: G.cream, color: G.ink }}
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
