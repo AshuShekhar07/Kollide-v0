@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import AdminNav from '../../components/AdminNav'
 import { Button, ErrorText, Spinner } from '../../components/ui'
 import { REASON_LABELS } from '../../lib/chat'
@@ -81,7 +82,14 @@ function Detail({ report, onResolved }: { report: ReportDetail; onResolved: () =
         </div>
         <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="text-neutral-500">Reported</dt>
-          <dd className="font-semibold">{who(snap.reported)}</dd>
+          <dd>
+            <span className="font-semibold">{who(snap.reported)}</span>
+            {!report.reported_deleted && (
+              <Link to={`/admin/profiles?id=${report.reported_id}`} className="ml-2 text-brand-700 underline">
+                View full profile
+              </Link>
+            )}
+          </dd>
           <dt className="text-neutral-500">By</dt>
           <dd>{who(snap.reporter)}</dd>
           <dt className="text-neutral-500">When</dt>

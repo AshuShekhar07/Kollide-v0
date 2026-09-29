@@ -249,6 +249,18 @@ export default function Chat() {
     setDraft('')
   }
 
+  // Grow the box with its text, up to its max height; past that it scrolls.
+  // The message list keeps its place from the bottom as the box grows.
+  useLayoutEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    const list = listRef.current
+    const fromBottom = list ? list.scrollHeight - list.scrollTop - list.clientHeight : 0
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`
+    if (list) list.scrollTop = list.scrollHeight - list.clientHeight - fromBottom
+  }, [draft])
+
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault()
@@ -512,7 +524,7 @@ export default function Chat() {
                 maxLength={MAX_MESSAGE_LENGTH}
                 rows={1}
                 placeholder="Message"
-                className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:border-brand-500 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-100"
+                className="max-h-40 min-h-11 flex-1 resize-none rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:border-brand-500 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-brand-100"
               />
               <motion.button
                 type="submit"

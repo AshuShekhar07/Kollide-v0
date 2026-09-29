@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import AdminNav from '../../components/AdminNav'
+import AdminProfile from '../../components/AdminProfile'
 import { Button, ErrorText, Spinner, inputClass } from '../../components/ui'
 import type { Database } from '../../lib/database.types'
 import { friendlyError, functionError } from '../../lib/errors'
@@ -14,6 +15,7 @@ const REJECT_REASONS = [
   "Didn't follow the head-turn prompts",
   'Video appears to be a recording of a screen or photo',
   'Appears to be under 18',
+  'Intro, answers or socials contain offensive content',
 ]
 
 function waitingFor(iso: string): { label: string; hours: number } {
@@ -32,7 +34,6 @@ function Review({ item, onDone }: { item: QueueItem; onDone: () => void }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [videoFailed, setVideoFailed] = useState(false)
   const [photoUrls, setPhotoUrls] = useState<(string | null)[]>([])
-  const [fullName, setFullName] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState<'approve' | 'reject' | null>(null)
   const [error, setError] = useState('')
@@ -51,13 +52,6 @@ function Review({ item, onDone }: { item: QueueItem; onDone: () => void }) {
       } else setVideoUrl(data.url)
     })
     signedPhotoUrls(item.photo_paths).then((urls) => !cancelled && setPhotoUrls(urls))
-    setFullName(null)
-    supabase
-      .from('profile_private')
-      .select('full_name')
-      .eq('user_id', item.user_id)
-      .maybeSingle()
-      .then(({ data }) => !cancelled && setFullName(data?.full_name ?? null))
     return () => {
       cancelled = true
     }
@@ -84,7 +78,6 @@ function Review({ item, onDone }: { item: QueueItem; onDone: () => void }) {
           {item.first_name}, {item.age}
         </h2>
         <span className="font-mono text-sm text-neutral-500">{item.public_code}</span>
-        {fullName && <span className="text-sm text-neutral-700">{fullName}</span>}
         <span className="text-sm capitalize text-neutral-500">{item.gender?.replace('_', '-')}</span>
         {item.is_resubmission && (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Resubmission</span>
@@ -109,6 +102,8 @@ function Review({ item, onDone }: { item: QueueItem; onDone: () => void }) {
           ))}
         </ul>
       </div>
+
+      <AdminProfile userId={item.user_id} embedded />
 
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">

@@ -4,6 +4,7 @@ import { RequireAdmin, RequireAuth, RequireOnboarded, StartRedirect } from './co
 import AdminBans from './pages/admin/AdminBans'
 import AdminMetrics from './pages/admin/AdminMetrics'
 import AdminPhotos from './pages/admin/AdminPhotos'
+import AdminProfiles from './pages/admin/AdminProfiles'
 import AdminReports from './pages/admin/AdminReports'
 import AdminVerification from './pages/admin/AdminVerification'
 import AuthCallback from './pages/AuthCallback'
@@ -54,6 +55,7 @@ export default function App() {
         <Route element={<RequireAdmin />}>
           <Route path="/admin" element={<AdminVerification />} />
           <Route path="/admin/photos" element={<AdminPhotos />} />
+          <Route path="/admin/profiles" element={<AdminProfiles />} />
           <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/admin/bans" element={<AdminBans />} />
           <Route path="/admin/metrics" element={<AdminMetrics />} />
