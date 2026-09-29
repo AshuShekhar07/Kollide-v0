@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { MailCheck, MapPin } from 'lucide-react'
 import SplitScreen from '../components/SplitScreen'
 import { Button, ErrorText, Field, FullScreenSpinner, inputClass, Logo } from '../components/ui'
@@ -33,6 +33,10 @@ export default function Login() {
   const [stage, setStage] = useState<'email' | 'code'>('email')
   const [busy, setBusy] = useState<'google' | 'email' | 'code' | null>(null)
   const [error, setError] = useState('')
+  // Sign in and sign up are the same flow; `?mode=signup` only changes the wording.
+  const [params] = useSearchParams()
+  const signup = params.get('mode') === 'signup'
+  const heading = signup ? 'Create your account' : 'Welcome back'
 
   if (loading) return <FullScreenSpinner />
   if (session && profile) return <Navigate to={startPathFor(profile)} replace />
@@ -93,7 +97,7 @@ export default function Login() {
             <Link to="/" aria-label="Kollide home">
               <Logo tone="white" className="text-3xl" />
             </Link>
-            <h1 className="mt-8 text-3xl font-extrabold leading-tight">Sign in or create an account</h1>
+            <h1 className="mt-8 text-3xl font-extrabold leading-tight">{heading}</h1>
             <p className="mt-2 text-white/80">Find your Garba friends or group.</p>
             <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/20">
               <MapPin className="h-3.5 w-3.5" /> Bangalore only, for now
@@ -103,7 +107,7 @@ export default function Login() {
 
         <div className="relative mx-auto -mt-8 w-full max-w-sm flex-1 px-4 pb-10 lg:mt-0 lg:max-w-md lg:flex-none lg:py-12">
           <div className="mb-8 hidden lg:block">
-            <h1 className="text-4xl font-extrabold leading-tight text-neutral-900">Sign in or create an account</h1>
+            <h1 className="text-4xl font-extrabold leading-tight text-neutral-900">{heading}</h1>
             <p className="mt-2 text-neutral-500">Find your Garba friends or group. Bangalore only, for now.</p>
           </div>
           <div className="animate-rise space-y-4 rounded-[28px] border border-neutral-200 bg-surface p-5 shadow-xl shadow-black/5 lg:p-7 lg:shadow-none">
@@ -171,6 +175,17 @@ export default function Login() {
 
             <ErrorText>{error}</ErrorText>
           </div>
+
+          <p className="mt-5 text-center text-sm text-neutral-600">
+            {signup ? 'Already have an account? ' : 'New to Kollide? '}
+            <Link
+              to={signup ? '/login' : '/login?mode=signup'}
+              replace
+              className="font-semibold text-neutral-900 underline underline-offset-4"
+            >
+              {signup ? 'Sign in' : 'Create an account'}
+            </Link>
+          </p>
 
           <p className="mt-6 px-2 text-center text-xs leading-relaxed text-neutral-500">
             By continuing you agree to our{' '}

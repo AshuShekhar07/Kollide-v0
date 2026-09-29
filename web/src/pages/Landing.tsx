@@ -90,12 +90,10 @@ function CircleBadge({ onClick }: { onClick: () => void }) {
  */
 function HeroCurtain({
   ready,
-  onJoin,
   onHow,
   children,
 }: {
   ready: boolean
-  onJoin: () => void
   onHow: () => void
   children: ReactNode
 }) {
@@ -148,13 +146,21 @@ function HeroCurtain({
             <Link to="/" aria-label="Kollide home" className="-ml-1">
               <HoverWordmark tone="dark" className="h-10 w-auto sm:h-12 lg:h-14" />
             </Link>
-            <Link
-              to="/start"
-              className="rounded-full px-5 py-2.5 text-sm font-semibold transition hover:brightness-95 active:scale-95"
-              style={{ backgroundColor: G.cream, color: G.ink }}
-            >
-              Sign in
-            </Link>
+            <nav className="flex items-center gap-1 sm:gap-2">
+              <Link
+                to="/login"
+                className="rounded-full px-4 py-2.5 text-sm font-semibold transition hover:bg-[#FFF4E4]/10 active:scale-95"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/login?mode=signup"
+                className="rounded-full px-5 py-2.5 text-sm font-semibold transition hover:brightness-95 active:scale-95"
+                style={{ backgroundColor: G.cream, color: G.ink }}
+              >
+                Sign up
+              </Link>
+            </nav>
           </header>
 
           <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-5 pb-10 sm:px-8 lg:px-12">
@@ -180,15 +186,14 @@ function HeroCurtain({
             </FadeUp>
             <FadeUp play={ready} delay={0.6}>
               <div className="mt-9 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={onJoin}
+                <Link
+                  to="/login?mode=signup"
                   className="group inline-flex items-center gap-2 rounded-full py-4 pl-7 pr-6 text-base font-bold shadow-xl shadow-black/25 transition hover:-translate-y-0.5 active:scale-[0.97]"
                   style={{ backgroundColor: G.haldi, color: G.ink }}
                 >
-                  Join the waitlist
+                  Sign up
                   <ArrowUpRight className="h-5 w-5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </button>
+                </Link>
                 <button
                   type="button"
                   onClick={onHow}
@@ -350,7 +355,7 @@ export default function Landing() {
           />
         )}
 
-        <HeroCurtain ready={ready} onJoin={() => scrollToId('waitlist')} onHow={() => scrollToId('how-it-works', 0)}>
+        <HeroCurtain ready={ready} onHow={() => scrollToId('how-it-works', 0)}>
           <main>
             <NineNights />
 
@@ -383,7 +388,7 @@ export default function Landing() {
 
             <WhatsNext activities={comingSoon} canVote={fromDb} />
 
-            <section id="waitlist" className="scroll-mt-6 px-4 pb-16 pt-16 sm:px-6 md:pt-24">
+            <section className="px-4 pt-16 sm:px-6 md:pt-24">
               <FadeUp className="mx-auto max-w-7xl">
                 <div
                   className="bandhani-soft relative overflow-hidden rounded-[40px] px-6 pb-14 pt-4 text-center sm:px-12 sm:pb-20"
@@ -397,20 +402,48 @@ export default function Landing() {
                       className="mt-8 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-6xl"
                     />
                     <p className="mt-5 text-lg opacity-80">
-                      Join the waitlist and we'll email you the moment Kollide opens in Bangalore.
+                      Sign up and get verified in time to find your people for the first night.
                     </p>
-                    <div className="mx-auto mt-8 max-w-md text-left">
-                      <WaitlistForm />
+                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                      <Link
+                        to="/login?mode=signup"
+                        className="group inline-flex items-center gap-2 rounded-full py-4 pl-7 pr-6 text-base font-bold shadow-xl shadow-black/25 transition hover:-translate-y-0.5 active:scale-[0.97]"
+                        style={{ backgroundColor: G.haldi, color: G.ink }}
+                      >
+                        Sign up
+                        <ArrowUpRight className="h-5 w-5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                      </Link>
+                      <Link
+                        to="/login"
+                        className="rounded-full px-6 py-4 text-base font-semibold ring-1 ring-[#FFF4E4]/40 transition hover:bg-[#FFF4E4]/10"
+                      >
+                        Sign in
+                      </Link>
                     </div>
-                    <p className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm opacity-80">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: G.haldi }} /> Opening
-                        Sunday, Oct 4
-                      </span>
+                    <p className="mt-6 flex items-center justify-center gap-1.5 text-sm opacity-80">
+                      <span className="h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: G.haldi }} />
                       <Countdown />
                     </p>
                   </div>
                 </div>
+              </FadeUp>
+            </section>
+
+            <section id="waitlist" className="scroll-mt-6 px-5 pb-16 pt-20 sm:px-8 md:pb-24 md:pt-28 lg:px-12">
+              <FadeUp className="mx-auto grid max-w-7xl items-end gap-8 md:grid-cols-[1.1fr_1fr] md:gap-16">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: G.orange }}>
+                    The Kollide app
+                  </p>
+                  <h2 className="mt-4 font-display text-4xl font-extrabold leading-[1] tracking-[-0.04em] sm:text-5xl">
+                    Want us to keep you updated when we bring more?
+                  </h2>
+                  <p className="mt-5 max-w-lg text-lg leading-relaxed opacity-75">
+                    We're building the Kollide app for your phone, with more than garba in it. Join the waitlist and
+                    we'll email you when it's out.
+                  </p>
+                </div>
+                <WaitlistForm tone="light" />
               </FadeUp>
             </section>
           </main>

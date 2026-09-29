@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase'
 
 type State = 'idle' | 'submitting' | 'done' | 'error'
 
-export default function WaitlistForm({ id = 'waitlist-email' }: { id?: string }) {
+// `dark` sits on a deep background; `light` on the landing page's cream.
+export default function WaitlistForm({ id = 'waitlist-email', tone = 'dark' }: { id?: string; tone?: 'dark' | 'light' }) {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<State>('idle')
   const [error, setError] = useState('')
@@ -24,9 +25,14 @@ export default function WaitlistForm({ id = 'waitlist-email' }: { id?: string })
 
   if (state === 'done') {
     return (
-      <p className="flex animate-pop items-center gap-2 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/25" role="status">
-        <PartyPopper className="h-5 w-5 shrink-0 text-marigold-300" />
-        You're on the list. We'll email you the moment Kollide opens.
+      <p
+        className={`flex animate-pop items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold ${
+          tone === 'dark' ? 'bg-white/15 text-white ring-1 ring-white/25' : 'bg-[#2A0E1B]/5 text-[#2A0E1B] ring-1 ring-[#2A0E1B]/15'
+        }`}
+        role="status"
+      >
+        <PartyPopper className={`h-5 w-5 shrink-0 ${tone === 'dark' ? 'text-marigold-300' : 'text-[#E0661A]'}`} />
+        You're on the list. We'll email you when the Kollide app is out.
       </p>
     )
   }
@@ -45,7 +51,9 @@ export default function WaitlistForm({ id = 'waitlist-email' }: { id?: string })
           placeholder="you@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="min-w-0 flex-1 rounded-full bg-white px-5 py-3.5 text-plum-950 shadow-lg shadow-black/10 placeholder:text-[#8a7d72] focus:outline-none focus:ring-4 focus:ring-marigold-400/60"
+          className={`min-w-0 flex-1 rounded-full bg-white px-5 py-3.5 text-plum-950 shadow-lg shadow-black/10 ${
+            tone === 'light' ? 'ring-1 ring-[#2A0E1B]/15' : ''
+          } placeholder:text-[#8a7d72] focus:outline-none focus:ring-4 focus:ring-marigold-400/60`}
         />
         <button
           type="submit"
@@ -56,7 +64,7 @@ export default function WaitlistForm({ id = 'waitlist-email' }: { id?: string })
         </button>
       </div>
       {state === 'error' && (
-        <p className="mt-2 text-sm font-medium text-marigold-300" role="alert">
+        <p className={`mt-2 text-sm font-medium ${tone === 'dark' ? 'text-marigold-300' : 'text-[#A8450C]'}`} role="alert">
           {error}
         </p>
       )}
