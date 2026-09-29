@@ -607,6 +607,11 @@ isOneToOne: false
 "create_group":
 { Args: { "p_activity_id": string,"p_description": string,"p_event_date": string,"p_max_members": number,"p_title": string,"p_venue": string }; Returns: Json
                            },
+"get_badge_counts":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "likes": number,"matches": number
+            }[]
+                           },
 "get_blocked_users":
 { Args: Record<PropertyKey, never>; Returns: {
               "blocked_at": string,"first_name": string,"public_code": string,"user_id": string
