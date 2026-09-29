@@ -12,8 +12,8 @@ import HowItWorks from '../components/landing/HowItWorks'
 import LogoIntro from '../components/landing/LogoIntro'
 import NineNights from '../components/landing/NineNights'
 import { FadeUp, RevealText } from '../components/landing/Reveal'
-import SamePath from '../components/landing/SamePath'
 import Toran from '../components/landing/Toran'
+import Welcome from '../components/landing/Welcome'
 import WhatsNext from '../components/landing/WhatsNext'
 import Wordmark from '../components/landing/Wordmark'
 import WaitlistForm from '../components/WaitlistForm'
@@ -358,7 +358,7 @@ export default function Landing() {
 
         <HeroCurtain ready={ready} onHow={() => scrollToId('how-it-works', 0)}>
           <main>
-            <SamePath onHow={() => scrollToId('how-it-works', 0)} />
+            <Welcome />
 
             <NineNights />
 
