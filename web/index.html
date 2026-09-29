@@ -13,9 +13,12 @@
     <!-- Apply the theme chosen in Settings before the first paint (see src/lib/theme.ts). -->
     <script>
       (function () {
-        var pref = 'light'
-        try { pref = localStorage.getItem('kollide:theme') || 'light' } catch (e) {}
-        var dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        var pref = 'festival'
+        try { pref = localStorage.getItem('kollide:theme') || 'festival' } catch (e) {}
+        // "festival": dark from 6pm to 5am, Bangalore time.
+        var hour = new Date(Date.now() + 19800000).getUTCHours()
+        var dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches) ||
+          (pref === 'festival' && (hour >= 18 || hour < 5))
         document.documentElement.dataset.theme = dark ? 'dark' : 'light'
         if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#16090f')
       })()

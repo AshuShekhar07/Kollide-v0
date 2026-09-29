@@ -1,8 +1,11 @@
-import { BadgeCheck } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { peekPhotoUrl, signedUrlsFor, type PhotoSize } from '../lib/photos'
+import { fabricFor, fabricStyle } from '../lib/fabric'
+import { CornerMirrors, Diya, MiniToran, Stitch } from './Outfit'
 
 export type CardProfile = {
+  // Picks the card's fabric; falls back to the name.
+  id?: string
   first_name: string
   age: number
   bio: string | null
@@ -29,8 +32,10 @@ export function useSignedPhotos(paths: string[], size: PhotoSize = 'full') {
   return fetched?.key === key ? fetched.urls : cached
 }
 
-// Photo-led profile card. The parent owns `photoIndex`, so it can step
-// through photos on tap without fighting a drag gesture.
+// Photo-led profile card, dressed in the person's fabric: the photo is sewn
+// onto it with toran flags over the top and mirrors in the corners. The
+// parent owns `photoIndex`, so it can step through photos on tap without
+// fighting a drag gesture.
 export default function ProfileCard({
   profile,
   photoIndex,
@@ -56,45 +61,55 @@ export default function ProfileCard({
   const [url] = useSignedPhotos(path ? [path] : [], size)
   const [loaded, setLoaded] = useState<string | null>(null)
 
+  const fabric = fabricFor(profile.id ?? profile.first_name)
+
   return (
-    <div className={`relative select-none overflow-hidden rounded-[2rem] bg-neutral-200 shadow-xl shadow-maroon-950/20 ${className}`}>
-      {url ? (
-        <img
-          key={url}
-          src={url}
-          alt=""
-          draggable={false}
-          onLoad={() => setLoaded(url)}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded === url ? 'opacity-100' : 'opacity-0'}`}
-        />
-      ) : null}
-      {(!url || loaded !== url) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-brand-100">
-          <span className="font-display text-6xl font-bold text-white/80">{profile.first_name.slice(0, 1)}</span>
-        </div>
-      )}
+    <div
+      className={`relative select-none overflow-hidden rounded-[2rem] shadow-xl shadow-maroon-950/20 ${className}`}
+      style={fabricStyle(fabric)}
+    >
+      <CornerMirrors />
+      <div className="absolute inset-[9px] overflow-hidden rounded-[1.5rem] bg-neutral-200">
+        {url ? (
+          <img
+            key={url}
+            src={url}
+            alt=""
+            draggable={false}
+            onLoad={() => setLoaded(url)}
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded === url ? 'opacity-100' : 'opacity-0'}`}
+          />
+        ) : null}
+        {(!url || loaded !== url) && (
+          <div className="absolute inset-0 flex items-center justify-center bg-brand-100">
+            <span className="font-display text-6xl font-bold text-white/80">{profile.first_name.slice(0, 1)}</span>
+          </div>
+        )}
 
-      {count > 1 && (
-        <div className="absolute inset-x-4 top-3 flex gap-1" aria-hidden>
-          {Array.from({ length: count }, (_, i) => (
-            <span
-              key={i}
-              className={`h-1 flex-1 rounded-full shadow-sm transition-colors ${i === index ? 'bg-white' : 'bg-white/35'}`}
-            />
-          ))}
-        </div>
-      )}
+        {count > 1 && (
+          <div className="absolute inset-x-4 top-7 z-10 flex gap-1" aria-hidden>
+            {Array.from({ length: count }, (_, i) => (
+              <span
+                key={i}
+                className={`h-1 flex-1 rounded-full shadow-sm transition-colors ${i === index ? 'bg-white' : 'bg-white/35'}`}
+              />
+            ))}
+          </div>
+        )}
 
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-5 pb-5 pt-20 text-white">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-display text-[2rem] font-extrabold leading-tight tracking-[-0.03em]">
-            {profile.first_name}
-            <span className="font-bold text-white/85">, {profile.age}</span>
-          </span>
-          <BadgeCheck className="h-6 w-6 fill-marigold-400 text-maroon-950" strokeWidth={2.2} aria-label="Verified" />
-        </p>
-        {profile.bio && !hideBio && <p className="mt-2 line-clamp-2 text-sm leading-snug text-white/90">{profile.bio}</p>}
-        {footer}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-5 pb-5 pt-20 text-white">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="font-display text-[2rem] font-extrabold leading-tight tracking-[-0.03em]">
+              {profile.first_name}
+              <span className="font-bold text-white/85">, {profile.age}</span>
+            </span>
+            <Diya className="h-7 w-7" label="Verified" />
+          </p>
+          {profile.bio && !hideBio && <p className="mt-2 line-clamp-2 text-sm leading-snug text-white/90">{profile.bio}</p>}
+          {footer}
+        </div>
+        <MiniToran />
+        <Stitch className="inset-1.5 rounded-[1.2rem]" />
       </div>
     </div>
   )

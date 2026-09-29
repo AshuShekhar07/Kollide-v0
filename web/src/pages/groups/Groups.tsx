@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DiscoverTabs from '../../components/DiscoverTabs'
 import { Capacity } from '../../components/GroupBits'
+import { RingScene } from '../../components/Scenes'
 import { LinkButton, EmptyState, ErrorText, Skeleton, Tag } from '../../components/ui'
 import { festiveTile } from '../../lib/festive'
 import { useAuth } from '../../lib/auth-context'
@@ -137,6 +138,7 @@ export default function Groups() {
           {groups?.length === 0 && (
             <EmptyState
               icon={UsersRound}
+              scene={<RingScene />}
               title="No open groups yet"
               action={
                 <LinkButton to="/groups/new">

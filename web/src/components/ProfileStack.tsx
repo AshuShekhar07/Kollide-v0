@@ -1,13 +1,16 @@
-import { BadgeCheck, ChevronsDown } from 'lucide-react'
+import { ChevronsDown } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import type { ShownAnswer } from '../lib/about'
 import type { PhotoSize } from '../lib/photos'
 import { useAnswers } from '../lib/useAnswers'
 import { AnswerTile } from './AboutView'
+import { fabricFor, fabricStyle } from '../lib/fabric'
+import { Diya, MiniToran, Stitch } from './Outfit'
 import { useSignedPhotos, type CardProfile } from './ProfileCard'
 
 // `className` must position and size it (e.g. `relative aspect-[4/5]`).
-function StackPhoto({ url, name, className }: { url: string | null; name: string; className: string }) {
+// Stitched onto the fabric around it.
+function StackPhoto({ url, name, className, children }: { url: string | null; name: string; className: string; children?: ReactNode }) {
   const [loaded, setLoaded] = useState<string | null>(null)
   return (
     <div className={`overflow-hidden rounded-[1.75rem] bg-brand-100 ${className}`}>
@@ -26,6 +29,8 @@ function StackPhoto({ url, name, className }: { url: string | null; name: string
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded === url ? 'opacity-100' : 'opacity-0'}`}
         />
       )}
+      {children}
+      <Stitch className="inset-1.5 rounded-[1.4rem]" />
     </div>
   )
 }
@@ -34,6 +39,10 @@ function StackPhoto({ url, name, className }: { url: string | null; name: string
  * A whole profile in one scroll: the main photo with their name, then their
  * intro, then answers and the rest of their photos taking turns. Nothing is
  * behind a button, so a glance down shows everything they've shared.
+ *
+ * It's laid out on the person's fabric, like an outfit: photos stitched on,
+ * toran flags over the main photo, the intro as an embroidered patch and
+ * answers as slips tied to a dandiya.
  *
  * `className` styles the outer element; give it a fixed height and
  * `overflow-y-auto` to make it a scrolling card. `heroClassName` sizes the
@@ -75,16 +84,18 @@ export default function ProfileStack({
   }
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-2.5 rounded-[2rem] p-2.5 ${className}`} style={fabricStyle(fabricFor(userId))}>
       <div className={`relative w-full ${heroClassName}`}>
-        <StackPhoto url={heroUrl} name={profile.first_name} className="absolute inset-0" />
+        <StackPhoto url={heroUrl} name={profile.first_name} className="absolute inset-0">
+          <MiniToran />
+        </StackPhoto>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 rounded-b-[1.75rem] bg-gradient-to-t from-black/80 via-black/35 to-transparent px-5 pb-5 pt-24 text-white">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-display text-[2rem] font-extrabold leading-none tracking-[-0.03em]">
               {profile.first_name}
               <span className="font-bold text-white/85">, {profile.age}</span>
             </span>
-            <BadgeCheck className="h-6 w-6 fill-marigold-400 text-maroon-950" strokeWidth={2.2} aria-label="Verified" />
+            <Diya className="h-7 w-7" label="Verified" />
           </p>
           {peek && (answers.length > 0 || profile.bio || restUrls.length > 0) && (
             <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-white/80">
@@ -95,7 +106,8 @@ export default function ProfileStack({
       </div>
 
       {profile.bio && (
-        <div className="rounded-[1.75rem] bg-neutral-100 px-5 py-4">
+        <div className="relative rounded-[1.75rem] bg-surface px-6 py-5 shadow-md shadow-black/10">
+          <Stitch className="inset-2 rounded-[1.35rem]" color="color-mix(in srgb, var(--color-rani) 45%, transparent)" />
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-600">About {profile.first_name}</p>
           <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-relaxed text-neutral-800">{profile.bio}</p>
         </div>
