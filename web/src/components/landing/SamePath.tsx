@@ -2,6 +2,8 @@ import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } f
 import { useRef, type ReactNode } from 'react'
 import { G } from './garba'
 
+// Not on the landing page right now; kept to be placed elsewhere on the site.
+//
 // "Same path": Kollide's story told with dots, as you scroll. You start
 // alone; others with the same plan light up across the city; you and one of
 // them collide; then everyone flows into a garba circle that starts turning.
