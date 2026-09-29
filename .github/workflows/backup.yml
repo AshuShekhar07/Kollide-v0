@@ -1,0 +1,96 @@
+name: Database backup
+
+# Off-site copy of the hosted database: dumped, encrypted with a passphrase and
+# kept as a workflow artifact for 14 days. Storage files (photos, videos) are
+# NOT part of a database dump; see README.md.
+on:
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Dump, encrypt, upload
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Secrets are only ever passed through the environment, never written into
+    # a command line or echoed.
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check the secrets exist
+        run: |
+          missing=""
+          [ -n "$SUPABASE_DB_URL" ] || missing="$missing SUPABASE_DB_URL"
+          [ -n "$BACKUP_PASSPHRASE" ] || missing="$missing BACKUP_PASSPHRASE"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing (see README.md)"
+            exit 1
+          fi
+
+      # The whole URL is masked already; also mask the bare password (and its
+      # decoded form) in case a tool prints it on its own.
+      - name: Mask the database password
+        run: |
+          python3 - <<'PY'
+          import os, urllib.parse
+          password = urllib.parse.urlsplit(os.environ["SUPABASE_DB_URL"]).password or ""
+          for value in {password, urllib.parse.unquote(password)}:
+              if value:
+                  print("::add-mask::" + value)
+          PY
+
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+
+      # Three dumps, restored in this order: roles, then schema, then data.
+      # The data dump includes the auth and storage tables (accounts, bucket and
+      # object rows); Vault secrets are never included.
+      - name: Dump the database
+        run: |
+          set -euo pipefail
+          mkdir backup
+          supabase db dump --db-url "$SUPABASE_DB_URL" --role-only -f backup/roles.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f backup/data.sql
+          cat backup/roles.sql backup/schema.sql backup/data.sql > backup/kollide.sql
+          wc -c backup/roles.sql backup/schema.sql backup/data.sql | sed 's#backup/##'
+
+      # Contents are never printed: this only checks the dump is not empty or
+      # truncated.
+      - name: Check the dump looks complete
+        run: |
+          set -euo pipefail
+          check() { grep -q "$1" "$2" || { echo "::error::The dump is missing $3"; exit 1; }; }
+          check 'CREATE TABLE IF NOT EXISTS "public"."profiles"' backup/schema.sql "the public.profiles table"
+          check 'COPY "public"."profiles"' backup/data.sql "public.profiles data"
+          check 'COPY "auth"."users"' backup/data.sql "auth.users data"
+
+      - name: Encrypt with gpg
+        run: |
+          set -euo pipefail
+          name="kollide-db-$(date -u +%Y%m%dT%H%M%SZ)"
+          echo "BACKUP_NAME=$name" >> "$GITHUB_ENV"
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 -o "backup/$name.sql.gpg" backup/kollide.sql
+          # Prove the file decrypts to exactly what was dumped, then remove every plaintext copy.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+            --decrypt "backup/$name.sql.gpg" | cmp - backup/kollide.sql
+          shred -u backup/*.sql
+          ls -l backup | sed 's/^/  /'
+
+      - name: Upload the encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: backup/*.sql.gpg
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0
