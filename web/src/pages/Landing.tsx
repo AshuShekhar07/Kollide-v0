@@ -10,7 +10,6 @@ import HoverSwap from '../components/landing/HoverSwap'
 import HoverWordmark from '../components/landing/HoverWordmark'
 import HowItWorks from '../components/landing/HowItWorks'
 import LogoIntro from '../components/landing/LogoIntro'
-import NineNights from '../components/landing/NineNights'
 import { FadeUp, RevealText } from '../components/landing/Reveal'
 import Toran from '../components/landing/Toran'
 import Welcome from '../components/landing/Welcome'
@@ -359,8 +358,6 @@ export default function Landing() {
         <HeroCurtain ready={ready} onHow={() => scrollToId('how-it-works', 0)}>
           <main>
             <Welcome />
-
-            <NineNights />
 
             <StorySection
               eyebrow="Navratri 2026"

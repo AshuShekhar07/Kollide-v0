@@ -68,14 +68,14 @@ function StackCard({ card, index, progress }: { card: (typeof CARDS)[number]; in
   )
 }
 
-const MORE = ['More people to dance with.', 'More nights worth leaving home for.', 'More plans that actually happen.']
-
 const BIG = 'font-display text-4xl font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-5xl lg:text-[3.6rem]'
+// The supporting line under the headline: same face and colour, a step down.
+const LEAD = 'font-display text-2xl font-bold leading-[1.15] tracking-[-0.03em] sm:text-3xl lg:text-[2.1rem]'
 
 /**
- * Right after the hero: what a Kollide night feels like, in a few big lines
- * signed off with "Welcome to Kollide.", beside a fanned stack of garba
- * photos.
+ * Right after the hero: what Kollide is for, a big headline and one line
+ * under it, signed off with "Welcome to Kollide…", beside a fanned stack of
+ * garba photos.
  */
 export default function Welcome() {
   const stackRef = useRef<HTMLDivElement>(null)
@@ -86,25 +86,21 @@ export default function Welcome() {
       <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         <div style={{ color: G.rani }}>
           <FadeUp>
-            <p className={BIG}>The best garba nights start with “okay, I’m in.”</p>
+            <p className={BIG}>Don’t just go to the event. Find your people.</p>
           </FadeUp>
-          <div className="mt-6 space-y-1">
-            {MORE.map((line, i) => (
-              <motion.p
-                key={line}
-                className={BIG}
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.8 }}
-                transition={{ duration: 0.8, delay: i * 0.12, ease: EASE_OUT }}
-              >
-                {line}
-              </motion.p>
-            ))}
-          </div>
+          <motion.p
+            className={`mt-7 max-w-[34rem] ${LEAD}`}
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.8 }}
+            transition={{ duration: 0.8, delay: 0.12, ease: EASE_OUT }}
+          >
+            Kollide matches you with people who want to experience the same things you do, because the best memories
+            are made together.
+          </motion.p>
           <FadeUp delay={0.2} className="mt-12 md:mt-16">
             <p className="relative inline-block text-4xl font-bold italic tracking-[-0.03em] sm:text-5xl">
-              Welcome to Kollide.
+              Welcome to Kollide…
               <svg
                 viewBox="0 0 300 20"
                 preserveAspectRatio="none"
