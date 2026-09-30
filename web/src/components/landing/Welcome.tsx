@@ -113,7 +113,6 @@ export default function Welcome() {
                   stroke={G.marigold}
                   strokeWidth="4"
                   strokeLinecap="round"
-                  vectorEffect="non-scaling-stroke"
                   initial={{ pathLength: 0 }}
                   whileInView={{ pathLength: 1 }}
                   viewport={{ once: true, amount: 0.8 }}

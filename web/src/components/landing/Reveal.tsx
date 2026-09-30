@@ -12,7 +12,7 @@ const word: Variants = {
   shown: { y: '0%', transition: { duration: 0.8, ease: EASE_OUT } },
 }
 
-type Tag = 'h1' | 'h2' | 'h3' | 'p'
+type Tag = 'h1' | 'h2' | 'h3' | 'p' | 'span'
 
 /**
  * A heading whose words slide up from behind a mask, one after another.

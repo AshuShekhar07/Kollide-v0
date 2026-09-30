@@ -2,38 +2,40 @@ import {
   Check,
   Coffee,
   Dices,
-  Feather,
-  Footprints,
-  Mountain,
   Music,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react'
-import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { supabase } from '../../lib/supabase'
-import { EASE_OUT } from './motion'
+import { G } from './garba'
 import { FadeUp, RevealText } from './Reveal'
+import Toran from './Toran'
 
 export type ComingSoonActivity = { slug: string; name: string }
 
 const ACTIVITY_ICONS: Record<string, LucideIcon> = {
-  trekking: Mountain,
-  badminton: Feather,
   concerts: Music,
-  running: Footprints,
   board_games: Dices,
   cafe_hopping: Coffee,
 }
 
 const ACTIVITY_LINES: Record<string, string> = {
-  trekking: 'Weekend treks out of Bangalore with people who keep your pace.',
-  badminton: 'A partner for evening rallies, or a doubles four that actually shows up.',
   concerts: 'Someone to go with when your favourite artist comes to town.',
-  running: 'Early-morning runs with a crew that keeps you honest.',
   board_games: 'Game nights with people who take Catan a little too seriously.',
   cafe_hopping: "The city's best corners, with people who like the same ones.",
 }
+
+// Card colours in turn; text on the lighter ones is ink, on the rest cream.
+const CARD_COLORS = [
+  { bg: G.rani, fg: G.cream },
+  { bg: G.marigold, fg: G.ink },
+  { bg: G.peacock, fg: G.cream },
+  { bg: G.haldi, fg: G.ink },
+  { bg: G.maroon, fg: G.cream },
+  { bg: G.leaf, fg: G.cream },
+]
 
 const VOTES_KEY = 'kollide:votes'
 
@@ -47,7 +49,7 @@ function readVotes(): string[] {
 
 // "I'd want this" (§6.1): logged as a coming_soon_vote event. The browser
 // remembers its own votes so the button stays ticked.
-function VoteButton({ slug }: { slug: string }) {
+function VoteButton({ slug, bg, fg }: { slug: string; bg: string; fg: string }) {
   const [voted, setVoted] = useState(() => readVotes().includes(slug))
   const [busy, setBusy] = useState(false)
 
@@ -69,10 +71,11 @@ function VoteButton({ slug }: { slug: string }) {
       type="button"
       onClick={vote}
       disabled={voted || busy}
-      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition active:scale-95 ${
+      style={{ '--vote-bg': bg, '--vote-fg': fg } as CSSProperties}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-bold transition active:scale-95 ${
         voted
-          ? 'bg-[#fff] text-[#111]'
-          : 'border border-[#fff]/30 text-[#fff] hover:bg-[#fff] hover:text-[#111] group-hover:border-[#111]/40 group-hover:text-[#111]'
+          ? 'bg-(--vote-fg) text-(--vote-bg)'
+          : 'border-2 border-current/45 hover:border-transparent hover:bg-(--vote-fg) hover:text-(--vote-bg)'
       }`}
     >
       {voted ? (
@@ -88,69 +91,67 @@ function VoteButton({ slug }: { slug: string }) {
   )
 }
 
-// Types `text` one character at a time once it scrolls into view.
-function useTypewriter(text: string, start: boolean, speed = 70) {
+/**
+ * The full-screen beat: a maroon card under a toran, the question sliding up
+ * word by word, then the answer. It stays pinned while the list slides over,
+ * sinking back a little, like the How it works cards.
+ */
+function Question({ cover }: { cover: ReturnType<typeof useScroll>['scrollYProgress'] }) {
   const reduced = useReducedMotion()
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!start || reduced) return
-    const id = window.setInterval(() => {
-      setCount((c) => {
-        if (c >= text.length) {
-          window.clearInterval(id)
-          return c
-        }
-        return c + 1
-      })
-    }, speed)
-    return () => window.clearInterval(id)
-  }, [start, reduced, text, speed])
-  return reduced ? text.length : count
-}
-
-const QUESTION = "That's it?\nJust Garba?"
-
-// The full-screen orange beat: the question types itself out, then the
-// answer ("what's next") appears. It stays pinned while the list slides over.
-function Question() {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, amount: 0.55 })
-  const count = useTypewriter(QUESTION, inView)
-  const done = count >= QUESTION.length
-  const typed = QUESTION.slice(0, count)
-  const [line1, line2 = ''] = typed.split('\n')
+  const scale = useTransform(cover, [0, 1], reduced ? [1, 1] : [1, 0.94])
 
   return (
-    <div ref={ref} className="sticky top-0 flex h-[100svh] items-center overflow-hidden bg-[#E0661A] text-[#111]">
-      <div className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12">
-        <h2 aria-label="That's it? Just Garba?" className="font-display font-extrabold leading-[0.9] tracking-[-0.045em]">
-          <span aria-hidden className="block text-[3.6rem] sm:text-8xl lg:text-[10rem]">
-            {line1}
-            {!typed.includes('\n') && <Caret />}
-          </span>
-          <span aria-hidden className="block min-h-[1em] text-[3.6rem] sm:text-8xl lg:text-[10rem]">
-            {line2}
-            {typed.includes('\n') && <Caret />}
-          </span>
-        </h2>
-        <motion.p
-          className="mt-10 max-w-md text-xl font-semibold leading-snug sm:text-2xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={done ? { opacity: 1, y: 0 } : undefined}
-          transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.3 }}
-        >
-          Not even close. Here's what's next.
-        </motion.p>
-      </div>
+    <div className="sticky top-0 flex h-[100svh] items-center justify-center px-4 sm:px-6">
+      <motion.div
+        className="bandhani-soft relative flex h-[88svh] max-h-[52rem] w-full max-w-7xl origin-top flex-col overflow-hidden rounded-[40px] shadow-2xl shadow-[#2A0E1B]/25"
+        style={{ scale, backgroundColor: G.maroon, color: G.cream }}
+      >
+        <Toran count={32} className="shrink-0 text-[#FFF4E4]" />
+        <div className="relative flex flex-1 flex-col justify-center px-6 sm:px-12 lg:px-16">
+          <h2 className="font-display font-extrabold leading-[0.92] tracking-[-0.045em] text-[3.6rem] sm:text-8xl lg:text-[9.5rem]">
+            <RevealText as="span" text="That's it?" className="block" />
+            <RevealText
+              as="span"
+              text="Just Garba?"
+              delay={0.25}
+              className="block"
+              accent={['Garba']}
+              accentClassName="italic pr-[0.12em]"
+            />
+          </h2>
+          <FadeUp delay={0.9} className="mt-10 md:mt-14">
+            <p className="text-2xl font-bold tracking-[-0.02em] sm:text-4xl">
+              Not even close.{' '}
+              <span className="relative inline-block">
+                Here's what's next.
+                <svg
+                  viewBox="0 0 300 20"
+                  preserveAspectRatio="none"
+                  className="absolute -bottom-3 left-0 h-4 w-full overflow-visible"
+                  aria-hidden
+                >
+                  <motion.path
+                    d="M 4 12 C 80 4, 200 18, 296 8"
+                    fill="none"
+                    stroke={G.marigold}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
+                    viewport={{ once: true, amount: 0.8 }}
+                    transition={{ duration: 0.8, delay: 1.5, ease: 'easeInOut' }}
+                  />
+                </svg>
+              </span>
+            </p>
+          </FadeUp>
+        </div>
+      </motion.div>
     </div>
   )
 }
 
-function Caret() {
-  return <span className="ml-1 inline-block h-[0.8em] w-[0.08em] translate-y-[0.08em] animate-pulse bg-[#111]" />
-}
-
-function EventRow({
+function ActivityCard({
   activity,
   index,
   canVote,
@@ -161,106 +162,128 @@ function EventRow({
 }) {
   const Icon = ACTIVITY_ICONS[activity.slug] ?? Sparkles
   const line = ACTIVITY_LINES[activity.slug] ?? 'Coming after Navratri.'
-  const from = index % 2 === 0 ? -60 : 60
+  const { bg, fg } = CARD_COLORS[index % CARD_COLORS.length]
 
   return (
-    <li className="group relative border-t border-[#fff]/15">
-      {/* Orange fill that wipes in on hover. */}
-      <span
-        className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-[#E0661A] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
-        aria-hidden
-      />
-      <motion.div
-        className="relative flex flex-col gap-5 px-5 py-8 transition-colors duration-300 group-hover:text-[#111] sm:px-8 md:flex-row md:items-center md:gap-10 md:py-10 lg:px-12"
-        initial={{ opacity: 0, x: from }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: 0.9, ease: EASE_OUT }}
-      >
-        <span className="w-10 font-mono text-sm text-[#E0661A] transition-colors group-hover:text-[#111]">
-          {String(index + 1).padStart(2, '0')}
-        </span>
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#fff]/10 transition-colors group-hover:bg-[#111] group-hover:text-[#E0661A]">
+    <motion.li
+      className="group bandhani-soft relative flex min-h-[19rem] flex-col overflow-hidden rounded-[32px] p-7 sm:p-8"
+      style={{ backgroundColor: bg, color: fg }}
+      initial={{ opacity: 0, y: 48, rotate: index % 2 ? 2 : -2 }}
+      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+      whileHover={{ y: -6, rotate: index % 2 ? 0.6 : -0.6 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ type: 'spring', stiffness: 140, damping: 18, delay: (index % 3) * 0.08 }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <span
+          className="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-700 group-hover:rotate-[360deg]"
+          style={{ backgroundColor: 'rgb(255 255 255 / 0.18)' }}
+        >
           <Icon className="h-6 w-6" />
         </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="font-display text-4xl font-extrabold leading-none tracking-[-0.03em] sm:text-5xl lg:text-6xl">
-            {activity.name}
-          </h3>
-          <p className="mt-3 max-w-xl text-[#fff]/60 transition-colors group-hover:text-[#111]/80">{line}</p>
-        </div>
+        <span
+          className="font-display text-6xl font-extrabold leading-none tracking-[-0.04em]"
+          style={{ WebkitTextStroke: `2px ${fg}`, color: 'transparent' }}
+          aria-hidden
+        >
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      </div>
+      <h3 className="mt-8 font-display text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">{activity.name}</h3>
+      <p className="mt-3 max-w-sm leading-relaxed opacity-85">{line}</p>
+      <div className="mt-auto pt-7">
         {canVote ? (
-          <VoteButton slug={activity.slug} />
+          <VoteButton slug={activity.slug} bg={bg} fg={fg} />
         ) : (
-          <span className="shrink-0 rounded-full border border-[#fff]/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] transition-colors group-hover:border-[#111]/40">
+          <span className="inline-block rounded-full border-2 border-current/45 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]">
             Soon
           </span>
         )}
-      </motion.div>
-    </li>
+      </div>
+    </motion.li>
   )
 }
 
-function Marquee({ names }: { names: string[] }) {
-  const items = [...names, ...names]
+// The last tile: more is on the way. Cream with a dashed edge, so it reads as
+// a place still to be filled, next to the coloured ones.
+function MoreCard({ index }: { index: number }) {
   return (
-    <div className="relative mt-14 overflow-hidden py-4" aria-hidden>
-      <div className="flex w-max animate-marquee items-center">
-        {items.map((name, i) => (
-          <span key={i} className="flex items-center">
-            <span className="text-outline-orange whitespace-nowrap px-6 font-display text-6xl font-extrabold tracking-[-0.02em] sm:text-8xl">
-              {name}
-            </span>
-            <span className="h-3 w-3 shrink-0 rounded-full bg-[#fff]" />
-          </span>
-        ))}
+    <motion.li
+      className="group relative flex min-h-[19rem] flex-col overflow-hidden rounded-[32px] border-2 border-dashed p-7 sm:p-8"
+      style={{ borderColor: 'rgb(42 14 27 / 0.3)', color: G.ink }}
+      initial={{ opacity: 0, y: 48, rotate: index % 2 ? 2 : -2 }}
+      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+      whileHover={{ y: -6, rotate: index % 2 ? 0.6 : -0.6 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ type: 'spring', stiffness: 140, damping: 18, delay: (index % 3) * 0.08 }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <span
+          className="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-700 group-hover:rotate-[360deg]"
+          style={{ backgroundColor: G.maroon, color: G.cream }}
+        >
+          <Sparkles className="h-6 w-6" />
+        </span>
+        <span
+          className="font-display text-6xl font-extrabold leading-none tracking-[-0.04em]"
+          style={{ WebkitTextStroke: `2px ${G.ink}`, color: 'transparent' }}
+          aria-hidden
+        >
+          +
+        </span>
       </div>
-    </div>
+      <h3 className="mt-8 font-display text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">Many more coming soon</h3>
+      <p className="mt-3 max-w-sm leading-relaxed opacity-75">And your votes decide which one lands first.</p>
+    </motion.li>
   )
 }
 
 /**
- * "That's it? Just Garba?" on a full orange screen, then the coming-soon
- * activities on black, sliding up over it.
+ * "That's it? Just Garba?" on a pinned maroon card, then the coming-soon
+ * activities as garba-coloured cards on the cream page, sliding up over it.
  */
 export default function WhatsNext({ activities, canVote }: { activities: ComingSoonActivity[]; canVote: boolean }) {
   const listRef = useRef<HTMLElement>(null)
   const reduced = useReducedMotion()
-  // The orange screen sinks back slightly as the list covers it.
+  // The card sinks back slightly as the list covers it.
   const { scrollYProgress } = useScroll({ target: listRef, offset: ['start end', 'start start'] })
   const radius = useTransform(scrollYProgress, [0, 1], reduced ? [0, 0] : [48, 0])
 
   return (
     <div className="relative">
-      <Question />
+      <Question cover={scrollYProgress} />
       <motion.section
         ref={listRef}
-        className="relative z-10 bg-[#111] pb-24 pt-20 text-[#fff] md:pb-32 md:pt-28"
-        style={{ borderTopLeftRadius: radius, borderTopRightRadius: radius }}
+        className="relative z-10 pb-24 pt-20 shadow-[0_-24px_60px_-24px_rgb(42_14_27/0.35)] md:pb-32 md:pt-28"
+        style={{ backgroundColor: G.cream, borderTopLeftRadius: radius, borderTopRightRadius: radius }}
         aria-label="What's next"
       >
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
           <FadeUp>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#E0661A]">After Navratri</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: G.rani }}>
+              After Navratri
+            </p>
           </FadeUp>
           <RevealText
             text="What's next."
-            className="mt-4 font-display text-6xl font-extrabold leading-[0.95] tracking-[-0.04em] sm:text-8xl"
+            className="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl"
           />
           <FadeUp delay={0.1}>
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-[#fff]/65">
+            <p className="mt-6 max-w-lg text-lg leading-relaxed opacity-75">
               Kollide opens up to more ways to meet people. Tell us what you'd use next, and we'll build it first.
             </p>
           </FadeUp>
+
+          {/* Threes when they divide evenly, otherwise fours, so no card sits alone on a row. */}
+          <ul
+            className={`mt-14 grid gap-4 sm:grid-cols-2 ${(activities.length + 1) % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
+          >
+            {activities.map((a, i) => (
+              <ActivityCard key={a.slug} activity={a} index={i} canVote={canVote} />
+            ))}
+            <MoreCard index={activities.length} />
+          </ul>
         </div>
-
-        <Marquee names={activities.map((a) => a.name)} />
-
-        <ul className="mt-14 border-b border-[#fff]/15">
-          {activities.map((a, i) => (
-            <EventRow key={a.slug} activity={a} index={i} canVote={canVote} />
-          ))}
-        </ul>
       </motion.section>
     </div>
   )

@@ -26,13 +26,13 @@ type Activity = { slug: string; name: string; status: 'live' | 'coming_soon' }
 // Shown until the activities query returns (or if it fails), so the page
 // always reads as multi-event.
 const FALLBACK_COMING_SOON: Activity[] = [
-  { slug: 'trekking', name: 'Trekking', status: 'coming_soon' },
-  { slug: 'badminton', name: 'Badminton', status: 'coming_soon' },
   { slug: 'concerts', name: 'Concerts', status: 'coming_soon' },
-  { slug: 'running', name: 'Running clubs', status: 'coming_soon' },
   { slug: 'board_games', name: 'Board game nights', status: 'coming_soon' },
   { slug: 'cafe_hopping', name: 'Cafe hopping', status: 'coming_soon' },
 ]
+
+// Coming-soon activities the database has but the landing page doesn't list.
+const HIDDEN_ON_LANDING = new Set(['trekking', 'badminton', 'running'])
 
 // The intro plays once per page load, not on every in-app visit to `/`.
 let introPlayed = false
@@ -55,30 +55,49 @@ function Countdown() {
   )
 }
 
-// A slowly spinning circular badge in the hero, like a garba circle. It also
+// A slowly turning badge in the hero, like a garba circle: a glass disc with
+// a ring of text spaced to fill it exactly, and a button in the middle that
 // takes you to the next section.
 function CircleBadge({ onClick }: { onClick: () => void }) {
-  const text = 'nine nights · one big circle · '
+  const reduced = useReducedMotion()
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label="See how it works"
-      className="group relative flex h-28 w-28 items-center justify-center rounded-full transition hover:scale-105 sm:h-32 sm:w-32"
+      className="group relative flex h-32 w-32 items-center justify-center rounded-full bg-[#2A0E1B]/40 shadow-xl shadow-[#2A0E1B]/30 ring-1 ring-[#FFF4E4]/25 backdrop-blur-md transition duration-300 hover:scale-105 hover:ring-[#F6C33B]/60 sm:h-36 sm:w-36"
     >
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full animate-spin-slow" aria-hidden>
         <defs>
-          <path id="hero-circle" d="M50 50 m-38 0 a38 38 0 1 1 76 0 a38 38 0 1 1 -76 0" />
+          <path id="hero-circle" d="M50 50 m-37 0 a37 37 0 1 1 74 0 a37 37 0 1 1 -74 0" />
         </defs>
-        <text fill={G.cream} fontSize="9.2" fontWeight="700" letterSpacing="1.6" style={{ textTransform: 'uppercase' }}>
-          <textPath href="#hero-circle">{text}</textPath>
+        <text
+          fill={G.cream}
+          fontSize="8.4"
+          fontWeight="800"
+          style={{ textTransform: 'uppercase', fontFamily: 'var(--font-display)' }}
+        >
+          {/* 2π × 37 is about 232.5; the text is stretched to fill it evenly. */}
+          <textPath href="#hero-circle" textLength="230" lengthAdjust="spacing">
+            Nine nights <tspan fill={G.haldi}>•</tspan> One big circle <tspan fill={G.haldi}>•</tspan>{' '}
+          </textPath>
         </text>
       </svg>
+      {/* A fine ring between the words and the button. */}
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
+        <circle cx="50" cy="50" r="28" fill="none" stroke={G.cream} strokeOpacity="0.2" strokeWidth="0.6" />
+      </svg>
       <span
-        className="flex h-12 w-12 items-center justify-center rounded-full transition group-hover:translate-y-0.5"
+        className="relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg shadow-[#F6C33B]/25 transition group-hover:scale-105 sm:h-16 sm:w-16"
         style={{ backgroundColor: G.haldi, color: G.ink }}
       >
-        <ArrowDown className="h-5 w-5" />
+        <motion.span
+          className="flex"
+          animate={reduced ? undefined : { y: [0, 3, 0] }}
+          transition={{ duration: 1.8, ease: 'easeInOut', repeat: Infinity }}
+        >
+          <ArrowDown className="h-6 w-6" strokeWidth={2.4} />
+        </motion.span>
       </span>
     </button>
   )
@@ -305,8 +324,9 @@ export default function Landing() {
       .eq('status', 'coming_soon')
       .order('sort_order')
       .then(({ data }) => {
-        if (data?.length) {
-          setComingSoon(data as Activity[])
+        const shown = (data as Activity[] | null)?.filter((a) => !HIDDEN_ON_LANDING.has(a.slug))
+        if (shown?.length) {
+          setComingSoon(shown)
           setFromDb(true)
         }
       })
