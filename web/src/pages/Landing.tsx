@@ -2,7 +2,7 @@ import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
 import { ArrowDown, ArrowUpRight, BadgeCheck } from 'lucide-react'
 import { motion, MotionConfig, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from 'motion/react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import Details from '../components/landing/Details'
 import { G } from '../components/landing/garba'
@@ -124,13 +124,39 @@ function HeroCurtain({
   const heroDim = useTransform(scrollYProgress, (p) => (reduced ? 0 : 0.6 * p))
   const radius = useTransform(scrollYProgress, (p) => (reduced ? 40 : 56 - 40 * p))
 
-  // Once the page has fully covered the hero, stop the video playing unseen.
-  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+  // Keep the video playing whenever the hero can be seen, and stop it only
+  // once the page has fully covered it. Browsers also pause muted autoplay
+  // video on their own (a hidden tab, power saving, a blocked first attempt),
+  // so any other pause is undone as soon as the hero is showing again.
+  const covered = useRef(false)
+  const syncVideo = useCallback(() => {
     const video = videoRef.current
     if (!video || reduced) return
-    if (p >= 1 && !video.paused) video.pause()
-    else if (p < 1 && video.paused) video.play().catch(() => {})
+    if (covered.current || document.hidden) {
+      if (!video.paused) video.pause()
+    } else if (video.paused) {
+      video.play().catch(() => {})
+    }
+  }, [reduced])
+
+  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+    covered.current = p >= 1
+    syncVideo()
   })
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || reduced) return
+    video.addEventListener('pause', syncVideo)
+    video.addEventListener('canplay', syncVideo)
+    document.addEventListener('visibilitychange', syncVideo)
+    syncVideo()
+    return () => {
+      video.removeEventListener('pause', syncVideo)
+      video.removeEventListener('canplay', syncVideo)
+      document.removeEventListener('visibilitychange', syncVideo)
+    }
+  }, [reduced, syncVideo])
 
   return (
     <div className="relative">
@@ -139,7 +165,6 @@ function HeroCurtain({
           <video
             ref={videoRef}
             className="h-full w-full object-cover"
-            src="/landing/garba-hero.mp4"
             poster="/landing/garba-hero-poster.jpg"
             autoPlay={!reduced}
             muted
@@ -147,7 +172,11 @@ function HeroCurtain({
             playsInline
             preload={reduced ? 'none' : 'auto'}
             aria-hidden
-          />
+          >
+            {/* MP4 first; a browser that can't decode H.264 falls back to WebM. */}
+            <source src="/landing/garba-hero.mp4" type="video/mp4" />
+            <source src="/landing/garba-hero.webm" type="video/webm" />
+          </video>
           {/* A warm maroon wash so the cream type reads over the dancing. */}
           <div
             className="absolute inset-0"
