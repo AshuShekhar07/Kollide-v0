@@ -6,12 +6,11 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react'
-import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
-import { useRef, useState, type CSSProperties } from 'react'
+import { motion } from 'motion/react'
+import { useState, type CSSProperties } from 'react'
 import { supabase } from '../../lib/supabase'
 import { G } from './garba'
 import { FadeUp, RevealText } from './Reveal'
-import Toran from './Toran'
 
 export type ComingSoonActivity = { slug: string; name: string }
 
@@ -88,66 +87,6 @@ function VoteButton({ slug, bg, fg }: { slug: string; bg: string; fg: string }) 
         "I'd want this"
       )}
     </button>
-  )
-}
-
-/**
- * The full-screen beat: a maroon card under a toran, the question sliding up
- * word by word, then the answer. It stays pinned while the list slides over,
- * sinking back a little, like the How it works cards.
- */
-function Question({ cover }: { cover: ReturnType<typeof useScroll>['scrollYProgress'] }) {
-  const reduced = useReducedMotion()
-  const scale = useTransform(cover, [0, 1], reduced ? [1, 1] : [1, 0.94])
-
-  return (
-    <div className="sticky top-0 flex h-[100svh] items-center justify-center px-4 sm:px-6">
-      <motion.div
-        className="bandhani-soft relative flex h-[88svh] max-h-[52rem] w-full max-w-7xl origin-top flex-col overflow-hidden rounded-[40px] shadow-2xl shadow-[#2A0E1B]/25"
-        style={{ scale, backgroundColor: G.maroon, color: G.cream }}
-      >
-        <Toran count={32} className="shrink-0 text-[#FFF4E4]" />
-        <div className="relative flex flex-1 flex-col justify-center px-6 sm:px-12 lg:px-16">
-          <h2 className="font-display font-extrabold leading-[0.92] tracking-[-0.045em] text-[3.6rem] sm:text-8xl lg:text-[9.5rem]">
-            <RevealText as="span" text="That's it?" className="block" />
-            <RevealText
-              as="span"
-              text="Just Garba?"
-              delay={0.25}
-              className="block"
-              accent={['Garba']}
-              accentClassName="italic pr-[0.12em]"
-            />
-          </h2>
-          <FadeUp delay={0.9} className="mt-10 md:mt-14">
-            <p className="text-2xl font-bold tracking-[-0.02em] sm:text-4xl">
-              Not even close.{' '}
-              <span className="relative inline-block">
-                Here's what's next.
-                <svg
-                  viewBox="0 0 300 20"
-                  preserveAspectRatio="none"
-                  className="absolute -bottom-3 left-0 h-4 w-full overflow-visible"
-                  aria-hidden
-                >
-                  <motion.path
-                    d="M 4 12 C 80 4, 200 18, 296 8"
-                    fill="none"
-                    stroke={G.marigold}
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    whileInView={{ pathLength: 1 }}
-                    viewport={{ once: true, amount: 0.8 }}
-                    transition={{ duration: 0.8, delay: 1.5, ease: 'easeInOut' }}
-                  />
-                </svg>
-              </span>
-            </p>
-          </FadeUp>
-        </div>
-      </motion.div>
-    </div>
   )
 }
 
@@ -239,52 +178,38 @@ function MoreCard({ index }: { index: number }) {
 }
 
 /**
- * "That's it? Just Garba?" on a pinned maroon card, then the coming-soon
- * activities as garba-coloured cards on the cream page, sliding up over it.
+ * The coming-soon activities, as garba-coloured cards on the cream page,
+ * with a last card for everything still to come.
  */
 export default function WhatsNext({ activities, canVote }: { activities: ComingSoonActivity[]; canVote: boolean }) {
-  const listRef = useRef<HTMLElement>(null)
-  const reduced = useReducedMotion()
-  // The card sinks back slightly as the list covers it.
-  const { scrollYProgress } = useScroll({ target: listRef, offset: ['start end', 'start start'] })
-  const radius = useTransform(scrollYProgress, [0, 1], reduced ? [0, 0] : [48, 0])
-
   return (
-    <div className="relative">
-      <Question cover={scrollYProgress} />
-      <motion.section
-        ref={listRef}
-        className="relative z-10 pb-24 pt-20 shadow-[0_-24px_60px_-24px_rgb(42_14_27/0.35)] md:pb-32 md:pt-28"
-        style={{ backgroundColor: G.cream, borderTopLeftRadius: radius, borderTopRightRadius: radius }}
-        aria-label="What's next"
-      >
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
-          <FadeUp>
-            <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: G.rani }}>
-              After Navratri
-            </p>
-          </FadeUp>
-          <RevealText
-            text="What's next."
-            className="mt-4 font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl"
-          />
-          <FadeUp delay={0.1}>
-            <p className="mt-6 max-w-lg text-lg leading-relaxed opacity-75">
-              Kollide opens up to more ways to meet people. Tell us what you'd use next, and we'll build it first.
-            </p>
-          </FadeUp>
+    <section className="px-5 py-24 sm:px-8 md:py-32 lg:px-12" aria-label="What's coming next">
+      <div className="mx-auto max-w-7xl">
+        <FadeUp>
+          <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: G.rani }}>
+            After Navratri
+          </p>
+        </FadeUp>
+        <RevealText
+          text="Here's what's coming next…"
+          className="mt-4 max-w-4xl font-display text-5xl font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl"
+        />
+        <FadeUp delay={0.1}>
+          <p className="mt-6 max-w-lg text-lg leading-relaxed opacity-75">
+            Kollide opens up to more ways to meet people. Tell us what you'd use next, and we'll build it first.
+          </p>
+        </FadeUp>
 
-          {/* Threes when they divide evenly, otherwise fours, so no card sits alone on a row. */}
-          <ul
-            className={`mt-14 grid gap-4 sm:grid-cols-2 ${(activities.length + 1) % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
-          >
-            {activities.map((a, i) => (
-              <ActivityCard key={a.slug} activity={a} index={i} canVote={canVote} />
-            ))}
-            <MoreCard index={activities.length} />
-          </ul>
-        </div>
-      </motion.section>
-    </div>
+        {/* Threes when they divide evenly, otherwise fours, so no card sits alone on a row. */}
+        <ul
+          className={`mt-14 grid gap-4 sm:grid-cols-2 ${(activities.length + 1) % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
+        >
+          {activities.map((a, i) => (
+            <ActivityCard key={a.slug} activity={a} index={i} canVote={canVote} />
+          ))}
+          <MoreCard index={activities.length} />
+        </ul>
+      </div>
+    </section>
   )
 }
