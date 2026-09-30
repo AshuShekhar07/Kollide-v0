@@ -2,7 +2,6 @@ import {
   Check,
   Coffee,
   Dices,
-  Mountain,
   Music,
   Sparkles,
   type LucideIcon,
@@ -17,14 +16,12 @@ import Toran from './Toran'
 export type ComingSoonActivity = { slug: string; name: string }
 
 const ACTIVITY_ICONS: Record<string, LucideIcon> = {
-  trekking: Mountain,
   concerts: Music,
   board_games: Dices,
   cafe_hopping: Coffee,
 }
 
 const ACTIVITY_LINES: Record<string, string> = {
-  trekking: 'Weekend treks out of Bangalore with people who keep your pace.',
   concerts: 'Someone to go with when your favourite artist comes to town.',
   board_games: 'Game nights with people who take Catan a little too seriously.',
   cafe_hopping: "The city's best corners, with people who like the same ones.",
@@ -251,6 +248,33 @@ export default function WhatsNext({ activities, canVote }: { activities: ComingS
               <ActivityCard key={a.slug} activity={a} index={i} canVote={canVote} />
             ))}
           </ul>
+
+          <FadeUp delay={0.1} className="mt-14 md:mt-20">
+            <p
+              className="relative inline-block font-display text-4xl font-bold italic tracking-[-0.03em] sm:text-5xl"
+              style={{ color: G.rani }}
+            >
+              Many more coming soon…
+              <svg
+                viewBox="0 0 300 20"
+                preserveAspectRatio="none"
+                className="absolute -bottom-3 left-0 h-4 w-full overflow-visible"
+                aria-hidden
+              >
+                <motion.path
+                  d="M 4 12 C 80 4, 200 18, 296 8"
+                  fill="none"
+                  stroke={G.marigold}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true, amount: 0.8 }}
+                  transition={{ duration: 0.8, delay: 0.5, ease: 'easeInOut' }}
+                />
+              </svg>
+            </p>
+          </FadeUp>
         </div>
       </motion.section>
     </div>
