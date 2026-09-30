@@ -2,8 +2,6 @@ import {
   Check,
   Coffee,
   Dices,
-  Feather,
-  Footprints,
   Mountain,
   Music,
   Sparkles,
@@ -20,18 +18,14 @@ export type ComingSoonActivity = { slug: string; name: string }
 
 const ACTIVITY_ICONS: Record<string, LucideIcon> = {
   trekking: Mountain,
-  badminton: Feather,
   concerts: Music,
-  running: Footprints,
   board_games: Dices,
   cafe_hopping: Coffee,
 }
 
 const ACTIVITY_LINES: Record<string, string> = {
   trekking: 'Weekend treks out of Bangalore with people who keep your pace.',
-  badminton: 'A partner for evening rallies, or a doubles four that actually shows up.',
   concerts: 'Someone to go with when your favourite artist comes to town.',
-  running: 'Early-morning runs with a crew that keeps you honest.',
   board_games: 'Game nights with people who take Catan a little too seriously.',
   cafe_hopping: "The city's best corners, with people who like the same ones.",
 }
@@ -249,7 +243,10 @@ export default function WhatsNext({ activities, canVote }: { activities: ComingS
             </p>
           </FadeUp>
 
-          <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Threes when they divide evenly, otherwise fours, so no card sits alone on a row. */}
+          <ul
+            className={`mt-14 grid gap-4 sm:grid-cols-2 ${activities.length % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
+          >
             {activities.map((a, i) => (
               <ActivityCard key={a.slug} activity={a} index={i} canVote={canVote} />
             ))}

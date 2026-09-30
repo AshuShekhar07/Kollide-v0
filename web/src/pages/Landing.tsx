@@ -27,12 +27,13 @@ type Activity = { slug: string; name: string; status: 'live' | 'coming_soon' }
 // always reads as multi-event.
 const FALLBACK_COMING_SOON: Activity[] = [
   { slug: 'trekking', name: 'Trekking', status: 'coming_soon' },
-  { slug: 'badminton', name: 'Badminton', status: 'coming_soon' },
   { slug: 'concerts', name: 'Concerts', status: 'coming_soon' },
-  { slug: 'running', name: 'Running clubs', status: 'coming_soon' },
   { slug: 'board_games', name: 'Board game nights', status: 'coming_soon' },
   { slug: 'cafe_hopping', name: 'Cafe hopping', status: 'coming_soon' },
 ]
+
+// Coming-soon activities the database has but the landing page doesn't list.
+const HIDDEN_ON_LANDING = new Set(['badminton', 'running'])
 
 // The intro plays once per page load, not on every in-app visit to `/`.
 let introPlayed = false
@@ -305,8 +306,9 @@ export default function Landing() {
       .eq('status', 'coming_soon')
       .order('sort_order')
       .then(({ data }) => {
-        if (data?.length) {
-          setComingSoon(data as Activity[])
+        const shown = (data as Activity[] | null)?.filter((a) => !HIDDEN_ON_LANDING.has(a.slug))
+        if (shown?.length) {
+          setComingSoon(shown)
           setFromDb(true)
         }
       })
