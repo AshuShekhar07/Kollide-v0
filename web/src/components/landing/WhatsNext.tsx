@@ -204,6 +204,40 @@ function ActivityCard({
   )
 }
 
+// The last tile: more is on the way. Cream with a dashed edge, so it reads as
+// a place still to be filled, next to the coloured ones.
+function MoreCard({ index }: { index: number }) {
+  return (
+    <motion.li
+      className="group relative flex min-h-[19rem] flex-col overflow-hidden rounded-[32px] border-2 border-dashed p-7 sm:p-8"
+      style={{ borderColor: 'rgb(42 14 27 / 0.3)', color: G.ink }}
+      initial={{ opacity: 0, y: 48, rotate: index % 2 ? 2 : -2 }}
+      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
+      whileHover={{ y: -6, rotate: index % 2 ? 0.6 : -0.6 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ type: 'spring', stiffness: 140, damping: 18, delay: (index % 3) * 0.08 }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <span
+          className="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-700 group-hover:rotate-[360deg]"
+          style={{ backgroundColor: G.maroon, color: G.cream }}
+        >
+          <Sparkles className="h-6 w-6" />
+        </span>
+        <span
+          className="font-display text-6xl font-extrabold leading-none tracking-[-0.04em]"
+          style={{ WebkitTextStroke: `2px ${G.ink}`, color: 'transparent' }}
+          aria-hidden
+        >
+          +
+        </span>
+      </div>
+      <h3 className="mt-8 font-display text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">Many more coming soon</h3>
+      <p className="mt-3 max-w-sm leading-relaxed opacity-75">And your votes decide which one lands first.</p>
+    </motion.li>
+  )
+}
+
 /**
  * "That's it? Just Garba?" on a pinned maroon card, then the coming-soon
  * activities as garba-coloured cards on the cream page, sliding up over it.
@@ -242,39 +276,13 @@ export default function WhatsNext({ activities, canVote }: { activities: ComingS
 
           {/* Threes when they divide evenly, otherwise fours, so no card sits alone on a row. */}
           <ul
-            className={`mt-14 grid gap-4 sm:grid-cols-2 ${activities.length % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
+            className={`mt-14 grid gap-4 sm:grid-cols-2 ${(activities.length + 1) % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
           >
             {activities.map((a, i) => (
               <ActivityCard key={a.slug} activity={a} index={i} canVote={canVote} />
             ))}
+            <MoreCard index={activities.length} />
           </ul>
-
-          <FadeUp delay={0.1} className="mt-14 md:mt-20">
-            <p
-              className="relative inline-block font-display text-4xl font-bold italic tracking-[-0.03em] sm:text-5xl"
-              style={{ color: G.rani }}
-            >
-              Many more coming soon…
-              <svg
-                viewBox="0 0 300 20"
-                preserveAspectRatio="none"
-                className="absolute -bottom-3 left-0 h-4 w-full overflow-visible"
-                aria-hidden
-              >
-                <motion.path
-                  d="M 4 12 C 80 4, 200 18, 296 8"
-                  fill="none"
-                  stroke={G.marigold}
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  whileInView={{ pathLength: 1 }}
-                  viewport={{ once: true, amount: 0.8 }}
-                  transition={{ duration: 0.8, delay: 0.5, ease: 'easeInOut' }}
-                />
-              </svg>
-            </p>
-          </FadeUp>
         </div>
       </motion.section>
     </div>
