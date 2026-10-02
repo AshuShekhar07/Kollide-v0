@@ -285,7 +285,7 @@ function checkbox(ctx: CanvasRenderingContext2D, x: number, y: number, done: boo
 function festivalLine(f: Festival) {
   if (f.phase === 'before') return f.days === 1 ? 'Navratri starts tomorrow' : `${f.days} days to Navratri`
   if (f.phase === 'during') return `Night ${f.night} of Navratri · ${f.info.colour} night`
-  return 'Navratri 2026 · Bangalore'
+  return 'Navratri 2026 · India'
 }
 
 export async function drawShareCard(input: ShareCardInput): Promise<Blob> {

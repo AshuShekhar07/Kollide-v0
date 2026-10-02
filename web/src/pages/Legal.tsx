@@ -53,8 +53,8 @@ export function Privacy() {
   return (
     <LegalPage title="Privacy Policy">
       <p>
-        Kollide helps verified people find a friend or a group to go to events with, starting with Garba and Dandiya in
-        Bangalore. This policy explains what we collect, why, who can see it, how long we keep it, and how to delete
+        Kollide helps verified people find a friend or a group to go to events with, starting with Garba and Dandiya
+        across India. This policy explains what we collect, why, who can see it, how long we keep it, and how to delete
         it. By creating an account you consent to this processing, as you confirm with the checkbox at signup.
       </p>
 
@@ -97,11 +97,6 @@ export function Privacy() {
           </li>
           <li>
             <strong>Technical data:</strong> sign-in and security logs kept by our hosting providers.
-          </li>
-          <li>
-            <strong>Location:</strong> Kollide is only in Bangalore for now, so with your permission the app checks
-            on your device whether you're in or near Bangalore. Your location is never sent to us or stored; we only
-            use it to show a notice if you're elsewhere.
           </li>
         </ul>
       </section>
@@ -247,7 +242,7 @@ export function Terms() {
         <h2>Who can use Kollide</h2>
         <ul>
           <li>You must be at least 18 years old.</li>
-          <li>Kollide currently runs only in Bangalore, and is meant for people in or visiting the city.</li>
+          <li>Kollide is available to people across India.</li>
           <li>You may have only one account, and it must be about you: your real first name, photos and details.</li>
           <li>You must complete verification with a video of your own face.</li>
           <li>You can't use Kollide if we've banned you before.</li>

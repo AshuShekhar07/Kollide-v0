@@ -44,7 +44,7 @@ function dayLabel(iso: string) {
 
 const ICEBREAKERS = [
   'Which Garba night are you going to? 💃',
-  'Where do you usually go for Garba in Bangalore?',
+  'Where do you usually go for Garba in your city?',
   'Honest question: how good are your Garba steps? 😄',
 ]
 

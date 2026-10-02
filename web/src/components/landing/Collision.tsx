@@ -19,7 +19,7 @@ const mix = (a: number, b: number, t: number) => a + (b - a) * t
 
 // How long the whole story takes, in seconds, and its beats as fractions of
 // that. The gaps between beats are the pauses on each photo.
-const DURATION = 10
+const DURATION = 5
 const ENTER = 0.15
 const RUSH = 0.27
 const MEET = 0.33

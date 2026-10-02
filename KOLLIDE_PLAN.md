@@ -8,7 +8,7 @@
 
 Kollide is a matchmaking platform for real-world meetups. People use it to find a friend or a group of friends to attend an event with, instead of going alone. It is not a dating app. Tagline: *"Where paths collide."*
 
-- **City:** Bangalore only.
+- **City:** All of India (launched nationally on Oct 2, 2026, after a Bangalore pilot).
 - **Pilot:** Sharad Navratri 2026, which runs Oct 11–19, 2026. Garba/Dandiya is the only live activity.
 - **Other activities** (treks, sports, concerts, etc.) are listed as "Coming soon" from day one, so the product reads as multi-event, not Garba-only.
 - **Target launch:** Sunday, Oct 4, 2026. Hard deadline: Oct 10.

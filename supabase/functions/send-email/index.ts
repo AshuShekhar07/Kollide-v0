@@ -31,7 +31,7 @@ function layout(title: string, body: string): string {
   return `<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;color:#262626">
   <h2 style="color:#7a1f5c">${title}</h2>
   ${body}
-  <p style="color:#888;font-size:12px;margin-top:32px">Kollide · Bangalore · Where paths collide</p>
+  <p style="color:#888;font-size:12px;margin-top:32px">Kollide · India · Where paths collide</p>
 </div>`
 }
 
