@@ -53,8 +53,8 @@ export function Privacy() {
   return (
     <LegalPage title="Privacy Policy">
       <p>
-        Kollide helps verified people find a friend or a group to go to events with, starting with Garba and Dandiya
-        across India. This policy explains what we collect, why, who can see it, how long we keep it, and how to delete
+        Kollide helps verified people find a friend or a group to go to events with, starting with Garba and Dandiya in
+        cities across India. This policy explains what we collect, why, who can see it, how long we keep it, and how to delete
         it. By creating an account you consent to this processing, as you confirm with the checkbox at signup.
       </p>
 
@@ -98,6 +98,11 @@ export function Privacy() {
           <li>
             <strong>Technical data:</strong> sign-in and security logs kept by our hosting providers.
           </li>
+          <li>
+            <strong>Location:</strong> with your permission, the app reads your phone's location when you open it,
+            so we can show you people and groups within 80 km. We save it rounded to about 1 km, with the name of the
+            nearest city. If you'd rather not share it, pick a city instead and we use only that city's centre.
+          </li>
         </ul>
       </section>
 
@@ -120,6 +125,10 @@ export function Privacy() {
           <li>
             <strong>Other members</strong> see your first name, age, intro, answers and photos. Unverified members can
             only see a limited number of profiles a day. Only verified members appear to others.
+          </li>
+          <li>
+            <strong>Your location</strong> is used only to decide who you see. Other members never see it, your city,
+            or how far away you are.
           </li>
           <li>
             <strong>Your socials</strong> are shown only to people you've kollided with and to members of groups
@@ -162,7 +171,7 @@ export function Privacy() {
             away.
           </li>
           <li>
-            <strong>Your profile, photos, kollides, groups and chats</strong> are kept while your account is open
+            <strong>Your profile, location, photos, kollides, groups and chats</strong> are kept while your account is open
             and deleted when you delete it.
           </li>
           <li>
@@ -242,7 +251,7 @@ export function Terms() {
         <h2>Who can use Kollide</h2>
         <ul>
           <li>You must be at least 18 years old.</li>
-          <li>Kollide is available to people across India.</li>
+          <li>Kollide is for people in India. You see people and groups within 80 km of where you are, or of the city you pick.</li>
           <li>You may have only one account, and it must be about you: your real first name, photos and details.</li>
           <li>You must complete verification with a video of your own face.</li>
           <li>You can't use Kollide if we've banned you before.</li>

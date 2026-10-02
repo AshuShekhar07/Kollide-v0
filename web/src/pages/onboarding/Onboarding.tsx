@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import { LocationSync } from '../../components/Location'
 import PendingInviteBanner from '../../components/PendingInviteBanner'
 import SplitScreen from '../../components/SplitScreen'
 import { ErrorText, FullScreenSpinner, Logo } from '../../components/ui'
@@ -175,6 +176,7 @@ export default function Onboarding() {
 
         <div className="mt-6">
           <PendingInviteBanner />
+          <LocationSync />
         </div>
         <div key={current} className="mt-2 animate-rise">
           {current === 0 && <BasicsStep {...props} />}

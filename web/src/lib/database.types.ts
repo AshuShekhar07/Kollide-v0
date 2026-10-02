@@ -101,6 +101,19 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"cities": {
+                  Row: {
+                    "lat": number,"lng": number,"name": string,"popular": number | null,"slug": string
+                  }
+                  Insert: {
+                    "lat": number,"lng": number,"name": string,"popular"?: number | null,"slug": string
+                  }
+                  Update: {
+                    "lat"?: number,"lng"?: number,"name"?: string,"popular"?: number | null,"slug"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"conversation_members": {
                   Row: {
                     "conversation_id": string,"joined_at": string,"last_read_at": string | null,"left_at": string | null,"user_id": string
@@ -229,13 +242,13 @@ isOneToOne: false
                   ]
                 },"groups": {
                   Row: {
-                    "activity_id": string,"admin_id": string | null,"created_at": string,"description": string | null,"event_date": string | null,"id": string,"max_members": number,"status": Database["public"]['Enums']["group_status"],"title": string,"venue": string | null
+                    "activity_id": string,"admin_id": string | null,"city": string | null,"created_at": string,"description": string | null,"event_date": string | null,"id": string,"lat": number | null,"lng": number | null,"max_members": number,"status": Database["public"]['Enums']["group_status"],"title": string,"venue": string | null
                   }
                   Insert: {
-                    "activity_id": string,"admin_id"?: string | null,"created_at"?: string,"description"?: string | null,"event_date"?: string | null,"id"?: string,"max_members": number,"status"?: Database["public"]['Enums']["group_status"],"title": string,"venue"?: string | null
+                    "activity_id": string,"admin_id"?: string | null,"city"?: string | null,"created_at"?: string,"description"?: string | null,"event_date"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"max_members": number,"status"?: Database["public"]['Enums']["group_status"],"title": string,"venue"?: string | null
                   }
                   Update: {
-                    "activity_id"?: string,"admin_id"?: string | null,"created_at"?: string,"description"?: string | null,"event_date"?: string | null,"id"?: string,"max_members"?: number,"status"?: Database["public"]['Enums']["group_status"],"title"?: string,"venue"?: string | null
+                    "activity_id"?: string,"admin_id"?: string | null,"city"?: string | null,"created_at"?: string,"description"?: string | null,"event_date"?: string | null,"id"?: string,"lat"?: number | null,"lng"?: number | null,"max_members"?: number,"status"?: Database["public"]['Enums']["group_status"],"title"?: string,"venue"?: string | null
                   }
                   Relationships: [
                     {
@@ -423,13 +436,13 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "bio": string | null,"consent_at": string | null,"created_at": string,"dob": string | null,"first_name": string | null,"gender": Database["public"]['Enums']["gender"] | null,"gender_preference": (Database["public"]['Enums']["gender"])[] | null,"id": string,"is_banned": boolean,"onboarding_complete": boolean,"plan": string | null,"public_code": string,"seeking": Database["public"]['Enums']["seeking"] | null,"verification_status": Database["public"]['Enums']["verification_status"],"verified_at": string | null,"verified_by": string | null
+                    "bio": string | null,"city": string | null,"consent_at": string | null,"created_at": string,"dob": string | null,"first_name": string | null,"gender": Database["public"]['Enums']["gender"] | null,"gender_preference": (Database["public"]['Enums']["gender"])[] | null,"id": string,"is_banned": boolean,"lat": number | null,"lng": number | null,"location_source": string | null,"location_updated_at": string | null,"onboarding_complete": boolean,"plan": string | null,"public_code": string,"seeking": Database["public"]['Enums']["seeking"] | null,"verification_status": Database["public"]['Enums']["verification_status"],"verified_at": string | null,"verified_by": string | null
                   }
                   Insert: {
-                    "bio"?: string | null,"consent_at"?: string | null,"created_at"?: string,"dob"?: string | null,"first_name"?: string | null,"gender"?: Database["public"]['Enums']["gender"] | null,"gender_preference"?: (Database["public"]['Enums']["gender"])[] | null,"id": string,"is_banned"?: boolean,"onboarding_complete"?: boolean,"plan"?: string | null,"public_code": string,"seeking"?: Database["public"]['Enums']["seeking"] | null,"verification_status"?: Database["public"]['Enums']["verification_status"],"verified_at"?: string | null,"verified_by"?: string | null
+                    "bio"?: string | null,"city"?: string | null,"consent_at"?: string | null,"created_at"?: string,"dob"?: string | null,"first_name"?: string | null,"gender"?: Database["public"]['Enums']["gender"] | null,"gender_preference"?: (Database["public"]['Enums']["gender"])[] | null,"id": string,"is_banned"?: boolean,"lat"?: number | null,"lng"?: number | null,"location_source"?: string | null,"location_updated_at"?: string | null,"onboarding_complete"?: boolean,"plan"?: string | null,"public_code": string,"seeking"?: Database["public"]['Enums']["seeking"] | null,"verification_status"?: Database["public"]['Enums']["verification_status"],"verified_at"?: string | null,"verified_by"?: string | null
                   }
                   Update: {
-                    "bio"?: string | null,"consent_at"?: string | null,"created_at"?: string,"dob"?: string | null,"first_name"?: string | null,"gender"?: Database["public"]['Enums']["gender"] | null,"gender_preference"?: (Database["public"]['Enums']["gender"])[] | null,"id"?: string,"is_banned"?: boolean,"onboarding_complete"?: boolean,"plan"?: string | null,"public_code"?: string,"seeking"?: Database["public"]['Enums']["seeking"] | null,"verification_status"?: Database["public"]['Enums']["verification_status"],"verified_at"?: string | null,"verified_by"?: string | null
+                    "bio"?: string | null,"city"?: string | null,"consent_at"?: string | null,"created_at"?: string,"dob"?: string | null,"first_name"?: string | null,"gender"?: Database["public"]['Enums']["gender"] | null,"gender_preference"?: (Database["public"]['Enums']["gender"])[] | null,"id"?: string,"is_banned"?: boolean,"lat"?: number | null,"lng"?: number | null,"location_source"?: string | null,"location_updated_at"?: string | null,"onboarding_complete"?: boolean,"plan"?: string | null,"public_code"?: string,"seeking"?: Database["public"]['Enums']["seeking"] | null,"verification_status"?: Database["public"]['Enums']["verification_status"],"verified_at"?: string | null,"verified_by"?: string | null
                   }
                   Relationships: [
                     
@@ -640,13 +653,13 @@ isOneToOne: false
 "get_group_invite_link":
 { Args: { "p_group_id": string }; Returns: string
                            },
-"get_group_member_profile":
-{ Args: { "p_group_id": string,"p_user_id": string }; Returns: Json
-                           },
 "get_group_invites":
 { Args: Record<PropertyKey, never>; Returns: {
               "admin_name": string,"description": string,"event_date": string,"group_id": string,"invited_at": string,"max_members": number,"member_count": number,"title": string,"venue": string
             }[]
+                           },
+"get_group_member_profile":
+{ Args: { "p_group_id": string,"p_user_id": string }; Returns: Json
                            },
 "get_groups":
 { Args: { "p_activity_id": string }; Returns: {
@@ -693,8 +706,16 @@ isOneToOne: false
 "mark_conversation_read":
 { Args: { "p_conversation_id": string }; Returns: undefined
                            },
+"orphaned_storage_objects":
+{ Args: { "p_bucket": string,"p_limit"?: number }; Returns: {
+              "name": string
+            }[]
+                           },
 "pass_profile":
 { Args: { "p_activity_id": string,"p_target_id": string }; Returns: undefined
+                           },
+"ping":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "remove_member":
 { Args: { "p_group_id": string,"p_user_id": string }; Returns: undefined
@@ -734,6 +755,12 @@ isOneToOne: false
                            },
 "send_message":
 { Args: { "p_body": string,"p_conversation_id": string }; Returns: Json
+                           },
+"set_my_city":
+{ Args: { "p_city": string }; Returns: Json
+                           },
+"set_my_position":
+{ Args: { "p_lat": number,"p_lng": number }; Returns: Json
                            },
 "submit_verification":
 { Args: { "p_storage_path": string }; Returns: undefined

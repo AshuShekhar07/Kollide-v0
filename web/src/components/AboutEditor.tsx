@@ -71,7 +71,7 @@ export default function AboutEditor({
           onChange={(e) => change(() => setIntro(e.target.value))}
           maxLength={MAX_INTRO}
           rows={4}
-          placeholder="Who you are, what you do, and what you enjoy. E.g. Product designer, new in town, can't sit still when the dhol starts."
+          placeholder="Who you are, what you do, and what you enjoy. E.g. Product designer, new to the city, can't sit still when the dhol starts."
           className={inputClass}
         />
         <span className="mt-1.5 flex justify-between text-xs text-neutral-500">

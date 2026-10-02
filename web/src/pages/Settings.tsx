@@ -1,13 +1,15 @@
-import { ChevronRight, FileText, Lock, LogOut, Moon, ShieldCheck, Smartphone, Sun, SunMoon, Trash2 } from 'lucide-react'
+import { ChevronRight, FileText, Lock, LogOut, MapPin, Moon, ShieldCheck, Smartphone, Sun, SunMoon, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Avatar from '../components/Avatar'
+import { LocationPicker } from '../components/Location'
 import { BackLink } from '../components/BackLink'
 import { Sheet } from '../components/SafetyDialogs'
 import { Button, ErrorText, Section, Spinner, inputClass } from '../components/ui'
 import { useAuth } from '../lib/auth-context'
 import type { Database } from '../lib/database.types'
 import { friendlyError, functionError } from '../lib/errors'
+import { RADIUS_KM } from '../lib/location'
 import { supabase } from '../lib/supabase'
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme'
 
@@ -67,6 +69,36 @@ function BlockedList() {
           ))}
         </ul>
       )}
+    </Section>
+  )
+}
+
+function Location() {
+  const { profile } = useAuth()
+  const [open, setOpen] = useState(false)
+  const from =
+    profile?.location_source === 'city'
+      ? 'You picked this city'
+      : profile?.location_source === 'gps'
+        ? "From your phone's location"
+        : 'Not set yet'
+  return (
+    <Section title="Location" hint={`You see people and groups within ${RADIUS_KM} km. Nobody sees your exact location.`}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center gap-3 rounded-3xl border border-neutral-200/80 bg-surface px-4 py-3.5 text-left shadow-sm hover:bg-neutral-50"
+      >
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100">
+          <MapPin className="h-[18px] w-[18px]" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-semibold text-neutral-800">{profile?.city ?? 'Choose your city'}</span>
+          <span className="block text-xs text-neutral-500">{from}</span>
+        </span>
+        <span className="text-sm font-bold text-neutral-900">Change</span>
+      </button>
+      {open && <LocationPicker onClose={() => setOpen(false)} />}
     </Section>
   )
 }
@@ -170,6 +202,8 @@ export default function Settings() {
     <div className="mx-auto w-full lg:max-w-2xl">
       <BackLink to="/profile">Profile</BackLink>
       <h1 className="mt-3 text-[2.4rem] font-extrabold leading-[0.95] tracking-[-0.04em] text-neutral-900 lg:text-6xl">Settings</h1>
+
+      <Location />
 
       <Appearance />
 
