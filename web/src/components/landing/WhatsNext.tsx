@@ -4,6 +4,7 @@ import {
   Dices,
   Music,
   Sparkles,
+  UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -18,12 +19,14 @@ const ACTIVITY_ICONS: Record<string, LucideIcon> = {
   concerts: Music,
   board_games: Dices,
   cafe_hopping: Coffee,
+  food_walks: UtensilsCrossed,
 }
 
 const ACTIVITY_LINES: Record<string, string> = {
   concerts: 'Someone to go with when your favourite artist comes to town.',
   board_games: 'Game nights with people who take Catan a little too seriously.',
   cafe_hopping: "The city's best corners, with people who like the same ones.",
+  food_walks: "Street food trails with people who never say 'I'm full'.",
 }
 
 // Card colours in turn; text on the lighter ones is ink, on the rest cream.
@@ -31,8 +34,8 @@ const CARD_COLORS = [
   { bg: G.rani, fg: G.cream },
   { bg: G.marigold, fg: G.ink },
   { bg: G.peacock, fg: G.cream },
-  { bg: G.haldi, fg: G.ink },
   { bg: G.maroon, fg: G.cream },
+  { bg: G.haldi, fg: G.ink },
   { bg: G.leaf, fg: G.cream },
 ]
 
@@ -143,43 +146,9 @@ function ActivityCard({
   )
 }
 
-// The last tile: more is on the way. Cream with a dashed edge, so it reads as
-// a place still to be filled, next to the coloured ones.
-function MoreCard({ index }: { index: number }) {
-  return (
-    <motion.li
-      className="group relative flex min-h-[19rem] flex-col overflow-hidden rounded-[32px] border-2 border-dashed p-7 sm:p-8"
-      style={{ borderColor: 'rgb(42 14 27 / 0.3)', color: G.ink }}
-      initial={{ opacity: 0, y: 48, rotate: index % 2 ? 2 : -2 }}
-      whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-      whileHover={{ y: -6, rotate: index % 2 ? 0.6 : -0.6 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ type: 'spring', stiffness: 140, damping: 18, delay: (index % 3) * 0.08 }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <span
-          className="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-700 group-hover:rotate-[360deg]"
-          style={{ backgroundColor: G.maroon, color: G.cream }}
-        >
-          <Sparkles className="h-6 w-6" />
-        </span>
-        <span
-          className="font-display text-6xl font-extrabold leading-none tracking-[-0.04em]"
-          style={{ WebkitTextStroke: `2px ${G.ink}`, color: 'transparent' }}
-          aria-hidden
-        >
-          +
-        </span>
-      </div>
-      <h3 className="mt-8 font-display text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">Many more coming soon</h3>
-      <p className="mt-3 max-w-sm leading-relaxed opacity-75">And your votes decide which one lands first.</p>
-    </motion.li>
-  )
-}
-
 /**
  * The coming-soon activities, as garba-coloured cards on the cream page,
- * with a last card for everything still to come.
+ * with a line under them for everything still to come.
  */
 export default function WhatsNext({ activities, canVote }: { activities: ComingSoonActivity[]; canVote: boolean }) {
   return (
@@ -201,14 +170,22 @@ export default function WhatsNext({ activities, canVote }: { activities: ComingS
         </FadeUp>
 
         {/* Threes when they divide evenly, otherwise fours, so no card sits alone on a row. */}
-        <ul
-          className={`mt-14 grid gap-4 sm:grid-cols-2 ${(activities.length + 1) % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
-        >
+        <ul className={`mt-14 grid gap-4 sm:grid-cols-2 ${activities.length % 3 === 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
           {activities.map((a, i) => (
             <ActivityCard key={a.slug} activity={a} index={i} canVote={canVote} />
           ))}
-          <MoreCard index={activities.length} />
         </ul>
+
+        <FadeUp className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+            style={{ backgroundColor: G.maroon, color: G.cream }}
+          >
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <p className="font-display text-2xl font-extrabold tracking-[-0.03em] sm:text-3xl">Many more coming soon.</p>
+          <p className="text-lg leading-relaxed opacity-75">And your votes decide which one lands first.</p>
+        </FadeUp>
       </div>
     </section>
   )

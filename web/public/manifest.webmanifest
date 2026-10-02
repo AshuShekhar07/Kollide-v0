@@ -1,7 +1,7 @@
 {
   "name": "Kollide",
   "short_name": "Kollide",
-  "description": "Find verified friends or a group for Garba nights in Bangalore.",
+  "description": "Find verified friends or a group for Garba nights across India.",
   "id": "/",
   "start_url": "/start",
   "scope": "/",

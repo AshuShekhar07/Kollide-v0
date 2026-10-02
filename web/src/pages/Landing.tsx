@@ -29,6 +29,7 @@ const FALLBACK_COMING_SOON: Activity[] = [
   { slug: 'concerts', name: 'Concerts', status: 'coming_soon' },
   { slug: 'board_games', name: 'Board game nights', status: 'coming_soon' },
   { slug: 'cafe_hopping', name: 'Cafe hopping', status: 'coming_soon' },
+  { slug: 'food_walks', name: 'Food walks', status: 'coming_soon' },
 ]
 
 // Coming-soon activities the database has but the landing page doesn't list.
@@ -213,8 +214,18 @@ function HeroCurtain({
 
           <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-5 pb-10 sm:px-8 lg:px-12">
             <FadeUp play={ready}>
-              <p className="text-base font-semibold sm:text-lg" style={{ color: G.haldi }}>
-                Navratri starts Sunday, October 11, in Bangalore.
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base font-semibold sm:text-lg" style={{ color: G.haldi }}>
+                <span
+                  className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-bold sm:text-base"
+                  style={{ backgroundColor: G.haldi, color: G.ink }}
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inset-0 animate-ping rounded-full motion-reduce:animate-none" style={{ backgroundColor: G.rani }} />
+                    <span className="relative h-2 w-2 rounded-full" style={{ backgroundColor: G.rani }} />
+                  </span>
+                  Now live across India
+                </span>
+                Navratri starts Sunday, October 11.
               </p>
             </FadeUp>
             <RevealText

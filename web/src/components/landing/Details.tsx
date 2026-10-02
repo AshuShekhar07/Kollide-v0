@@ -62,8 +62,8 @@ const TILES: Tile[] = [
   },
   {
     icon: MapPin,
-    title: 'Bangalore only, 18+',
-    body: "We're starting in one city so every garba night has people on it. Everyone on Kollide is an adult.",
+    title: 'All of India, 18+',
+    body: "Kollide is live across India, so wherever you're dancing this Navratri, you can find people going to the same nights. Everyone on Kollide is an adult.",
     bg: G.haldi,
     fg: G.ink,
     span: 'md:col-span-6 lg:col-span-6',

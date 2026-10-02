@@ -228,7 +228,7 @@ export default function SamePath({ onHow }: { onHow: () => void }) {
       Got the night. Got the outfit. <span style={{ color: G.rani }}>Missing the people.</span>
     </p>,
     <p key="2" className={HEAD}>
-      Across Bangalore, others have the same plan <span style={{ color: G.rani }}>and no one to go with.</span>
+      Across India, others have the same plan <span style={{ color: G.rani }}>and no one to go with.</span>
     </p>,
     <p key="3" className={HEAD}>
       Kollide puts you on the <span style={{ color: G.rani }}>same path.</span>

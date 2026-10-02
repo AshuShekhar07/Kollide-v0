@@ -14,6 +14,7 @@ const ACTIVITY_EMOJI: Record<string, string> = {
   running: '🏃',
   board_games: '🎲',
   cafe_hopping: '☕',
+  food_walks: '🍜',
 }
 
 export default function ActivitiesStep({ data, reload, onNext, onBack }: StepProps) {
