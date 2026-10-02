@@ -27,9 +27,9 @@ function Toggle({ checked, onChange, children }: { checked: boolean; onChange: (
 
 /**
  * Make a story card of a match to share on Instagram or WhatsApp. Only first
- * names go on it; their photo stays off unless you switch it on (their
- * fabric stands in for it). The venue is whatever you type, and "still
- * deciding" until you do.
+ * names go on it, with both photos; either of theirs can be switched off
+ * (their fabric then stands in for the photo). The venue is whatever you
+ * type, and "still deciding" until you do.
  */
 export default function ShareMatch({
   them,
@@ -43,7 +43,7 @@ export default function ShareMatch({
   const { profile } = useAuth()
   const festival = useFestival()
   const [showName, setShowName] = useState(true)
-  const [showPhoto, setShowPhoto] = useState(false)
+  const [showPhoto, setShowPhoto] = useState(true)
   const [venue, setVenue] = useState('')
   // The venue as last drawn; typing redraws after a short pause.
   const [drawnVenue, setDrawnVenue] = useState('')

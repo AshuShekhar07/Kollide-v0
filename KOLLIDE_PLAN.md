@@ -50,15 +50,15 @@ Kollide is a matchmaking platform for real-world meetups. People use it to find 
 - **When it opens:** when a 1:1 match is accepted, or when a user is approved into a group.
 - **Text only.** No photos, video, voice or links. Reject messages containing URLs on the server.
 - **Message length:** max 500 characters, enforced by a database constraint and inside the send function.
-- **Message cap:** each conversation has a shared cap of **50 × number of members**.
-  - Any member can use the shared pool; there is no per-person quota.
-  - A 1:1 chat therefore gets 100 messages.
-  - For groups, the cap only ever goes up: `cap = GREATEST(cap, 50 × approved_members)`. It never shrinks when someone leaves.
-- **Cap UI:**
-  - A banner at the top of the chat explains the limit.
-  - A counter shows the remaining messages.
-  - A reminder appears at 80% and again at 95%.
-  - When the cap is reached, the input is replaced by a card showing the other members' social handles and "Continue on socials" links.
+- **Message history:** *(Changed Oct 2 from a hard cap that ended the chat.)* There's no limit on sending. Each conversation keeps a shared history of **50 × number of members** messages and deletes older ones as new ones arrive.
+  - A 1:1 chat therefore keeps 100 messages.
+  - For groups, the history only ever grows: `cap = GREATEST(cap, 50 × approved_members)`. It never shrinks when someone leaves.
+  - **Stars:** any member can star a message to keep it. Stars are shared (everyone sees them, anyone can unstar) and each one takes a place: with 1 starred message, a 1:1 chat keeps that one plus the newest 99. At most half the history can be starred, so there's always room for new messages.
+  - Reported (retained) conversations are never pruned.
+- **History UI:**
+  - A line at the top of the chat says how many messages it keeps and how many are starred.
+  - Tapping a message shows a Star / Unstar button; starred messages carry a star.
+  - Socials stay in the chat menu ("<name>'s socials") and, for groups, on the group page.
 - **Encryption copy.** Messages are encrypted at rest using Supabase's storage encryption. They are **not** end-to-end encrypted. Use this exact copy wherever encryption comes up:
   > "Your messages are private. If a conversation is reported, our safety team reviews it to investigate."
   Never use the words "end-to-end" anywhere in the product.

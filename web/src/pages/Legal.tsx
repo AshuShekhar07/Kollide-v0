@@ -159,6 +159,11 @@ export function Privacy() {
           Messages are text only and are stored encrypted at rest by our database provider. {PRIVACY_COPY} We don't
           read chats that haven't been reported.
         </p>
+        <p className="mt-2">
+          Each chat keeps its newest messages (100 in a one-on-one chat, 50 per member in a group). Older messages are
+          permanently deleted as new ones arrive, unless someone in the chat has starred them. A reported chat is kept
+          as it is while our safety team reviews it.
+        </p>
       </section>
 
       <section>

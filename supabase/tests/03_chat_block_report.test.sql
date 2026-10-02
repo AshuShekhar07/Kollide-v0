@@ -1,4 +1,4 @@
--- Phase 3: send_message checks and cap, chat RLS, block, report with
+-- Phase 3: send_message checks, history window and stars, chat RLS, block, report with
 -- snapshot, admin reports queue, bans and re-signup.
 --
 -- Seed users used here (see seed.sql):
@@ -23,7 +23,7 @@ begin
 end;
 $$;
 
-select plan(73);
+select plan(84);
 
 create function pg_temp.uid(n int) returns uuid language sql immutable as $$
   select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid;
@@ -72,8 +72,8 @@ insert into t select 'pa', private.create_match(pg_temp.uid(3), pg_temp.uid(4), 
 -- send_message: validation
 ---------------------------------------------------------------------------
 select pg_temp.login_as(8);
-select is((public.send_message(pg_temp.v('si'), '  Hi Isha!  ') ->> 'remaining')::int, 99,
-          'send returns remaining messages (100 cap for 1:1)');
+select is(public.send_message(pg_temp.v('si'), '  Hi Isha!  ') #>> '{message,body}', 'Hi Isha!',
+          'send returns the stored message');
 select is((select body from public.get_messages(pg_temp.v('si')) limit 1), 'Hi Isha!',
           'body is trimmed');
 select throws_ok($$select public.send_message(pg_temp.v('si'), repeat('a', 501))$$, '22023', null,
@@ -133,41 +133,88 @@ select is((select count(*)::int from public.get_messages(
           1, 'p_before pages to older messages');
 
 ---------------------------------------------------------------------------
--- Cap: reminders at 80% and 95%, then KL002
+-- History window (20261017000001): no cap on sending; the chat keeps the
+-- newest 100 messages, and starred ones on top, taking a place each.
 ---------------------------------------------------------------------------
 reset role;
-update public.conversations set message_count = 79 where id = pg_temp.v('si');
+delete from public.messages where conversation_id = pg_temp.v('si');
+update public.conversations set message_count = 0 where id = pg_temp.v('si');
 select pg_temp.login_as(8);
-select public.send_message(pg_temp.v('si'), 'eighty');
+select count(public.send_message(pg_temp.v('si'), 'msg ' || n)) from generate_series(1, 100) n;
 reset role;
-select is((select count(*)::int from public.notifications
-           where type = 'chat_cap_warning' and payload ->> 'percent' = '80'
-             and payload ->> 'conversation_id' = pg_temp.v('si')::text),
-          2, '80% reminder sent to both members');
-update public.conversations set message_count = 94 where id = pg_temp.v('si');
-select pg_temp.login_as(9);
-select public.send_message(pg_temp.v('si'), 'ninety-five');
-select public.send_message(pg_temp.v('si'), 'ninety-six');
-reset role;
-select is((select count(*)::int from public.notifications
-           where type = 'chat_cap_warning' and payload ->> 'percent' = '95'
-             and payload ->> 'conversation_id' = pg_temp.v('si')::text),
-          2, '95% reminder sent once per member, not on every later message');
-
-update public.conversations set message_count = 99 where id = pg_temp.v('si');
-select pg_temp.login_as(8);
-select is((public.send_message(pg_temp.v('si'), 'last one') ->> 'remaining')::int, 0, 'last message fits');
-select throws_ok($$select public.send_message(pg_temp.v('si'), 'one more')$$, 'KL002', null,
-                 'sending past the cap fails with KL002');
-reset role;
-select is((select message_count from public.conversations where id = pg_temp.v('si')), 100,
-          'count stops at the cap');
+select is((select count(*)::int from public.messages where conversation_id = pg_temp.v('si')), 100,
+          'a full history keeps every message');
 select is((select count(*)::int from public.events_log
            where name = 'chat_cap_reached' and props ->> 'conversation_id' = pg_temp.v('si')::text),
-          2, 'chat_cap_reached logged for both members');
-select throws_ok($$update public.conversations set message_count = 101 where id = pg_temp.v('si')$$, '23514', null,
-                 'check constraint backstops the cap');
-update public.conversations set message_count = 10 where id = pg_temp.v('si');
+          2, 'chat_cap_reached logged for both members when the history fills');
+
+select pg_temp.login_as(9);
+select lives_ok($$select public.send_message(pg_temp.v('si'), 'one more')$$, 'sending past 100 still works');
+reset role;
+select is((select count(*)::int from public.messages where conversation_id = pg_temp.v('si')), 100,
+          'still 100 stored');
+select ok(not exists (select 1 from public.messages where conversation_id = pg_temp.v('si') and body = 'msg 1'),
+          'the oldest message was deleted');
+select is((select message_count from public.conversations where id = pg_temp.v('si')), 101,
+          'message_count counts every message sent');
+
+-- Stars
+insert into t select 'm5', id from public.messages where conversation_id = pg_temp.v('si') and body = 'msg 5';
+select pg_temp.login_as(9);
+select is((public.star_message(pg_temp.v('m5'), true) ->> 'starred_count')::int, 1, 'Isha stars an old message');
+select is((public.star_message(pg_temp.v('m5'), true) ->> 'starred_count')::int, 1, 'starring twice is harmless');
+reset role;
+select ok(exists (select 1 from public.messages where conversation_id = pg_temp.v('si') and body = 'msg 2'),
+          'starring deletes nothing by itself');
+
+select pg_temp.login_as(8);
+select public.send_message(pg_temp.v('si'), 'and another');
+reset role;
+select ok(not exists (select 1 from public.messages where conversation_id = pg_temp.v('si') and body = 'msg 2'),
+          'the star took a place: the next message pushed out the oldest unstarred one');
+select pg_temp.login_as(8);
+select ok(exists (select 1 from public.get_messages(pg_temp.v('si'), null, 100)
+                  where id = pg_temp.v('m5') and starred_at is not null),
+          'the starred message outlives the window, marked starred for the other member too');
+
+reset role;
+update public.conversations set starred_count = 50 where id = pg_temp.v('si');
+select pg_temp.login_as(8);
+select throws_ok(format('select public.star_message(%L, true)',
+                   (select id from public.get_messages(pg_temp.v('si'), null, 1))),
+                 '22023', 'You can star up to 50 messages in this chat. Unstar one first.',
+                 'at most half the history can be starred');
+reset role;
+update public.conversations set starred_count = 1 where id = pg_temp.v('si');
+
+select pg_temp.login_as(10);
+select throws_ok($$select public.star_message(pg_temp.v('m5'), false)$$, '42501', null,
+                 'non-members cannot star or unstar');
+select pg_temp.login_as(8);
+select is((public.star_message(pg_temp.v('m5'), false) ->> 'starred_count')::int, 0,
+          'anyone in the chat can unstar');
+select count(public.send_message(pg_temp.v('si'), 'later ' || n)) from generate_series(1, 3) n;
+reset role;
+select ok(not exists (select 1 from public.messages where id = pg_temp.v('m5')),
+          'once unstarred, an old message goes when newer ones arrive');
+select pg_temp.login_as(8);
+select throws_ok($$update public.messages set starred_at = now() where conversation_id = pg_temp.v('si')$$,
+                 '42501', null, 'no direct star writes');
+reset role;
+
+-- A reported (retained) chat is never pruned, but reads with the same window.
+update public.conversations set retained = true where id = pg_temp.v('si');
+select pg_temp.login_as(9);
+select public.send_message(pg_temp.v('si'), 'kept');
+reset role;
+select is((select count(*)::int from public.messages where conversation_id = pg_temp.v('si')), 101,
+          'retained chats are not pruned');
+select pg_temp.login_as(9);
+select is((select count(*)::int from public.get_messages(
+             pg_temp.v('si'), (select min(created_at) from public.get_messages(pg_temp.v('si'), null, 100)), 100)),
+          0, 'but get_messages shows only the newest 100');
+reset role;
+update public.conversations set retained = false where id = pg_temp.v('si');
 
 ---------------------------------------------------------------------------
 -- Block

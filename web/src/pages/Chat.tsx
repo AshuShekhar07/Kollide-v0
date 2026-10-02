@@ -1,4 +1,4 @@
-import { ArrowLeft, AtSign, Ban, Flag, Info, Lock, MoreVertical, PartyPopper, SendHorizontal, Share2, UsersRound } from 'lucide-react'
+import { ArrowLeft, AtSign, Ban, Flag, Info, Lock, MoreVertical, SendHorizontal, Share2, Star, UsersRound } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -10,7 +10,7 @@ import SocialLinks from '../components/SocialLinks'
 import { Button, ErrorText, FullScreenSpinner } from '../components/ui'
 import { festiveTile } from '../lib/festive'
 import { useAuth } from '../lib/auth-context'
-import { MAX_MESSAGE_LENGTH, PRIVACY_COPY, type ChatMessage, type Conversation } from '../lib/chat'
+import { MAX_MESSAGE_LENGTH, PRIVACY_COPY, keptMessages, type ChatMessage, type Conversation } from '../lib/chat'
 import { friendlyError } from '../lib/errors'
 import { supabase } from '../lib/supabase'
 
@@ -64,6 +64,9 @@ export default function Chat() {
   const [sendError, setSendError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [dialog, setDialog] = useState<'report' | 'block' | 'socials' | 'share' | null>(null)
+  // The message whose star button is showing, and the one being starred.
+  const [selected, setSelected] = useState<string | null>(null)
+  const [starring, setStarring] = useState<string | null>(null)
   const myPhoto = useShell()?.myPhoto ?? null
 
   const listRef = useRef<HTMLDivElement>(null)
@@ -103,14 +106,19 @@ export default function Chat() {
 
   // Messages that arrive live or by polling; ones already on screen (our own
   // send, or the same message from both paths) are skipped.
+  // Known ones are merged too, so polling picks up stars.
   const receive = useCallback(
     (incoming: ChatMessage[]) => {
       const fresh = incoming.filter((m) => !messagesRef.current.some((x) => x.id === m.id))
-      if (fresh.length === 0) return
+      const changed = incoming.some((m) =>
+        messagesRef.current.some((x) => x.id === m.id && x.starred_at !== m.starred_at),
+      )
+      if (fresh.length === 0 && !changed) return
+      if (fresh.length === 0) return setMessages((cur) => merge(cur, incoming))
       const el = listRef.current
       const nearBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 120
       if (nearBottom || fresh.some((m) => m.sender_id === uid)) scrollMode.current = { kind: 'bottom' }
-      setMessages((cur) => merge(cur, fresh))
+      setMessages((cur) => merge(cur, incoming))
       if (fresh.some((m) => m.sender_id !== uid)) markRead()
       // Someone new in the group (e.g. rejoined); fetch their name.
       const names = convRef.current?.group?.names
@@ -119,7 +127,7 @@ export default function Chat() {
     [uid, markRead, loadConversation],
   )
 
-  // New messages and count/frozen changes. RLS limits both to members, and
+  // New messages, stars, and count/frozen changes. RLS limits them to members, and
   // hides messages from anyone the reader has blocked. If the socket can't
   // connect, drops, or errors, poll until it is back: Realtime is only the
   // fast path.
@@ -162,10 +170,24 @@ export default function Chat() {
       )
       .on(
         'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` },
+        (payload) => receive([payload.new as ChatMessage]),
+      )
+      .on(
+        'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'conversations', filter: `id=eq.${id}` },
         (payload) => {
-          const next = payload.new as Pick<Conversation, 'message_count' | 'message_cap' | 'is_frozen'>
-          setConv((cur) => cur && { ...cur, message_count: next.message_count, message_cap: next.message_cap, is_frozen: next.is_frozen })
+          const next = payload.new as Pick<Conversation, 'message_count' | 'message_cap' | 'starred_count' | 'is_frozen'>
+          setConv(
+            (cur) =>
+              cur && {
+                ...cur,
+                message_count: next.message_count,
+                message_cap: next.message_cap,
+                starred_count: next.starred_count,
+                is_frozen: next.is_frozen,
+              },
+          )
           // A block or ban hides the other member, and a bigger cap means
           // someone joined the group; refetch the header for either.
           const cur = convRef.current
@@ -238,15 +260,28 @@ export default function Chat() {
     const { data, error } = await supabase.rpc('send_message', { p_conversation_id: id, p_body: body })
     setSending(false)
     if (error) {
-      if (error.code === 'KL002') setConv((c) => c && { ...c, message_count: c.message_cap })
-      else if (/closed/i.test(error.message)) loadConversation()
+      if (/closed/i.test(error.message)) loadConversation()
       return setSendError(friendlyError(error))
     }
-    const result = data as unknown as { message: ChatMessage; remaining: number }
+    const result = data as unknown as { message: ChatMessage }
     scrollMode.current = { kind: 'bottom' }
     setMessages((cur) => merge(cur, [result.message]))
-    setConv((c) => c && { ...c, message_count: c.message_cap - result.remaining })
+    setConv((c) => c && { ...c, message_count: c.message_count + 1 })
     setDraft('')
+  }
+
+  // Stars are shared: everyone in the chat sees them, and anyone can remove one.
+  async function toggleStar(m: ChatMessage) {
+    if (starring) return
+    setStarring(m.id)
+    setSendError('')
+    const { data, error } = await supabase.rpc('star_message', { p_message_id: m.id, p_starred: !m.starred_at })
+    setStarring(null)
+    if (error) return setSendError(friendlyError(error))
+    const starredAt = m.starred_at ? null : new Date().toISOString()
+    setMessages((cur) => cur.map((x) => (x.id === m.id ? { ...x, starred_at: starredAt } : x)))
+    setConv((c) => c && { ...c, starred_count: (data as { starred_count: number }).starred_count })
+    setSelected(null)
   }
 
   // Grow the box with its text, up to its max height; past that it scrolls.
@@ -284,13 +319,13 @@ export default function Chat() {
 
   const group = conv.kind === 'group' ? conv.group : null
   const other = group ? null : (conv.members[0] ?? null)
-  const remaining = Math.max(conv.message_cap - conv.message_count, 0)
-  const used = conv.message_count / conv.message_cap
-  const atCap = remaining === 0
+  // What the chat still holds: starred messages plus the newest others.
+  const shown = keptMessages(messages, conv.message_cap, conv.starred_count)
+  const newest = conv.message_cap - conv.starred_count
+  const starLimit = Math.floor(conv.message_cap / 2)
   const closed = conv.is_frozen || (!group && !other)
   // Report and block for group members live on the group page.
   const target = other && { userId: other.user_id, name: other.first_name }
-  const meterTone = used >= 0.95 ? 'bg-red-500' : used >= 0.8 ? 'bg-marigold-500' : 'bg-neutral-900'
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col bg-canvas md:max-w-2xl lg:h-[calc(100dvh-4.75rem)] lg:max-w-4xl lg:border-x lg:border-neutral-200">
@@ -371,13 +406,23 @@ export default function Chat() {
 
       {!closed && (
         <div className="border-b border-neutral-200/70 bg-surface/60 px-4 py-2 lg:px-8">
-          <p className="text-xs text-neutral-600" aria-live="polite">
-            <strong className="font-semibold text-neutral-900">{remaining}</strong> of {conv.message_cap} shared messages left,
-            then continue on socials.
+          <p className="flex gap-1.5 text-xs text-neutral-600" aria-live="polite">
+            <Star className="mt-px h-3.5 w-3.5 shrink-0 text-marigold-500" />
+            <span>
+              {conv.starred_count > 0 ? (
+                <>
+                  Keeps your <strong className="font-semibold text-neutral-900">{conv.starred_count} starred</strong> and the
+                  newest {newest} messages.
+                </>
+              ) : (
+                <>
+                  Keeps the newest <strong className="font-semibold text-neutral-900">{newest}</strong> messages.
+                </>
+              )}{' '}
+              {conv.message_count >= newest ? 'Older ones are deleted as you chat.' : 'Older ones are deleted after that.'} Tap a
+              message to star it and keep it.
+            </span>
           </p>
-          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-neutral-200" aria-hidden>
-            <div className={`h-full rounded-full transition-all duration-500 ${meterTone}`} style={{ width: `${Math.min(used, 1) * 100}%` }} />
-          </div>
           <p className="mt-1.5 flex gap-1.5 text-[11px] leading-snug text-neutral-500">
             <Lock className="mt-px h-3 w-3 shrink-0" /> {PRIVACY_COPY}
           </p>
@@ -392,7 +437,7 @@ export default function Chat() {
             </Button>
           </div>
         )}
-        {messages.length === 0 && !closed && (
+        {shown.length === 0 && !closed && (
           <div className="flex animate-rise flex-col items-center px-4 pt-8 text-center">
             {other ? (
               <Avatar path={other.photo_path} name={other.first_name} className="h-20 w-20 text-2xl" ring />
@@ -423,10 +468,10 @@ export default function Chat() {
           </div>
         )}
         <ul aria-label="Conversation">
-          {messages.map((m, i) => {
+          {shown.map((m, i) => {
             const mine = m.sender_id === uid
-            const prev = messages[i - 1]
-            const nextMsg = messages[i + 1]
+            const prev = shown[i - 1]
+            const nextMsg = shown[i + 1]
             const newDay = !prev || dayLabel(prev.created_at) !== dayLabel(m.created_at)
             const firstOfRun = newDay || prev?.sender_id !== m.sender_id
             const lastOfRun = !nextMsg || nextMsg.sender_id !== m.sender_id || dayLabel(nextMsg.created_at) !== dayLabel(m.created_at)
@@ -445,17 +490,47 @@ export default function Chat() {
                   </span>
                 )}
                 <div
+                  role={closed ? undefined : 'button'}
+                  tabIndex={closed ? undefined : 0}
+                  aria-expanded={closed ? undefined : selected === m.id}
+                  onClick={() => !closed && setSelected((s) => (s === m.id ? null : m.id))}
+                  onKeyDown={(e) => {
+                    if (!closed && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault()
+                      setSelected((s) => (s === m.id ? null : m.id))
+                    }
+                  }}
                   className={`max-w-[80%] lg:max-w-[60%] whitespace-pre-wrap break-words rounded-3xl px-4 py-2 text-[15px] leading-snug ${corner} ${
                     mine
                       ? 'bg-ink text-on-ink'
                       : 'border border-neutral-200/80 bg-surface text-neutral-900 shadow-sm'
-                  }`}
+                  } ${m.starred_at ? 'ring-2 ring-marigold-400' : ''} ${closed ? '' : 'cursor-pointer'}`}
                 >
                   {m.body}
-                  <span className={`ml-2 inline-block translate-y-0.5 text-[10px] ${mine ? 'text-on-ink/60' : 'text-neutral-400'}`}>
+                  <span className={`ml-2 inline-flex translate-y-0.5 items-center gap-1 text-[10px] ${mine ? 'text-on-ink/60' : 'text-neutral-400'}`}>
+                    {m.starred_at && <Star className="h-3 w-3 fill-marigold-400 text-marigold-400" aria-label="Starred" />}
                     {time(m.created_at)}
                   </span>
                 </div>
+                {selected === m.id && !closed && (
+                  <button
+                    type="button"
+                    onClick={() => toggleStar(m)}
+                    disabled={starring === m.id || (!m.starred_at && conv.starred_count >= starLimit)}
+                    className="mt-1 inline-flex animate-pop items-center gap-1.5 rounded-full border border-neutral-200 bg-surface px-3 py-1.5 text-xs font-bold text-neutral-800 shadow-sm transition hover:border-neutral-900 disabled:opacity-50"
+                  >
+                    {starring === m.id ? (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Star className={`h-3.5 w-3.5 ${m.starred_at ? '' : 'fill-marigold-400 text-marigold-500'}`} />
+                    )}
+                    {m.starred_at
+                      ? 'Unstar'
+                      : conv.starred_count >= starLimit
+                        ? `Up to ${starLimit} stars. Unstar one first`
+                        : 'Star to keep'}
+                  </button>
+                )}
               </li>
             )
           })}
@@ -468,41 +543,8 @@ export default function Chat() {
             <Lock className="h-4 w-4" />
             {group ? 'This group has closed.' : 'This chat is closed.'}
           </p>
-        ) : atCap ? (
-          <div className="max-h-[50dvh] overflow-y-auto rounded-3xl border border-marigold-300 bg-marigold-50 p-4">
-            <p className="flex items-center gap-2 font-display font-bold text-neutral-900">
-              <PartyPopper className="h-5 w-5 text-marigold-600" /> You've used all {conv.message_cap} messages
-            </p>
-            <p className="mt-1 text-sm text-neutral-600">
-              Continue on socials with {group ? 'the group' : other?.first_name}.
-            </p>
-            {group ? (
-              <div className="mt-3 space-y-3">
-                {conv.members.map((m) => (
-                  <div key={m.user_id}>
-                    <p className="mb-1 text-sm font-semibold text-neutral-800">{m.first_name}</p>
-                    <SocialLinks userId={m.user_id} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-3">{other && <SocialLinks userId={other.user_id} />}</div>
-            )}
-          </div>
         ) : (
           <>
-            {used >= 0.8 && (
-              <p
-                className={`mb-2 rounded-2xl px-3 py-2 text-xs font-medium ${
-                  used >= 0.95 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'
-                }`}
-                role="status"
-              >
-                {used >= 0.95
-                  ? `Only ${remaining} message${remaining === 1 ? '' : 's'} left. Swap socials now so you don't lose touch.`
-                  : `You've used ${Math.floor(used * 100)}% of this chat's messages. Good time to swap socials.`}
-              </p>
-            )}
             {sendError && (
               <div className="mb-2">
                 <ErrorText>{sendError}</ErrorText>

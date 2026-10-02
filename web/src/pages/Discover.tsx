@@ -26,6 +26,12 @@ import { useIsDesktop } from '../lib/useIsDesktop'
 const BATCH = 20
 const SWIPE_PX = 110
 const SWIPE_VELOCITY = 600
+// A drag only decides if it's mostly sideways: at least this many times
+// further across than up or down (within about 34° of horizontal). Anything
+// steeper, like a thumb wandering down while deciding, springs back.
+const SIDEWAYS_RATIO = 1.5
+// A flick has to travel at least this far, so a twitch isn't a decision.
+const FLICK_MIN_PX = 40
 
 type Dir = -1 | 1 // pass | kollide
 
@@ -46,8 +52,13 @@ function SwipeCard({ profile, dir, onDecide }: { profile: FeedProfile; dir: Dir;
   const ref = useRef<HTMLDivElement>(null)
 
   function onDragEnd(_: unknown, info: PanInfo) {
-    if (info.offset.x > SWIPE_PX || info.velocity.x > SWIPE_VELOCITY) onDecide(1)
-    else if (info.offset.x < -SWIPE_PX || info.velocity.x < -SWIPE_VELOCITY) onDecide(-1)
+    const { x: dx, y: dy } = info.offset
+    const { x: vx, y: vy } = info.velocity
+    if (Math.abs(dx) < Math.abs(dy) * SIDEWAYS_RATIO) return
+    const flick =
+      Math.abs(dx) > FLICK_MIN_PX && Math.abs(vx) > SWIPE_VELOCITY && Math.abs(vx) > Math.abs(vy) * SIDEWAYS_RATIO
+    if (dx > SWIPE_PX || (flick && dx > 0 && vx > 0)) onDecide(1)
+    else if (dx < -SWIPE_PX || (flick && dx < 0 && vx < 0)) onDecide(-1)
   }
 
   // Desktop: click the left/right half to step through photos (taps don't

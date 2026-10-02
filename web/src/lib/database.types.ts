@@ -141,13 +141,13 @@ isOneToOne: false
                   ]
                 },"conversations": {
                   Row: {
-                    "created_at": string,"group_id": string | null,"id": string,"is_frozen": boolean,"kind": Database["public"]['Enums']["conversation_kind"],"last_message_at": string | null,"match_id": string | null,"message_cap": number,"message_count": number,"retained": boolean
+                    "created_at": string,"group_id": string | null,"id": string,"is_frozen": boolean,"kind": Database["public"]['Enums']["conversation_kind"],"last_message_at": string | null,"match_id": string | null,"message_cap": number,"message_count": number,"retained": boolean,"starred_count": number
                   }
                   Insert: {
-                    "created_at"?: string,"group_id"?: string | null,"id"?: string,"is_frozen"?: boolean,"kind": Database["public"]['Enums']["conversation_kind"],"last_message_at"?: string | null,"match_id"?: string | null,"message_cap": number,"message_count"?: number,"retained"?: boolean
+                    "created_at"?: string,"group_id"?: string | null,"id"?: string,"is_frozen"?: boolean,"kind": Database["public"]['Enums']["conversation_kind"],"last_message_at"?: string | null,"match_id"?: string | null,"message_cap": number,"message_count"?: number,"retained"?: boolean,"starred_count"?: number
                   }
                   Update: {
-                    "created_at"?: string,"group_id"?: string | null,"id"?: string,"is_frozen"?: boolean,"kind"?: Database["public"]['Enums']["conversation_kind"],"last_message_at"?: string | null,"match_id"?: string | null,"message_cap"?: number,"message_count"?: number,"retained"?: boolean
+                    "created_at"?: string,"group_id"?: string | null,"id"?: string,"is_frozen"?: boolean,"kind"?: Database["public"]['Enums']["conversation_kind"],"last_message_at"?: string | null,"match_id"?: string | null,"message_cap"?: number,"message_count"?: number,"retained"?: boolean,"starred_count"?: number
                   }
                   Relationships: [
                     {
@@ -304,13 +304,13 @@ isOneToOne: false
                   ]
                 },"messages": {
                   Row: {
-                    "body": string,"conversation_id": string,"created_at": string,"id": string,"sender_id": string | null
+                    "body": string,"conversation_id": string,"created_at": string,"id": string,"sender_id": string | null,"starred_at": string | null,"starred_by": string | null
                   }
                   Insert: {
-                    "body": string,"conversation_id": string,"created_at"?: string,"id"?: string,"sender_id"?: string | null
+                    "body": string,"conversation_id": string,"created_at"?: string,"id"?: string,"sender_id"?: string | null,"starred_at"?: string | null,"starred_by"?: string | null
                   }
                   Update: {
-                    "body"?: string,"conversation_id"?: string,"created_at"?: string,"id"?: string,"sender_id"?: string | null
+                    "body"?: string,"conversation_id"?: string,"created_at"?: string,"id"?: string,"sender_id"?: string | null,"starred_at"?: string | null,"starred_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -322,6 +322,12 @@ isOneToOne: false
     },{
       foreignKeyName: "messages_sender_id_fkey"
       columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_starred_by_fkey"
+      columns: ["starred_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -678,7 +684,7 @@ isOneToOne: false
                            },
 "get_messages":
 { Args: { "p_before"?: string,"p_conversation_id": string,"p_limit"?: number }; Returns: {
-              "body": string,"created_at": string,"id": string,"sender_id": string
+              "body": string,"created_at": string,"id": string,"sender_id": string,"starred_at": string
             }[]
                            },
 "get_my_groups":
@@ -761,6 +767,9 @@ isOneToOne: false
                            },
 "set_my_position":
 { Args: { "p_lat": number,"p_lng": number }; Returns: Json
+                           },
+"star_message":
+{ Args: { "p_message_id": string,"p_starred": boolean }; Returns: Json
                            },
 "submit_verification":
 { Args: { "p_storage_path": string }; Returns: undefined

@@ -72,7 +72,7 @@ never committed to the repository (`*.sql.gpg` and `/backup/` are ignored).
 ## Running the concurrency checks by hand
 
 `web/scripts/` has two checks that fire parallel requests at a local stack and
-confirm the chat message cap and the group member limit hold. They need the
+confirm the chat history window and the group member limit hold. They need the
 full local stack and its seeded users:
 
 ```bash
