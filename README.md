@@ -33,7 +33,7 @@ PR or a workflow file.
 | `BACKUP_PASSPHRASE` | Backup | A long random passphrase used to encrypt every backup (`openssl rand -base64 32`). **Also store it somewhere outside GitHub** (a password manager): without it the backups cannot be opened. |
 | `SUPABASE_URL` | Uptime | The project URL, `https://<project-ref>.supabase.co` (Dashboard -> Project Settings -> API). |
 | `SUPABASE_ANON_KEY` | Uptime | The public anon (publishable) key from the same page. It is the key already shipped in the web app, but keep it in a secret so it is masked in logs. |
-| `APP_URL` | Uptime | The address people open, for example `https://kollide-v0.ashushekhar07.workers.dev`. It must answer `200` directly (no redirect). |
+| `APP_URL` | Uptime | The address people open, for example `https://kollide.in`. It must answer `200` directly (no redirect). |
 
 After adding them, open **Actions -> Database backup -> Run workflow** and
 **Actions -> Uptime -> Run workflow** once to check they work.
