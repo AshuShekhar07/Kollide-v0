@@ -12,6 +12,7 @@ Function setup is in [supabase/functions/README.md](supabase/functions/README.md
 | `CI` (`.github/workflows/ci.yml`) | every push and pull request | Database job: starts a local Postgres with the Supabase CLI, applies every migration and the seed (`supabase db reset`), runs the pgTAP tests (`supabase test db`). Web job: `npm ci`, `npm run build`, `npm run lint` in `web/`. Any error fails the run; lint warnings do not. |
 | `Database backup` (`backup.yml`) | daily at 21:00 UTC, or run it by hand | Dumps the hosted database (roles, schema, data including accounts), encrypts it with gpg and keeps it as a workflow artifact for 14 days. |
 | `Uptime` (`uptime.yml`) | every 15 minutes, or run it by hand | Expects a 200 from the app, and calls `public.ping()` through the REST API with the anon key. Any other answer fails the run. |
+| `Apply migrations` (`migrate.yml`) | only by hand | Lists the migrations in `supabase/migrations` that the hosted database is missing (`supabase db push --dry-run`), and applies them when you tick **apply**. Run it unticked first and check the list. |
 
 Scheduled workflows only run from the default branch (`main`), start on a
 best-effort basis (a 15-minute schedule can be a few minutes late), and GitHub
@@ -28,7 +29,7 @@ PR or a workflow file.
 
 | Secret | Used by | What to put in it |
 |---|---|---|
-| `SUPABASE_DB_URL` | Backup | The **session pooler** connection string of the hosted project: Dashboard -> Connect -> Session pooler, port `5432`, user `postgres.<project-ref>`, with your database password filled in and percent-encoded (`@` becomes `%40`, and so on). Do **not** use the direct `db.<ref>.supabase.co` host: on the free plan it is IPv6-only and GitHub's runners are IPv4-only. Do not use the transaction pooler (port `6543`); it does not suit `pg_dump`. |
+| `SUPABASE_DB_URL` | Backup, Apply migrations | The **session pooler** connection string of the hosted project: Dashboard -> Connect -> Session pooler, port `5432`, user `postgres.<project-ref>`, with your database password filled in and percent-encoded (`@` becomes `%40`, and so on). Do **not** use the direct `db.<ref>.supabase.co` host: on the free plan it is IPv6-only and GitHub's runners are IPv4-only. Do not use the transaction pooler (port `6543`); it does not suit `pg_dump`. |
 | `BACKUP_PASSPHRASE` | Backup | A long random passphrase used to encrypt every backup (`openssl rand -base64 32`). **Also store it somewhere outside GitHub** (a password manager): without it the backups cannot be opened. |
 | `SUPABASE_URL` | Uptime | The project URL, `https://<project-ref>.supabase.co` (Dashboard -> Project Settings -> API). |
 | `SUPABASE_ANON_KEY` | Uptime | The public anon (publishable) key from the same page. It is the key already shipped in the web app, but keep it in a secret so it is masked in logs. |
