@@ -54,6 +54,13 @@ jobs:
         with:
           version: 2.118.0
 
+      # Versions in this repo next to the ones the hosted database has applied.
+      # A version only on the Remote side means someone changed the database by
+      # hand; the dry run below refuses to continue until that is sorted out.
+      - name: Show local and hosted migration history
+        run: supabase migration list --db-url "$SUPABASE_DB_URL"
+        continue-on-error: true
+
       - name: List the migrations the database is missing
         run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
 
