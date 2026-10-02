@@ -1,0 +1,62 @@
+name: Apply migrations
+
+# Applies supabase/migrations to the hosted database, by hand from the Actions
+# tab. It always lists the migrations the database is missing first; they are
+# only applied when "apply" is ticked.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply them (leave unticked to only list what would run)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Never two at once against the same database.
+concurrency:
+  group: migrate
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Migrate the hosted database
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Secrets are only ever passed through the environment, never written into
+    # a command line or echoed.
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Check the secret exists
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Missing repository secret: SUPABASE_DB_URL (see README.md)"
+            exit 1
+          fi
+
+      # The whole URL is masked already; also mask the bare password (and its
+      # decoded form) in case a tool prints it on its own.
+      - name: Mask the database password
+        run: |
+          python3 - <<'PY'
+          import os, urllib.parse
+          password = urllib.parse.urlsplit(os.environ["SUPABASE_DB_URL"]).password or ""
+          for value in {password, urllib.parse.unquote(password)}:
+              if value:
+                  print("::add-mask::" + value)
+          PY
+
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+
+      - name: List the migrations the database is missing
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
+
+      - name: Apply them
+        if: ${{ inputs.apply }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --yes
