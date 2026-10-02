@@ -93,7 +93,7 @@ This stack replaces the earlier FastAPI + Celery + Redis + R2 suggestion. The te
 | Concern | Choice |
 |---|---|
 | Frontend | React + TypeScript + Vite single-page app, with React Router and Tailwind. Installable as a PWA, so it serves as both the "website and app". |
-| Frontend hosting | Cloudflare Workers static assets (free, commercial use allowed, no cold starts), deployed from `web/` via `web/wrangler.jsonc` with SPA fallback. Live at https://kollide-v0.ashushekhar07.workers.dev. Build-time env vars (`VITE_*`) are set under the Worker's **Build** variables. *Alternative: Next.js on Vercel Pro. Vercel's free Hobby plan is non-commercial only.* |
+| Frontend hosting | Cloudflare Workers static assets (free, commercial use allowed, no cold starts), deployed from `web/` via `web/wrangler.jsonc` with SPA fallback. Live at https://kollide.in. Build-time env vars (`VITE_*`) are set under the Worker's **Build** variables. *Alternative: Next.js on Vercel Pro. Vercel's free Hobby plan is non-commercial only.* |
 | Database | Supabase Postgres |
 | Authorization | Row-Level Security (RLS) on **every** table |
 | Business logic | Postgres functions called via RPC, `SECURITY DEFINER` with explicit checks, plus triggers |
@@ -674,4 +674,4 @@ Each phase ends with its acceptance checks passing. Dates assume a start on Sat,
 2. **"Coming soon" activities.** What is the exact list? (Placeholders: trekking, badminton, concerts, running clubs, board game nights, cafe hopping.)
 3. **Phone OTP.** Keep phone unverified for the pilot, or pay for SMS OTP?
 4. **Reference frame.** Should one still frame from each approved video be kept for identifying reported users later? Currently **no**: the rule is full deletion after 48h. Revisit if moderation needs it.
-5. **Frontend hosting.** ~~Cloudflare Pages or Vercel Pro?~~ Decided: Cloudflare Workers static assets at `kollide-v0.ashushekhar07.workers.dev`. A custom domain can be attached later without code changes.
+5. **Frontend hosting.** ~~Cloudflare Pages or Vercel Pro?~~ Decided: Cloudflare Workers static assets, served from the custom domain `kollide.in`.

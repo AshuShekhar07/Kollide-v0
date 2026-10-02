@@ -155,7 +155,7 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-# Local only. Hosted auth URLs (https://kollide-v0.ashushekhar07.workers.dev) are set in the
+# Local only. Hosted auth URLs (https://kollide.in) are set in the
 # Supabase dashboard. Do not run `supabase config push`: it would overwrite them with these.
 site_url = "http://localhost:5173"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.

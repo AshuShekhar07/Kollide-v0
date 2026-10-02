@@ -35,8 +35,8 @@ Vault secrets. Emails land in Mailpit at http://127.0.0.1:54324.
 
    ```bash
    supabase secrets set \
-     SITE_URL=https://kollide-v0.ashushekhar07.workers.dev \
-     ALLOWED_ORIGINS=https://kollide-v0.ashushekhar07.workers.dev,http://localhost:5173 \
+     SITE_URL=https://kollide.in \
+     ALLOWED_ORIGINS=https://kollide.in,http://localhost:5173 \
      EMAIL_HOOK_SECRET=<random hex> \
      SMTP_HOST=smtp.gmail.com SMTP_PORT=465 SMTP_SECURE=true \
      SMTP_USER=<you>@gmail.com SMTP_PASS=<app password> \
