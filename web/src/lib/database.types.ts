@@ -626,6 +626,9 @@ isOneToOne: false
 "create_group":
 { Args: { "p_activity_id": string,"p_description": string,"p_event_date": string,"p_max_members": number,"p_title": string,"p_venue": string }; Returns: Json
                            },
+"find_invite_code":
+{ Args: { "p_code": string }; Returns: string
+                           },
 "get_badge_counts":
 { Args: Record<PropertyKey, never>; Returns: {
               "likes": number,"matches": number
@@ -657,7 +660,7 @@ isOneToOne: false
 { Args: { "p_token": string }; Returns: Json
                            },
 "get_group_invite_link":
-{ Args: { "p_group_id": string }; Returns: string
+{ Args: { "p_group_id": string }; Returns: Json
                            },
 "get_group_invites":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -739,7 +742,7 @@ isOneToOne: false
 { Args: { "p_token": string }; Returns: Json
                            },
 "reset_group_invite_link":
-{ Args: { "p_group_id": string }; Returns: string
+{ Args: { "p_group_id": string }; Returns: Json
                            },
 "respond_invite":
 { Args: { "p_accept": boolean,"p_group_id": string }; Returns: undefined

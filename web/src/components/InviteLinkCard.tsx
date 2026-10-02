@@ -6,6 +6,9 @@ import { supabase } from '../lib/supabase'
 import { Sheet } from './SafetyDialogs'
 import { Button, ErrorText, Skeleton } from './ui'
 
+// The invite functions return the link's token and its 6-character code.
+type InviteLink = { token: string; code: string }
+
 // The group admin's shareable invite link, with copy, share and reset.
 export default function InviteLinkCard({ groupId, title }: { groupId: string; title: string }) {
   const [token, setToken] = useState<string | null>(null)
@@ -17,7 +20,7 @@ export default function InviteLinkCard({ groupId, title }: { groupId: string; ti
   useEffect(() => {
     supabase.rpc('get_group_invite_link', { p_group_id: groupId }).then(({ data, error }) => {
       if (error) setError(friendlyError(error))
-      else setToken(data)
+      else setToken((data as unknown as InviteLink).token)
     })
   }, [groupId])
 
@@ -49,7 +52,7 @@ export default function InviteLinkCard({ groupId, title }: { groupId: string; ti
     setResetting(false)
     setConfirmReset(false)
     if (error) return setError(friendlyError(error))
-    setToken(data)
+    setToken((data as unknown as InviteLink).token)
   }
 
   return (

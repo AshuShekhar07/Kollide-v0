@@ -82,9 +82,9 @@ select is((select count(*)::int from public.profile_private where user_id = pg_t
 ---------------------------------------------------------------------------
 select pg_temp.login_as(2);
 insert into t select 'g', (public.create_group(pg_temp.garba(), 'Rohan''s circle', 'Friday garba', null, 'Palace Grounds', 5)) ->> 'group_id';
-insert into t values ('tok', public.get_group_invite_link(pg_temp.v('g')::uuid));
+insert into t values ('tok', public.get_group_invite_link(pg_temp.v('g')::uuid) ->> 'token');
 select ok(char_length(pg_temp.v('tok')) = 22, 'token is 22 characters');
-select is(public.get_group_invite_link(pg_temp.v('g')::uuid), pg_temp.v('tok'), 'same link on repeat calls');
+select is(public.get_group_invite_link(pg_temp.v('g')::uuid) ->> 'token', pg_temp.v('tok'), 'same link on repeat calls');
 
 select pg_temp.login_as(3);
 select throws_ok($$select public.get_group_invite_link(pg_temp.v('g')::uuid)$$, '42501', null,
@@ -143,7 +143,7 @@ select is(public.get_group_invite(pg_temp.v('tok')) ->> 'my_status', 'approved',
 -- Reset and blocks
 ---------------------------------------------------------------------------
 select pg_temp.login_as(2);
-insert into t values ('tok2', public.reset_group_invite_link(pg_temp.v('g')::uuid));
+insert into t values ('tok2', public.reset_group_invite_link(pg_temp.v('g')::uuid) ->> 'token');
 select is(public.get_group_invite(pg_temp.v('tok')), null, 'old link stops working after reset');
 select isnt(public.get_group_invite(pg_temp.v('tok2')), null, 'new link works');
 
