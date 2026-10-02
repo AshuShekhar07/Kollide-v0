@@ -2,6 +2,7 @@ import { CalendarDays, MapPin, Plus, ShieldCheck, Sparkles, UsersRound } from 'l
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DiscoverTabs from '../../components/DiscoverTabs'
+import { ChooseLocation, LocationChip } from '../../components/Location'
 import { Capacity } from '../../components/GroupBits'
 import { RingScene } from '../../components/Scenes'
 import { LinkButton, EmptyState, ErrorText, Skeleton, Tag } from '../../components/ui'
@@ -9,6 +10,7 @@ import { festiveTile } from '../../lib/festive'
 import { useAuth } from '../../lib/auth-context'
 import { fetchLiveActivity, type LiveActivity } from '../../lib/discovery'
 import { friendlyError } from '../../lib/errors'
+import { hasLocation } from '../../lib/location'
 import { dateParts, spotsLeft, type GroupListItem, type MemberStatus } from '../../lib/groups'
 import { supabase } from '../../lib/supabase'
 
@@ -76,10 +78,13 @@ export default function Groups() {
   const { profile } = useAuth()
   const uid = profile?.id
   const verified = profile?.verification_status === 'approved'
+  const located = hasLocation(profile)
+  const place = located ? `${profile?.lat},${profile?.lng}` : null
   const [activity, setActivity] = useState<LiveActivity | null | undefined>(undefined)
   const [groups, setGroups] = useState<GroupListItem[] | null>(null)
   const [error, setError] = useState('')
 
+  // Runs again after a move, to list the groups there.
   useEffect(() => {
     if (!uid || !verified) return
     fetchLiveActivity(uid)
@@ -91,7 +96,7 @@ export default function Groups() {
         setGroups(data)
       })
       .catch((e) => setError(friendlyError(e)))
-  }, [uid, verified])
+  }, [uid, verified, place])
 
   return (
     <>
@@ -121,6 +126,7 @@ export default function Groups() {
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-500">{activity?.name ?? 'Garba'}</p>
               <h1 className="mt-1 text-[1.9rem] font-extrabold leading-none tracking-[-0.04em] text-neutral-900 lg:text-6xl">Groups</h1>
               <p className="mt-2 text-xs text-neutral-500 lg:text-sm">Go as a crowd. Everyone in a group is verified.</p>
+              <LocationChip className="mt-1.5" />
             </div>
             <LinkButton to="/groups/new" className="shrink-0 px-4 py-2.5 text-sm">
               <Plus className="h-4 w-4" strokeWidth={2.6} /> Start a group
@@ -128,14 +134,15 @@ export default function Groups() {
           </div>
 
           <ErrorText>{error}</ErrorText>
-          {!groups && !error && (
+          {!located && <ChooseLocation />}
+          {located && !groups && !error && (
             <div className="grid gap-3 lg:grid-cols-2 lg:gap-5" aria-label="Loading">
               {[0, 1].map((i) => (
                 <Skeleton key={i} className="h-36 !rounded-[28px]" />
               ))}
             </div>
           )}
-          {groups?.length === 0 && (
+          {located && groups?.length === 0 && (
             <EmptyState
               icon={UsersRound}
               scene={<RingScene />}
@@ -149,7 +156,7 @@ export default function Groups() {
               Be the first. Start a group for your Garba night and invite people who are going.
             </EmptyState>
           )}
-          {groups && groups.length > 0 && (
+          {located && groups && groups.length > 0 && (
             <ul className="grid gap-3 lg:grid-cols-2 lg:gap-5">
               {groups.map((g) => (
                 <GroupCard key={g.id} group={g} />

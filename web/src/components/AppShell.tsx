@@ -5,7 +5,7 @@ import { Link, NavLink, useLocation, useOutlet, useOutletContext } from 'react-r
 import { useAuth } from '../lib/auth-context'
 import { useFestival } from '../lib/festival'
 import { supabase } from '../lib/supabase'
-import BangaloreCheck from './BangaloreCheck'
+import { LocationSync } from './Location'
 import { AnimatedDandiya, DandiyaIcon } from './Dandiya'
 import Avatar from './Avatar'
 import Celebrate from './Celebrate'
@@ -227,7 +227,7 @@ export default function AppShell() {
           <AnimatedOutlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />
         ) : (
           <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-28 pt-3 md:max-w-2xl lg:max-w-6xl lg:px-8 lg:pb-16 lg:pt-10">
-            <BangaloreCheck />
+            <LocationSync />
             <InstallPrompt />
             <PendingInviteBanner />
             <AnimatedOutlet context={{ refreshBadges, myPhoto: photo } satisfies ShellContext} />

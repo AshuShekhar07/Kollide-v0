@@ -87,6 +87,10 @@ begin
       gender_preference   = (select array_agg(g::public.gender) from jsonb_array_elements_text(u->4) g),
       seeking             = (u->>5)::public.seeking,
       bio                 = 'Test user ' || (u->>1) || '. Loves Garba nights in Bangalore.',
+      city                = 'Bengaluru',
+      lat                 = 12.97,
+      lng                 = 77.59,
+      location_source     = 'city',
       onboarding_complete = true,
       consent_at          = now(),
       verification_status = case state

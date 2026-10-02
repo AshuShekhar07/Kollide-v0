@@ -6,6 +6,7 @@ import AboutView from '../components/AboutView'
 import { AnimatedDandiya, DandiyaIcon } from '../components/Dandiya'
 import { useShell } from '../components/AppShell'
 import DiscoverTabs from '../components/DiscoverTabs'
+import { ChooseLocation, LocationChip } from '../components/Location'
 import { FestivalBanner } from '../components/FestivalBits'
 import MatchDialog from '../components/MatchDialog'
 import { Diya } from '../components/Outfit'
@@ -16,6 +17,7 @@ import { Button, EmptyState, ErrorText, Eyebrow, Skeleton, Tag } from '../compon
 import { useAuth } from '../lib/auth-context'
 import { fetchLiveActivity, type Feed, type FeedProfile, type LiveActivity, type MatchResult } from '../lib/discovery'
 import { friendlyError } from '../lib/errors'
+import { hasLocation } from '../lib/location'
 import { signedThumbUrls } from '../lib/photos'
 import { SEEKING_OPTIONS } from '../lib/profile-options'
 import { supabase } from '../lib/supabase'
@@ -149,6 +151,9 @@ export default function Discover() {
   const { refreshBadges } = useShell()
   const uid = profile?.id
   const verified = profile?.verification_status === 'approved'
+  const located = hasLocation(profile)
+  // Moving somewhere new means a new set of people.
+  const place = located ? `${profile?.lat},${profile?.lng}` : null
 
   const [activity, setActivity] = useState<LiveActivity | null | undefined>(undefined)
   const [queue, setQueue] = useState<FeedProfile[]>([])
@@ -179,6 +184,8 @@ export default function Discover() {
   useEffect(loadActivity, [loadActivity])
 
   const loadFeed = useCallback(async (activityId: string) => {
+    // Also called after a move: nobody from the old place stays in the deck.
+    setQueue([])
     setLoading(true)
     await Promise.allSettled(inflight.current)
     inflight.current = []
@@ -198,14 +205,14 @@ export default function Discover() {
   }, [])
 
   useEffect(() => {
-    if (activity) loadFeed(activity.id)
-    else if (activity === null) setLoading(false)
-  }, [activity, loadFeed])
+    if (activity && place) loadFeed(activity.id)
+    else if (activity !== undefined) setLoading(false)
+  }, [activity, place, loadFeed])
 
   // Fetch the next batch once the deck runs out.
   useEffect(() => {
-    if (activity && !loading && queue.length === 0 && mayHaveMore) loadFeed(activity.id)
-  }, [activity, loading, queue.length, mayHaveMore, loadFeed])
+    if (activity && place && !loading && queue.length === 0 && mayHaveMore) loadFeed(activity.id)
+  }, [activity, place, loading, queue.length, mayHaveMore, loadFeed])
 
   const decide = useCallback(
     (d: Dir) => {
@@ -265,6 +272,8 @@ export default function Discover() {
 
       {activity === null ? (
         <AddLiveActivity onAdded={loadActivity} />
+      ) : activity && !located ? (
+        <ChooseLocation />
       ) : (
         <>
           <div className="flex flex-1 flex-col lg:mx-auto lg:w-full lg:max-w-5xl lg:flex-none">
@@ -283,11 +292,14 @@ export default function Discover() {
                   {activity?.name ?? 'Discover'}
                 </h1>
               </div>
-              {!verified && viewsLeft !== null && (
-                <Tag tone="amber" className="shrink-0">
-                  {viewsLeft} left today
-                </Tag>
-              )}
+              <div className="flex shrink-0 items-center gap-2">
+                <LocationChip className="max-w-[9rem]" />
+                {!verified && viewsLeft !== null && (
+                  <Tag tone="amber" className="shrink-0">
+                    {viewsLeft} left today
+                  </Tag>
+                )}
+              </div>
             </div>
 
             {/* Phones: the card runs down to just above the tab bar, with the buttons
