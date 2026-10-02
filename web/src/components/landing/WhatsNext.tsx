@@ -4,6 +4,7 @@ import {
   Dices,
   Music,
   Sparkles,
+  UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -18,12 +19,14 @@ const ACTIVITY_ICONS: Record<string, LucideIcon> = {
   concerts: Music,
   board_games: Dices,
   cafe_hopping: Coffee,
+  food_walks: UtensilsCrossed,
 }
 
 const ACTIVITY_LINES: Record<string, string> = {
   concerts: 'Someone to go with when your favourite artist comes to town.',
   board_games: 'Game nights with people who take Catan a little too seriously.',
   cafe_hopping: "The city's best corners, with people who like the same ones.",
+  food_walks: "Street food trails with people who never say 'I'm full'.",
 }
 
 // Card colours in turn; text on the lighter ones is ink, on the rest cream.
@@ -31,8 +34,8 @@ const CARD_COLORS = [
   { bg: G.rani, fg: G.cream },
   { bg: G.marigold, fg: G.ink },
   { bg: G.peacock, fg: G.cream },
-  { bg: G.haldi, fg: G.ink },
   { bg: G.maroon, fg: G.cream },
+  { bg: G.haldi, fg: G.ink },
   { bg: G.leaf, fg: G.cream },
 ]
 

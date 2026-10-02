@@ -29,6 +29,7 @@ const FALLBACK_COMING_SOON: Activity[] = [
   { slug: 'concerts', name: 'Concerts', status: 'coming_soon' },
   { slug: 'board_games', name: 'Board game nights', status: 'coming_soon' },
   { slug: 'cafe_hopping', name: 'Cafe hopping', status: 'coming_soon' },
+  { slug: 'food_walks', name: 'Food walks', status: 'coming_soon' },
 ]
 
 // Coming-soon activities the database has but the landing page doesn't list.
