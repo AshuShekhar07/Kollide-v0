@@ -402,7 +402,9 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# Local values only. Hosted: `supabase secrets set ...` (see supabase/functions/README.md).
+# Local values only. NEVER run `supabase secrets set` from inside this repo: the CLI also
+# pushes this block to the hosted project and overwrites its real SMTP and hook secrets.
+# For hosted secrets use scripts/hosted-secrets.sh (see supabase/functions/README.md).
 [edge_runtime.secrets]
 SITE_URL = "http://localhost:5173"
 ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5180"

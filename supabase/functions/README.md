@@ -33,15 +33,26 @@ Vault secrets. Emails land in Mailpit at http://127.0.0.1:54324.
 2. **Set function secrets.** Generate the hook secret with `openssl rand -hex 32`. For Gmail, use an
    App Password (Google Account → Security → 2-Step Verification → App passwords).
 
+   **Use `scripts/hosted-secrets.sh`, not `supabase secrets set` directly.** Run from inside this
+   repo, the CLI also pushes the local-only `[edge_runtime.secrets]` from `supabase/config.toml`
+   to the hosted project, overwriting `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM` and
+   `EMAIL_HOOK_SECRET` with the local values and adding `PUBLIC_API_URL`. That breaks sign-in
+   emails until they are put back. The script runs the CLI from an empty temporary folder
+   instead. Run `supabase login` once first.
+
    ```bash
-   supabase secrets set \
+   scripts/hosted-secrets.sh set \
      SITE_URL=https://kollide.in \
-     ALLOWED_ORIGINS=https://kollide.in,http://localhost:5173 \
+     ALLOWED_ORIGINS=https://kollide.in,https://kollide.pages.dev,http://localhost:5173 \
      EMAIL_HOOK_SECRET=<random hex> \
      SMTP_HOST=smtp.gmail.com SMTP_PORT=465 SMTP_SECURE=true \
      SMTP_USER=<you>@gmail.com SMTP_PASS=<app password> \
      SMTP_FROM="Kollide <<you>@gmail.com>"
    ```
+
+   `scripts/hosted-secrets.sh list` shows the names and SHA-256 fingerprints of what is set
+   (never the values), so you can check a change took effect. `SITE_URL` is the address used in
+   email links; `ALLOWED_ORIGINS` is an exact-match list of the sites allowed to call the functions.
 
    Supabase blocks outbound ports 25 and 587 from edge functions, so use 465.
 
