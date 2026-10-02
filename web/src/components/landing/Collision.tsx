@@ -1,23 +1,30 @@
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
-import { useRef } from 'react'
+import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform, type MotionValue } from 'motion/react'
+import { useEffect, useRef } from 'react'
 import { G } from './garba'
 
-// Kollide's idea, paths that collide, told with photos as the section
-// scrolls in: two people going solo slide in and collide into a "+1"; then
-// the others going that night fly in and it becomes a crew, with a date
-// night fanned alongside. Everything is driven by scroll, so the section is
+// Kollide's idea, paths that collide, told with photos once the section
+// comes into view: two people going solo slide in and collide into a "+1";
+// then the others going that night fly in and it becomes a crew, with a date
+// night fanned alongside. It plays on its own clock, with a pause on each
+// photo, so it reads the same however fast people scroll, and the section is
 // no taller than before.
 
 const clamp = (v: number) => Math.min(Math.max(v, 0), 1)
 const ease = (t: number) => 1 - (1 - t) ** 3
 // 0 → 1 as p goes from a to b, eased.
 const span = (p: number, a: number, b: number) => ease(clamp((p - a) / (b - a)))
+// The same, speeding up instead of slowing down: for the rush into a collision.
+const spanIn = (p: number, a: number, b: number) => clamp((p - a) / (b - a)) ** 2
 const mix = (a: number, b: number, t: number) => a + (b - a) * t
 
-// Beats, as fractions of the scroll progress.
-const MEET = 0.36
+// How long the whole story takes, in seconds, and its beats as fractions of
+// that. The gaps between beats are the pauses on each photo.
+const DURATION = 10
+const ENTER = 0.15
+const RUSH = 0.27
+const MEET = 0.33
 const POP = 0.62
-const SETTLE = [0.66, 0.84] as const
+const SETTLE = [0.74, 0.9] as const
 
 type Pose = { x: number; y?: number; rotate: number; scale: number; opacity: number }
 
@@ -94,11 +101,18 @@ const CARDS: Card[] = [
     fg: G.cream,
     box: 'left-[11%] top-[18%] h-[64%] w-[38%]',
     z: 40,
-    // From the left edge to the middle, then gone in the collision.
+    // In from the left edge, a pause, then a rush into the middle and gone
+    // in the collision.
     pose: (p) => {
-      const t = span(p, 0, MEET)
-      const out = span(p, MEET, MEET + 0.06)
-      return { x: mix(-75, 8, t), rotate: mix(-14, -3, t), scale: mix(1, 0.85, out), opacity: Math.min(span(p, 0, 0.08), 1 - out) }
+      const t = span(p, 0, ENTER)
+      const rush = spanIn(p, RUSH, MEET)
+      const out = span(p, MEET, MEET + 0.05)
+      return {
+        x: mix(-75, 0, t) + 14 * rush,
+        rotate: mix(-14, -5, t) + 3 * rush,
+        scale: mix(1, 0.85, out),
+        opacity: Math.min(span(p, 0, 0.06), 1 - out),
+      }
     },
   },
   {
@@ -111,9 +125,15 @@ const CARDS: Card[] = [
     box: 'left-[51%] top-[18%] h-[64%] w-[38%]',
     z: 40,
     pose: (p) => {
-      const t = span(p, 0, MEET)
-      const out = span(p, MEET, MEET + 0.06)
-      return { x: mix(75, -8, t), rotate: mix(14, 3, t), scale: mix(1, 0.85, out), opacity: Math.min(span(p, 0, 0.08), 1 - out) }
+      const t = span(p, 0, ENTER)
+      const rush = spanIn(p, RUSH, MEET)
+      const out = span(p, MEET, MEET + 0.05)
+      return {
+        x: mix(75, 0, t) - 14 * rush,
+        rotate: mix(14, 5, t) - 3 * rush,
+        scale: mix(1, 0.85, out),
+        opacity: Math.min(span(p, 0, 0.06), 1 - out),
+      }
     },
   },
 ]
@@ -184,7 +204,7 @@ const BUBBLES = [
 ]
 
 function Bubble({ progress, from, color, i }: { progress: MotionValue<number>; from: number[]; color: string; i: number }) {
-  const start = 0.44 + i * 0.03
+  const start = 0.5 + i * 0.025
   const t = (p: number) => span(p, start, POP)
   const x = useTransform(progress, (p) => `${mix(from[0], 0, t(p))}vmin`)
   const y = useTransform(progress, (p) => `${mix(from[1], 0, t(p))}vmin`)
@@ -204,9 +224,19 @@ function Bubble({ progress, from, color, i }: { progress: MotionValue<number>; f
 export default function Collision() {
   const ref = useRef<HTMLDivElement>(null)
   const reduced = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.5', 'start -0.05'] })
-  // Under reduced motion, show where it ends: the crew with both couples.
-  const progress = useTransform(scrollYProgress, (p) => (reduced ? 1 : p))
+  const inView = useInView(ref, { once: true, amount: 0.4 })
+  const progress = useMotionValue(0)
+
+  useEffect(() => {
+    // Under reduced motion, show where it ends: the crew with both couples.
+    if (reduced) {
+      progress.set(1)
+      return
+    }
+    if (!inView) return
+    const controls = animate(progress, 1, { duration: DURATION, ease: 'linear' })
+    return () => controls.stop()
+  }, [inView, reduced, progress])
 
   return (
     <div ref={ref} className="relative h-[26rem] w-full sm:h-[32rem] lg:h-[36rem]">
