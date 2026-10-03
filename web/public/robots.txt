@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+# Signed-in app screens, login and invite links: nothing here is useful in search.
+Disallow: /login
+Disallow: /auth/
+Disallow: /start
+Disallow: /join/
+Disallow: /onboarding
+Disallow: /discover
+Disallow: /groups
+Disallow: /likes
+Disallow: /matches
+Disallow: /profile
+Disallow: /settings
+Disallow: /chat/
+Disallow: /admin
+
+Sitemap: https://kollide.in/sitemap.xml

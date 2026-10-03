@@ -28,12 +28,23 @@
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,700&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,700&display=swap"
+      />
+    </noscript>
+    <link rel="preload" as="image" href="/landing/garba-hero-poster.jpg" fetchpriority="high" />
     <meta
       name="description"
       content="Find verified people to go to garba with this Navratri, anywhere in India. Match one-on-one or join a group of up to 10, then plan the night in chat."
     />
     <title>Kollide · Find your garba people this Navratri</title>
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://kollide.in/" />
 
     <!-- Link previews (WhatsApp, Instagram, X, iMessage). -->
     <meta property="og:type" content="website" />
@@ -45,6 +56,7 @@
       content="Verified people heading to the same garba nights across India. Go as a pair or join a group of up to 10."
     />
     <meta property="og:image" content="https://kollide.in/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Kollide: Find people to show up with, not just swipe past." />
@@ -56,6 +68,30 @@
       content="Verified people heading to the same garba nights across India. Go as a pair or join a group of up to 10."
     />
     <meta name="twitter:image" content="https://kollide.in/og-image.jpg" />
+    <meta name="twitter:image:alt" content="Kollide: Find people to show up with, not just swipe past." />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://kollide.in/#organization",
+            "name": "Kollide",
+            "url": "https://kollide.in/",
+            "logo": "https://kollide.in/icon-512.png",
+            "description": "Kollide helps verified people find a friend or a group to go to garba nights with, across India."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://kollide.in/#website",
+            "name": "Kollide",
+            "url": "https://kollide.in/",
+            "inLanguage": "en-IN",
+            "publisher": { "@id": "https://kollide.in/#organization" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
