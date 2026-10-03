@@ -111,7 +111,7 @@ export default function HoverSwap({ base, reveal, className = '' }: { base: Phot
             data-swap="base"
             src={base.src}
             style={{ objectPosition: base.position }}
-            alt=""
+            alt={base.alt}
             loading="lazy"
             decoding="async"
             draggable={false}
@@ -120,7 +120,7 @@ export default function HoverSwap({ base, reveal, className = '' }: { base: Phot
           <img
             data-swap="reveal"
             src={reveal.src}
-            alt=""
+            alt={reveal.alt}
             loading="lazy"
             decoding="async"
             draggable={false}
